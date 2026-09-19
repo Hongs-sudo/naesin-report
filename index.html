@@ -1,0 +1,3101 @@
+<!doctype html>
+<html lang="ko">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="theme-color" content="#d96324">
+<meta name="description" content="수학도서관 중등부 내신대비 주간보고서">
+<link rel="manifest" href="./manifest.webmanifest">
+<link rel="icon" href="./icon-192.png">
+<link rel="apple-touch-icon" href="./icon-192.png">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="default">
+<meta name="apple-mobile-web-app-title" content="주간보고서">
+<meta name="mobile-web-app-capable" content="yes">
+</head>
+<body>
+<title>내신대비 주간보고서</title>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=IBM+Plex+Sans+KR:wght@400;500;600;700&family=IBM+Plex+Mono:wght@500;600&display=swap');
+
+  /* 수학도서관 브랜드 컬러 #D96324 기준 팔레트 */
+  :root{
+    --bg:#f1efec;
+    --surface:#ffffff;
+    --surface-2:#f8f6f3;
+    --ink:#241f1a;
+    --ink-muted:#6b6058;
+    --ink-faint:#9b9088;
+    --line:#e3ddd6;
+    --line-soft:#efeae4;
+    --accent:#d96324;
+    --accent-ink:#a8480f;
+    --accent-soft:#fcede3;
+    --accent-soft-2:#f7dac6;
+    --accent-btn:#b34a12;
+    --accent-btn-hover:#8f3a0c;
+    --accent-btn-text:#ffffff;
+    --good:#2e8b62;
+    --good-soft:#e3f3eb;
+    --warn:#b8801c;
+    --warn-soft:#faf0d9;
+    --bad:#c94436;
+    --bad-soft:#fbe7e4;
+    --shadow: 0 1px 2px rgba(59,40,26,.05), 0 8px 24px -12px rgba(59,40,26,.20);
+    font-variant-numeric: tabular-nums;
+  }
+  @media (prefers-color-scheme: dark){
+    :root:not([data-theme="light"]){
+      --bg:#16120f;
+      --surface:#1f1a16;
+      --surface-2:#28221c;
+      --ink:#f0eae4;
+      --ink-muted:#b0a69c;
+      --ink-faint:#7c7268;
+      --line:#372f27;
+      --line-soft:#2c251f;
+      --accent:#ef8b46;
+      --accent-ink:#f6a877;
+      --accent-soft:#34241a;
+      --accent-soft-2:#452f1f;
+      --accent-btn:#ef8b46;
+      --accent-btn-hover:#f6a877;
+      --accent-btn-text:#241a12;
+      --good:#58c08d;
+      --good-soft:#18321f;
+      --warn:#e0ae5c;
+      --warn-soft:#3a2c17;
+      --bad:#f08076;
+      --bad-soft:#3a2020;
+      --shadow: 0 1px 2px rgba(0,0,0,.3), 0 8px 24px -12px rgba(0,0,0,.55);
+    }
+  }
+  :root[data-theme="dark"]{
+    --bg:#16120f;
+    --surface:#1f1a16;
+    --surface-2:#28221c;
+    --ink:#f0eae4;
+    --ink-muted:#b0a69c;
+    --ink-faint:#7c7268;
+    --line:#372f27;
+    --line-soft:#2c251f;
+    --accent:#ef8b46;
+    --accent-ink:#f6a877;
+    --accent-soft:#34241a;
+    --accent-soft-2:#452f1f;
+    --accent-btn:#ef8b46;
+    --accent-btn-hover:#f6a877;
+    --accent-btn-text:#241a12;
+    --good:#58c08d;
+    --good-soft:#18321f;
+    --warn:#e0ae5c;
+    --warn-soft:#3a2c17;
+    --bad:#f08076;
+    --bad-soft:#3a2020;
+    --shadow: 0 1px 2px rgba(0,0,0,.3), 0 8px 24px -12px rgba(0,0,0,.55);
+  }
+
+  *{box-sizing:border-box;}
+  html,body{margin:0;padding:0;}
+  body{
+    background:var(--bg);
+    color:var(--ink);
+    font-family:'IBM Plex Sans KR','Noto Sans KR',-apple-system,sans-serif;
+    font-size:14px;
+    line-height:1.55;
+  }
+  h1,h2,h3,h4{text-wrap:balance; margin:0;}
+  input,textarea,select,button{font-family:inherit; font-size:inherit; color:inherit;}
+  ::selection{background:var(--accent-soft-2);}
+
+  .num{font-family:'IBM Plex Mono',ui-monospace,monospace;}
+
+  /* ---------- app shell ---------- */
+  .app{
+    display:grid;
+    grid-template-columns:272px 1fr;
+    min-height:100vh;
+  }
+  @media (max-width: 900px){
+    .app{grid-template-columns:1fr;}
+    .sidebar{position:static; height:auto; border-right:none; border-bottom:1px solid var(--line);}
+  }
+
+  .sidebar{
+    background:var(--surface);
+    border-right:1px solid var(--line);
+    padding:20px 16px 24px;
+    position:sticky; top:0; height:100vh; overflow-y:auto;
+    display:flex; flex-direction:column; gap:16px;
+  }
+  .brand{display:flex; flex-direction:column; align-items:flex-start; gap:9px; padding:2px 4px 10px; flex:none;}
+  .brand-logo{width:154px; max-width:100%; height:auto; display:block;}
+  .brand-text h1{font-size:15px;font-weight:700;letter-spacing:-.01em;}
+  .brand-text p{margin:2px 0 0;font-size:11.5px;color:var(--ink-faint);}
+
+  .btn{
+    appearance:none; border:1px solid var(--line); background:var(--surface);
+    color:var(--ink); border-radius:8px; padding:9px 13px; font-weight:600; font-size:13px;
+    cursor:pointer; display:inline-flex; align-items:center; justify-content:center; gap:6px;
+    transition:background .12s,border-color .12s,transform .04s;
+    white-space:nowrap;
+  }
+  .btn:hover{background:var(--surface-2); border-color:var(--ink-faint);}
+  .btn:active{transform:translateY(1px);}
+  .btn:focus-visible{outline:2px solid var(--accent); outline-offset:1px;}
+  .btn-primary{background:var(--accent-btn); border-color:var(--accent-btn); color:var(--accent-btn-text);}
+  .btn-primary:hover{background:var(--accent-btn-hover); border-color:var(--accent-btn-hover);}
+  .btn-ghost{border-color:transparent; background:transparent;}
+  .btn-ghost:hover{background:var(--surface-2);}
+  .btn-danger{color:var(--bad);}
+  .btn-block{width:100%;}
+  .btn-sm{padding:6px 10px; font-size:12px; border-radius:7px;}
+
+  .side-actions{display:flex; flex-direction:column; gap:8px; flex:none;}
+
+  .side-search{
+    display:flex; align-items:center; gap:6px;
+    border:1px solid var(--line); border-radius:8px; padding:7px 10px; background:var(--surface-2); flex:none;
+  }
+  .side-search input{border:none; background:transparent; outline:none; width:100%; font-size:13px; color:var(--ink);}
+  .side-search input::placeholder{color:var(--ink-faint);}
+
+  /* 사이드바 전체가 스크롤되므로 학생 목록은 절대 눌려서 사라지지 않습니다 */
+  .side-list{list-style:none; margin:0; padding:0; display:flex; flex-direction:column; gap:4px;
+    flex:0 0 auto; overflow:visible;}
+  .side-empty{color:var(--ink-faint); font-size:12.5px; padding:14px 6px; text-align:center; border:1px dashed var(--line); border-radius:9px;}
+
+  .side-item{
+    display:flex; align-items:center; min-width:0;
+    border-radius:8px; padding:7px 9px; cursor:pointer; border:1px solid transparent;
+  }
+  .side-item:hover{background:var(--surface-2);}
+  .side-item.active{background:var(--accent-soft); border-color:var(--accent-soft-2);}
+  .side-item-line{display:flex; align-items:center; gap:5px; width:100%; min-width:0; white-space:nowrap;}
+  .side-item-name{font-weight:700; font-size:13px; min-width:0; overflow:hidden; text-overflow:ellipsis;}
+  .side-item.active .side-item-name{color:var(--accent-ink);}
+  .side-item-school{font-size:11px; color:var(--ink-faint); min-width:0; overflow:hidden; text-overflow:ellipsis;}
+  .side-item-school:before{content:'·'; margin-right:5px; color:var(--line);}
+  .side-item-week{margin-left:auto; font-size:9.5px; font-weight:700; color:var(--accent-ink); background:var(--accent-soft-2); border-radius:999px; padding:1px 6px; flex:none;}
+
+  .sidebar-foot{margin-top:auto; flex:none; padding-top:12px; border-top:1px solid var(--line-soft); display:flex; flex-direction:column; gap:8px;}
+  .sidebar-foot summary{cursor:pointer; font-size:12.5px; color:var(--ink-muted); font-weight:600; list-style:none;}
+  .sidebar-foot summary::-webkit-details-marker{display:none;}
+  .sidebar-foot summary:before{content:'⚙  '; }
+
+  /* ---------- main ---------- */
+  .main{padding:20px 28px 60px; max-width:1180px;}
+  @media (max-width:640px){.main{padding:16px;}}
+
+  .topbar{
+    display:flex; align-items:flex-start; justify-content:space-between; gap:16px;
+    margin-bottom:18px; flex-wrap:wrap;
+  }
+  .topbar h2{font-size:19px; font-weight:700; letter-spacing:-.01em;}
+  .top-title-line{display:flex; align-items:center; gap:10px; flex-wrap:wrap;}
+  .topbar .sub{font-size:12.5px; color:var(--ink-faint); margin-top:4px;}
+  .topbar-actions{display:flex; gap:8px; flex-wrap:wrap;}
+  .week-selector{display:inline-flex; align-items:center; gap:3px; padding:3px; border:1px solid var(--line); border-radius:9px; background:var(--surface-2);}
+  .week-select-btn{appearance:none; border:0; background:transparent; color:var(--ink-muted); border-radius:6px; padding:5px 8px; font-size:11.5px; font-weight:700; cursor:pointer; white-space:nowrap;}
+  .week-select-btn:hover{background:var(--surface); color:var(--ink);}
+  .week-select-btn.active{background:var(--accent); color:#fff; box-shadow:0 1px 2px rgba(0,0,0,.10);}
+  .week-note{font-size:11px; color:var(--accent-ink); font-weight:600;}
+
+  .empty-state{
+    display:flex; flex-direction:column; align-items:center; justify-content:center; text-align:center; gap:14px;
+    padding:80px 20px; color:var(--ink-muted);
+  }
+  .empty-state .mark{font-size:38px;}
+  .empty-state h3{font-size:17px; color:var(--ink);}
+  .empty-state p{max-width:360px; font-size:13px; color:var(--ink-faint);}
+
+  .tabs{display:flex; gap:4px; border-bottom:1px solid var(--line); margin-bottom:20px; overflow-x:auto;}
+  .tab{
+    padding:9px 4px; margin-right:18px; font-weight:600; font-size:13.5px; color:var(--ink-faint);
+    border-bottom:2px solid transparent; cursor:pointer; white-space:nowrap;
+  }
+  .tab:hover{color:var(--ink);}
+  .tab.active{color:var(--accent-ink); border-bottom-color:var(--accent);}
+
+  .panel{display:none;}
+  .panel.active{display:block; animation:fade .15s ease;}
+  @keyframes fade{from{opacity:0; transform:translateY(2px);} to{opacity:1; transform:none;}}
+
+  .card{
+    background:var(--surface); border:1px solid var(--line); border-radius:12px;
+    padding:18px 20px; box-shadow:var(--shadow); margin-bottom:16px;
+  }
+  .card h3{font-size:13.5px; font-weight:700; margin-bottom:2px;}
+  .card .hint{font-size:11.5px; color:var(--ink-faint); margin-bottom:14px;}
+  .card-head{display:flex; align-items:baseline; justify-content:space-between; gap:10px; margin-bottom:14px;}
+  .card-head h3{margin-bottom:0;}
+
+  .grid{display:grid; gap:12px 16px;}
+  .grid-2{grid-template-columns:1fr 1fr;}
+  .grid-3{grid-template-columns:1fr 1fr 1fr;}
+  .grid-4{grid-template-columns:repeat(4,1fr);}
+  @media (max-width:640px){.grid-2,.grid-3,.grid-4{grid-template-columns:1fr;}}
+
+  .field label{display:block; font-size:12px; font-weight:600; color:var(--ink-muted); margin-bottom:5px;}
+  .field input[type="text"], .field input[type="number"], .field input[type="date"], .field select, .field textarea{
+    width:100%; border:1px solid var(--line); background:var(--surface-2); color:var(--ink);
+    border-radius:8px; padding:9px 10px; outline:none; transition:border-color .12s, background .12s;
+  }
+  .field input:focus, .field select:focus, .field textarea:focus{border-color:var(--accent); background:var(--surface);}
+  .field textarea{resize:vertical; min-height:64px; line-height:1.5;}
+  .field .unit{font-size:11.5px; color:var(--ink-faint); margin-top:4px;}
+
+  .weekplan-row{display:grid; grid-template-columns:repeat(4,1fr); gap:10px;}
+  .weekplan-chip{
+    border:1px solid var(--line); border-radius:9px; padding:8px 10px; background:var(--surface-2);
+  }
+  .weekplan-chip label{display:block; font-size:10.5px; font-weight:700; color:var(--ink-faint); margin-bottom:4px;}
+  .weekplan-chip input{width:100%; border:none; background:transparent; outline:none; font-weight:700; color:var(--accent-ink); font-size:14px;}
+
+  /* table */
+  .table-wrap{overflow-x:auto; border:1px solid var(--line); border-radius:10px;}
+  table.book-table{width:100%; border-collapse:collapse; min-width:760px;}
+  table.book-table th{
+    text-align:left; font-size:11px; font-weight:700; color:var(--ink-faint); text-transform:uppercase; letter-spacing:.03em;
+    background:var(--surface-2); padding:9px 10px; border-bottom:1px solid var(--line); white-space:nowrap;
+  }
+  table.book-table td{padding:6px 8px; border-bottom:1px solid var(--line-soft); vertical-align:middle;}
+  table.book-table tr:last-child td{border-bottom:none;}
+  table.book-table tr.group-total td{background:var(--surface-2); font-weight:700;}
+  .grp-cell{
+    width:44px; text-align:center; font-weight:700; color:var(--accent-ink); font-size:11px; white-space:nowrap;
+  }
+  .item-input{border:1px solid transparent; background:transparent; width:100%; padding:6px 6px; border-radius:6px; font-weight:600;}
+  .item-input:hover, .item-input:focus{border-color:var(--line); background:var(--surface-2); outline:none;}
+  .num-input{
+    border:1px solid var(--line); background:var(--surface-2); border-radius:6px; padding:6px 6px;
+    width:64px; text-align:right; outline:none; font-family:'IBM Plex Mono',monospace;
+  }
+  .num-input:focus{border-color:var(--accent); background:var(--surface);}
+  .total-input{width:70px;}
+  .pct-cell{width:96px;}
+  .pct-bar-wrap{display:flex; align-items:center; gap:7px;}
+  .pct-track{flex:1; height:6px; border-radius:99px; background:var(--line-soft); overflow:hidden;}
+  .pct-fill{height:100%; border-radius:99px; background:var(--accent);}
+  .pct-num{font-size:11px; font-weight:700; color:var(--ink-muted); width:34px; text-align:right; font-family:'IBM Plex Mono',monospace;}
+  .row-del{background:none;border:none;color:var(--ink-faint);cursor:pointer;padding:4px;border-radius:6px;}
+  .row-del:hover{color:var(--bad); background:var(--bad-soft);}
+
+  .add-row-btn{margin-top:10px;}
+
+  .grp-input{
+    width:100%; border:1px solid transparent; background:transparent; text-align:center; font-weight:700;
+    color:var(--accent-ink); font-size:11px; border-radius:6px; padding:4px 1px;
+  }
+  .grp-input:hover, .grp-input:focus{border-color:var(--line); background:var(--surface-2); outline:none;}
+
+  .pct-input-wrap{position:relative;}
+  .pct-input{padding-right:18px !important;}
+  .pct-suffix{position:absolute; right:6px; top:50%; transform:translateY(-50%); font-size:10.5px; color:var(--ink-faint); pointer-events:none;}
+
+  .ach-chart-cell{width:112px;}
+  .ach-bars{display:flex; align-items:flex-end; gap:4px; height:34px;}
+  .ach-bar-col{width:12px; display:flex; flex-direction:column; align-items:center; justify-content:flex-end; height:100%;}
+  .ach-bar{width:100%; min-height:2px; border-radius:3px 3px 1px 1px; background:var(--line-soft);}
+  .ach-bar.has-val{background:var(--accent); opacity:.42;}
+  .ach-bar.w1.has-val{opacity:.32;} .ach-bar.w2.has-val{opacity:.52;} .ach-bar.w3.has-val{opacity:.72;} .ach-bar.w4.has-val{opacity:.94;}
+  .ach-bar.current{outline:2px solid var(--accent-ink); outline-offset:-1px;}
+
+  .summary-chart{
+    margin-top:16px; padding:16px 18px; border:1px solid var(--line); border-radius:10px; background:var(--surface-2);
+  }
+  .summary-chart-head{display:flex; align-items:baseline; justify-content:space-between; margin-bottom:14px;}
+  .summary-chart-head h4{font-size:12.5px; font-weight:700; color:var(--ink-muted);}
+  .summary-bars{display:flex; align-items:flex-end; gap:22px; height:120px; padding:0 6px;}
+  .summary-bar-col{display:flex; flex-direction:column; align-items:center; justify-content:flex-end; gap:8px; flex:1; height:100%;}
+  .summary-bar-track{width:100%; max-width:44px; flex:1; display:flex; align-items:flex-end; border-radius:6px 6px 2px 2px; background:var(--surface); border:1px solid var(--line);}
+  .summary-bar-fill{width:100%; border-radius:5px 5px 0 0; background:linear-gradient(180deg, var(--accent), var(--accent-ink)); min-height:2px;}
+  .summary-bar-fill.empty{background:var(--line-soft);}
+  .summary-bar-label{font-size:11px; font-weight:700; color:var(--ink-muted);}
+  .summary-bar-val{font-size:12.5px; font-weight:700; color:var(--accent-ink); font-family:'IBM Plex Mono',monospace;}
+  .summary-bar-val.empty{color:var(--ink-faint); font-weight:600;}
+
+  .hbar-list{display:flex; flex-direction:column; gap:9px;}
+  .hbar-row{display:flex; align-items:center; gap:10px;}
+  .hbar-row.total{margin-top:4px; padding-top:9px; border-top:1px dashed var(--line);}
+  .hbar-row.total .hbar-label, .hbar-row.total .hbar-val{font-weight:700; color:var(--ink);}
+  .hbar-label{width:150px; flex:none; font-size:12px; font-weight:600; color:var(--ink-muted); overflow:hidden; text-overflow:ellipsis; white-space:nowrap;}
+  .hbar-track{flex:1; height:9px; border-radius:99px; background:var(--line-soft); overflow:hidden;}
+  .hbar-fill{height:100%; border-radius:99px; background:var(--accent);}
+  .hbar-fill.done{background:var(--good);}
+  .hbar-val{width:40px; flex:none; text-align:right; font-size:11.5px; font-weight:700; color:var(--accent-ink); font-family:'IBM Plex Mono',monospace;}
+  .hbar-sub{width:62px; flex:none; text-align:right; font-size:10.5px; color:var(--ink-faint); font-family:'IBM Plex Mono',monospace;}
+
+  .mock-avg-list{display:flex; flex-direction:column; gap:8px; margin-top:14px;}
+  .mock-avg-row{
+    display:flex; align-items:center; justify-content:space-between; gap:10px;
+    border:1px solid var(--line); border-radius:8px; padding:8px 12px; background:var(--surface-2); font-size:12.5px;
+  }
+  .mock-avg-row .lab{font-weight:700; color:var(--ink-muted);}
+  .mock-avg-row .val{font-weight:700; color:var(--accent-ink); font-family:'IBM Plex Mono',monospace;}
+  .mock-avg-row .cnt{color:var(--ink-faint); font-size:11px;}
+
+  .mock-list{display:flex; flex-direction:column; gap:10px;}
+  .mock-row{
+    display:grid; grid-template-columns:1.1fr 1fr 1.4fr .8fr 1.6fr auto; gap:8px; align-items:center;
+    border:1px solid var(--line); border-radius:9px; padding:9px 10px; background:var(--surface-2);
+  }
+  @media (max-width:900px){.mock-row{grid-template-columns:1fr 1fr; }}
+  .mock-row input{border:1px solid var(--line); background:var(--surface); border-radius:6px; padding:7px 8px; outline:none; width:100%;}
+  .mock-row input:focus{border-color:var(--accent);}
+
+  .checklist{display:flex; flex-wrap:wrap; gap:8px;}
+  .chip-toggle{
+    border:1px solid var(--line); background:var(--surface-2); border-radius:999px; padding:7px 13px;
+    font-size:12.5px; font-weight:600; cursor:pointer; color:var(--ink-muted);
+  }
+  .chip-toggle.on{background:var(--accent-soft); border-color:var(--accent-soft-2); color:var(--accent-ink);}
+
+  .save-bar{
+    position:sticky; bottom:0; margin-top:24px; padding:14px 18px; border-radius:12px;
+    background:var(--surface); border:1px solid var(--line); box-shadow:var(--shadow);
+    display:flex; align-items:center; justify-content:space-between; gap:12px; flex-wrap:wrap;
+  }
+  .save-status{font-size:12px; color:var(--ink-faint); display:flex; align-items:center; gap:6px;}
+  .dot{width:7px;height:7px;border-radius:99px;background:var(--good);}
+
+  /* ---------- preview modal ---------- */
+  .modal-veil{
+    position:fixed; inset:0; background:rgba(15,17,26,.55); backdrop-filter:blur(2px);
+    display:none; align-items:flex-start; justify-content:center; padding:32px 16px; z-index:50; overflow-y:auto;
+  }
+  .modal-veil.open{display:flex;}
+  .modal{
+    background:var(--rp-bg,#f5f2ee); border-radius:16px; max-width:880px; width:100%;
+    box-shadow:0 24px 60px -20px rgba(0,0,0,.4); overflow:hidden;
+  }
+  .modal-bar{
+    display:flex; align-items:center; justify-content:space-between; padding:10px 16px;
+    background:var(--surface); border-bottom:1px solid var(--line);
+    position:sticky; top:0; z-index:2;
+  }
+  .modal-bar .btn{font-size:12px;}
+  .modal-bar-title{font-size:12.5px; font-weight:700; color:var(--ink-muted); white-space:nowrap;}
+
+  /* ---------- 리포트 관리 ---------- */
+  .manage-modal{background:var(--surface); max-width:940px;}
+  .manage-body{padding:16px 18px 20px; max-height:calc(100vh - 160px); overflow-y:auto;}
+  .manage-table{width:100%; border-collapse:collapse; min-width:760px;}
+  .manage-table th{
+    text-align:left; font-size:11px; font-weight:700; color:var(--ink-faint); letter-spacing:.03em;
+    padding:8px 10px; border-bottom:1px solid var(--line); white-space:nowrap; background:var(--surface-2);
+  }
+  .manage-table td{padding:10px; border-bottom:1px solid var(--line-soft); font-size:13px; vertical-align:middle;}
+  .manage-table tr:last-child td{border-bottom:none;}
+  .manage-table tr.is-active td{background:var(--accent-soft);}
+  .manage-name{font-weight:700;}
+  .manage-sub{font-size:11.5px; color:var(--ink-faint);}
+  .manage-week{font-size:11px; font-weight:700; color:var(--accent-ink); background:var(--accent-soft-2);
+    border-radius:99px; padding:2px 9px; white-space:nowrap;}
+  .manage-actions{display:flex; gap:6px; justify-content:flex-end; white-space:nowrap;}
+  .manage-table tr.manage-group td{
+    background:var(--accent-soft); border-top:1px solid var(--accent-soft-2);
+    border-bottom:1px solid var(--accent-soft-2); padding:8px 10px;
+  }
+  .manage-table tr.manage-group td.manage-group-cell{cursor:pointer; user-select:none;}
+  .manage-table tr.manage-group:hover td{background:var(--accent-soft-2);}
+  .manage-group-caret{display:inline-block; width:14px; font-size:11px; color:var(--accent-ink);}
+  .manage-group-name{font-size:12.5px; font-weight:700; color:var(--accent-ink);}
+  .manage-group-count{
+    font-size:10.5px; font-weight:700; color:var(--accent-ink); background:var(--surface);
+    border:1px solid var(--accent-soft-2); border-radius:99px; padding:1px 8px; margin-left:8px;
+  }
+  .manage-empty{padding:36px 10px; text-align:center; color:var(--ink-faint); font-size:13px;}
+  .manage-count{font-size:12px; color:var(--ink-muted); margin-bottom:10px;}
+  .mini-btn{
+    border:1px solid var(--line); background:var(--surface); color:var(--ink-muted);
+    border-radius:6px; padding:4px 8px; font-size:11px; font-weight:600; cursor:pointer; white-space:nowrap;
+  }
+  .mini-btn:hover{background:var(--surface-2); border-color:var(--ink-faint); color:var(--ink);}
+  .mini-btn.danger:hover{color:var(--bad); border-color:var(--bad); background:var(--bad-soft);}
+  .mini-btn:focus-visible{outline:2px solid var(--accent); outline-offset:1px;}
+
+  /* 학년별 폴더 */
+  .folder-row{
+    display:flex; align-items:center; gap:7px; cursor:pointer; user-select:none;
+    padding:8px 9px; border-radius:8px; margin-top:2px;
+  }
+  .folder-row:hover{background:var(--surface-2);}
+  .folder-caret{font-size:10px; color:var(--ink-faint); width:10px; flex:none;}
+  .folder-icon{font-size:13px; flex:none;}
+  .folder-name{font-size:13px; font-weight:700; color:var(--ink); flex:1; min-width:0;
+    overflow:hidden; text-overflow:ellipsis; white-space:nowrap;}
+  .folder-count{
+    font-size:10.5px; font-weight:700; color:var(--ink-muted); background:var(--surface-2);
+    border:1px solid var(--line); border-radius:99px; padding:1px 7px; flex:none;
+  }
+  .folder-row.open .folder-name{color:var(--accent-ink);}
+  .folder-empty{
+    margin-left:14px; border-left:2px solid var(--line-soft); padding:8px 10px;
+    font-size:11.5px; color:var(--ink-faint);
+  }
+  .side-item.in-folder{margin-left:14px; border-left:2px solid var(--line-soft); border-radius:0 9px 9px 0;}
+  .side-item.in-folder.active{border-left-color:var(--accent);}
+
+  .sync-badge{border:1px solid var(--line); border-radius:9px; padding:9px 11px; background:var(--surface-2); margin-bottom:2px;}
+  .sync-badge-top{display:flex; align-items:center; gap:7px;}
+  .sync-label{font-size:12px; font-weight:700; color:var(--ink-muted);}
+  .sync-sub{font-size:10.5px; color:var(--ink-faint); margin-top:3px; line-height:1.45;}
+  .sync-dot{width:7px; height:7px; border-radius:99px; background:var(--ink-faint); flex:none;}
+  .sync-badge.shared{background:var(--good-soft); border-color:var(--good);}
+  .sync-badge.shared .sync-dot{background:var(--good);}
+  .sync-badge.shared .sync-label{color:var(--good);}
+  .sync-badge.connecting .sync-dot{background:var(--warn);}
+  .sync-badge.error{background:var(--bad-soft); border-color:var(--bad);}
+  .sync-badge.error .sync-dot{background:var(--bad);}
+  .sync-badge.error .sync-label{color:var(--bad);}
+
+  .side-item-exam{font-size:11px; color:var(--ink-faint); margin-top:2px; overflow:hidden;
+    text-overflow:ellipsis; white-space:nowrap;}
+  .side-item-actions{display:none; gap:4px; margin-top:7px;}
+  .side-item:hover .side-item-actions, .side-item.active .side-item-actions{display:flex;}
+  @media (hover:none){ .side-item-actions{display:flex;} }
+
+  /* ---------- toast ---------- */
+  .toast{
+    position:fixed; left:50%; bottom:22px; transform:translateX(-50%) translateY(12px);
+    background:var(--ink); color:var(--bg); padding:10px 18px; border-radius:99px; font-size:12.5px; font-weight:600;
+    opacity:0; pointer-events:none; transition:opacity .18s, transform .18s; z-index:100; box-shadow:var(--shadow);
+  }
+  .toast.show{opacity:1; transform:translateX(-50%) translateY(0);}
+
+  /* ==========================================================
+     학부모 발송용 리포트 - A4 한 장 요약본
+     ========================================================== */
+  .report{
+    --rp-bg:#f5f2ee; --rp-surface:#ffffff; --rp-ink:#2a231d; --rp-muted:#867a70; --rp-line:#e9e1d8;
+    --rp-accent:#d96324; --rp-accent-ink:#a8480f; --rp-accent-soft:#fcede3; --rp-soft-2:#f8dcc8;
+    --rp-good:#2e8b62; --rp-warn:#b8801c; --rp-track:#ece6de;
+    width:794px; height:1123px; box-sizing:border-box;
+    background:var(--rp-surface); color:var(--rp-ink);
+    font-family:'IBM Plex Sans KR','Noto Sans KR',sans-serif;
+    padding:26px 30px 20px; display:flex; flex-direction:column; gap:11px;
+    position:relative; overflow:hidden;
+  }
+  .report *{box-sizing:border-box;}
+
+  /* header */
+  .rp-head{display:flex; align-items:flex-end; justify-content:space-between; gap:16px;
+    padding-bottom:11px; border-bottom:2px solid var(--rp-accent);}
+  .rp-head-left{display:flex; align-items:center; gap:13px;}
+  .rp-logo{width:150px; height:auto; display:block;}
+  .rp-head-titles{display:flex; flex-direction:column; gap:2px;}
+  .rp-eyebrow{font-size:10px; font-weight:700; letter-spacing:.06em; color:var(--rp-accent); text-transform:uppercase;}
+  .rp-title{font-size:17px; font-weight:700; letter-spacing:-.01em; line-height:1.25;}
+  .rp-head-right{text-align:right; display:flex; flex-direction:column; gap:4px; align-items:flex-end;}
+  .rp-student{font-size:19px; font-weight:700; line-height:1.1;}
+  .rp-student small{font-size:11.5px; font-weight:600; color:var(--rp-muted); margin-left:5px;}
+  .rp-week-badge{background:var(--rp-accent); color:#fff; font-size:11px; font-weight:700;
+    border-radius:99px; padding:3px 11px; display:inline-block;}
+
+  /* info strip */
+  .rp-info{display:grid; grid-template-columns:repeat(4,1fr); gap:8px;}
+  .rp-info-item{background:var(--rp-accent-soft); border-radius:8px; padding:7px 10px; min-width:0;}
+  .rp-info-item .l{font-size:9px; font-weight:700; color:var(--rp-accent-ink); letter-spacing:.02em; margin-bottom:2px;}
+  .rp-info-item .v{font-size:11.5px; font-weight:700; line-height:1.3; overflow:hidden;
+    display:-webkit-box; -webkit-line-clamp:2; -webkit-box-orient:vertical; word-break:keep-all;}
+  .rp-info-item .v.empty{color:var(--rp-muted); font-weight:500;}
+
+  /* generic panel */
+  .rp-panel{border:1px solid var(--rp-line); border-radius:11px; padding:11px 13px; background:var(--rp-surface); min-width:0;}
+  .rp-panel-title{display:flex; align-items:center; gap:6px; font-size:11px; font-weight:700; margin-bottom:9px; color:var(--rp-ink);}
+  .rp-panel-title .no{background:var(--rp-accent); color:#fff; width:15px; height:15px; border-radius:4px;
+    font-size:9.5px; display:flex; align-items:center; justify-content:center; flex:none;}
+  .rp-panel-title .sub{margin-left:auto; font-size:9.5px; font-weight:600; color:var(--rp-muted);}
+
+  .rp-grid-2{display:grid; grid-template-columns:1fr 232px; gap:10px; align-items:stretch;}
+  .rp-grid-3{display:grid; grid-template-columns:1.35fr 1fr; gap:10px; align-items:stretch;}
+
+  /* ① 교재 구성요소 - 주차별 미니 막대 */
+  .rp-ach-row{display:flex; align-items:center; gap:9px; padding:3.5px 0;}
+  .rp-ach-tag{width:26px; flex:none; font-size:9px; font-weight:700; color:var(--rp-accent-ink);
+    background:var(--rp-accent-soft); border-radius:4px; padding:2px 0; text-align:center;}
+  .rp-ach-tag.blank{background:transparent;}
+  .rp-ach-name{flex:1; font-size:10.5px; font-weight:600; min-width:0; overflow:hidden;
+    text-overflow:ellipsis; white-space:nowrap;}
+  .rp-ach-weeks{display:flex; gap:4px; flex:none;}
+  .rp-ach-week{width:26px; text-align:center;}
+  .rp-ach-week .bar-track{height:26px; border-radius:4px 4px 2px 2px; background:var(--rp-track);
+    display:flex; align-items:flex-end; overflow:hidden;}
+  .rp-ach-week .bar-fill{width:100%; border-radius:3px 3px 0 0; background:var(--rp-accent); opacity:.5; min-height:2px;}
+  .rp-ach-week.current .bar-track{outline:1.5px solid var(--rp-accent); outline-offset:1px;}
+  .rp-ach-week.current .bar-fill{opacity:1;}
+  .rp-ach-week .lab{font-size:8px; color:var(--rp-muted); margin-top:2px; font-weight:600;}
+  .rp-ach-avg{width:38px; flex:none; text-align:right; font-size:11.5px; font-weight:700;
+    color:var(--rp-accent-ink); font-family:'IBM Plex Mono',monospace;}
+  .rp-ach-head{display:flex; align-items:center; gap:9px; padding-bottom:4px; border-bottom:1px solid var(--rp-line); margin-bottom:3px;}
+  .rp-ach-head .sp{flex:1;}
+  .rp-ach-head .wk{width:26px; text-align:center; font-size:8.5px; font-weight:700; color:var(--rp-muted);}
+  .rp-ach-head .wks{display:flex; gap:4px; flex:none;}
+  .rp-ach-head .avg{width:38px; text-align:right; font-size:8.5px; font-weight:700; color:var(--rp-muted);}
+
+  /* 종합 게이지 */
+  .rp-gauge-panel{display:flex; flex-direction:column; align-items:center; justify-content:center; gap:9px;
+    background:linear-gradient(165deg,var(--rp-accent-soft),var(--rp-surface));}
+  .rp-gauge{position:relative; width:132px; height:132px;}
+  .rp-gauge svg{width:100%; height:100%; transform:rotate(-90deg);}
+  .rp-gauge-center{position:absolute; inset:0; display:flex; flex-direction:column; align-items:center; justify-content:center; gap:1px;}
+  .rp-gauge-num{font-size:30px; font-weight:700; color:var(--rp-accent-ink); line-height:1; font-family:'IBM Plex Mono',monospace;}
+  .rp-gauge-lab{font-size:9.5px; font-weight:700; color:var(--rp-muted);}
+  .rp-weekbars{display:flex; gap:7px; width:100%; padding:0 4px;}
+  .rp-weekbar{flex:1; display:flex; flex-direction:column; align-items:center; gap:3px;}
+  .rp-weekbar .v{font-size:9.5px; font-weight:700; color:var(--rp-accent-ink); font-family:'IBM Plex Mono',monospace;}
+  .rp-weekbar .v.empty{color:var(--rp-muted); font-weight:600;}
+  .rp-weekbar .t{width:100%; height:34px; background:var(--rp-surface); border:1px solid var(--rp-line);
+    border-radius:4px 4px 2px 2px; display:flex; align-items:flex-end; overflow:hidden;}
+  .rp-weekbar .f{width:100%; background:var(--rp-accent); border-radius:3px 3px 0 0; min-height:2px;}
+  .rp-weekbar .l{font-size:8.5px; font-weight:700; color:var(--rp-muted);}
+
+  /* 가로 막대 (모의고사 교재) */
+  .rp-hbar{display:flex; align-items:center; gap:8px; padding:3.5px 0;}
+  .rp-hbar-name{width:88px; flex:none; font-size:10.5px; font-weight:600; overflow:hidden;
+    text-overflow:ellipsis; white-space:nowrap;}
+  .rp-hbar-track{flex:1; height:9px; border-radius:99px; background:var(--rp-track); overflow:hidden;}
+  .rp-hbar-fill{height:100%; border-radius:99px; background:var(--rp-accent);}
+  .rp-hbar-fill.done{background:var(--rp-good);}
+  .rp-hbar-val{width:34px; flex:none; text-align:right; font-size:10.5px; font-weight:700;
+    color:var(--rp-accent-ink); font-family:'IBM Plex Mono',monospace;}
+  .rp-hbar-sub{width:48px; flex:none; text-align:right; font-size:9px; color:var(--rp-muted);
+    font-family:'IBM Plex Mono',monospace;}
+
+  /* 스탯 타일 (학습지 / 추가모의고사) */
+  .rp-stats{display:grid; grid-template-columns:1fr 1fr; gap:9px;}
+  .rp-stat{border:1px solid var(--rp-line); border-radius:9px; padding:9px 10px; display:flex; flex-direction:column; gap:5px;}
+  .rp-stat .k{font-size:9.5px; font-weight:700; color:var(--rp-muted);}
+  .rp-stat .row{display:flex; align-items:baseline; gap:5px;}
+  .rp-stat .n{font-size:21px; font-weight:700; color:var(--rp-accent-ink); line-height:1; font-family:'IBM Plex Mono',monospace;}
+  .rp-stat .n.empty{font-size:14px; color:var(--rp-muted);}
+  .rp-stat .d{font-size:9.5px; color:var(--rp-muted); font-weight:600;}
+  .rp-stat .track{height:6px; border-radius:99px; background:var(--rp-track); overflow:hidden;}
+  .rp-stat .fill{height:100%; border-radius:99px; background:var(--rp-accent);}
+
+  /* 주말 모의고사 */
+  .rp-mock-item{display:flex; align-items:center; gap:9px; padding:4px 0;}
+  .rp-mock-name{width:104px; flex:none;}
+  .rp-mock-name .r{font-size:10.5px; font-weight:700;}
+  .rp-mock-name .d{font-size:8.5px; color:var(--rp-muted); overflow:hidden; text-overflow:ellipsis; white-space:nowrap;}
+  .rp-mock-track{flex:1; height:12px; border-radius:99px; background:var(--rp-track); position:relative;}
+  .rp-mock-fill{height:100%; border-radius:99px; background:var(--rp-accent);}
+  .rp-mock-avgmark{position:absolute; top:-3px; width:2px; height:18px; background:var(--rp-ink); opacity:.45; border-radius:1px;}
+  .rp-mock-score{width:42px; flex:none; text-align:right; font-size:12.5px; font-weight:700;
+    color:var(--rp-accent-ink); font-family:'IBM Plex Mono',monospace;}
+  .rp-mock-diff{width:66px; flex:none; text-align:right; font-size:9.5px; font-weight:700; font-family:'IBM Plex Mono',monospace;}
+  .rp-mock-diff.up{color:var(--rp-good);} .rp-mock-diff.down{color:var(--rp-warn);} .rp-mock-diff.na{color:var(--rp-muted); font-weight:600;}
+  .rp-mock-legend{font-size:8.5px; color:var(--rp-muted); margin-top:5px; display:flex; gap:12px; align-items:center;}
+  .rp-mock-legend i{display:inline-block; width:2px; height:9px; background:var(--rp-ink); opacity:.45; margin-right:4px; vertical-align:-1px;}
+
+  /* 코멘트 */
+  .rp-note{font-size:10.5px; line-height:1.55; white-space:pre-wrap; overflow:hidden;
+    display:-webkit-box; -webkit-line-clamp:4; -webkit-box-orient:vertical; word-break:break-word;}
+  .rp-note.empty{color:var(--rp-muted); opacity:.6;}
+  .rp-note-label{font-size:9px; font-weight:700; color:var(--rp-muted); margin-bottom:3px;}
+  .rp-note-block{margin-bottom:8px;}
+  .rp-note-block:last-child{margin-bottom:0;}
+  .rp-msg-panel{background:linear-gradient(160deg,var(--rp-accent-soft),var(--rp-surface)); border-color:var(--rp-soft-2);}
+  .rp-msg-panel .rp-note{-webkit-line-clamp:7; font-size:11px;}
+
+  .rp-foot{margin-top:auto; padding-top:9px; border-top:1px solid var(--rp-line);
+    display:flex; align-items:center; justify-content:center; gap:8px;
+    font-size:9px; color:var(--rp-muted);}
+  .rp-foot-mark{width:26px; height:auto; opacity:.85;}
+
+  /* 화면에서 A4를 축소해 보여주는 무대 */
+  .report-stage{display:flex; justify-content:center; padding:16px; background:var(--rp-bg,#f5f2ee);}
+  .report-scaler{transform-origin:top center;}
+  .report-shadow{box-shadow:0 6px 28px -10px rgba(59,40,26,.35); border-radius:3px; overflow:hidden;}
+
+  @media print{
+    .print-hide, .sidebar, .topbar, .tabs, .save-bar, .modal-bar{display:none !important;}
+    .modal-veil{position:static; background:none; padding:0; display:block !important; overflow:visible;}
+    .modal{box-shadow:none; border-radius:0; max-width:none; background:#fff;}
+    .report-stage{padding:0; background:#fff;}
+    .report-scaler{transform:none !important;}
+    .report-shadow{box-shadow:none;}
+    .report{width:210mm; height:297mm; padding:12mm 13mm 9mm;}
+    @page{ size:A4 portrait; margin:0; }
+  }
+
+
+  /* ---------- Firebase 공유 / 로그인 ---------- */
+  .user-card{border:1px solid var(--line); border-radius:9px; padding:10px 11px; background:var(--surface-2); display:none;}
+  .user-card.show{display:block;}
+  .user-top{display:flex; align-items:center; gap:8px; min-width:0;}
+  .user-avatar{width:28px; height:28px; border-radius:50%; object-fit:cover; background:var(--accent-soft); flex:none;}
+  .user-avatar-fallback{width:28px;height:28px;border-radius:50%;background:var(--accent-soft);color:var(--accent-ink);display:flex;align-items:center;justify-content:center;font-weight:800;flex:none;}
+  .user-meta{min-width:0; flex:1;}
+  .user-name{font-size:12px; font-weight:700; overflow:hidden; text-overflow:ellipsis; white-space:nowrap;}
+  .user-email{font-size:10.5px; color:var(--ink-faint); overflow:hidden; text-overflow:ellipsis; white-space:nowrap;}
+  .user-role{font-size:10px;font-weight:800;border-radius:99px;padding:2px 7px;background:var(--accent-soft);color:var(--accent-ink);flex:none;}
+  .user-actions{display:flex; gap:5px; margin-top:8px;}
+  .admin-only{display:none !important;}
+  body.is-admin .admin-only{display:inline-flex !important;}
+
+  .auth-veil{position:fixed; inset:0; z-index:200; background:rgba(24,18,14,.72); backdrop-filter:blur(4px); display:flex; align-items:center; justify-content:center; padding:20px;}
+  .auth-veil.hidden{display:none;}
+  .auth-card{width:min(440px,100%); background:var(--surface); color:var(--ink); border:1px solid var(--line); border-radius:16px; box-shadow:0 24px 70px rgba(0,0,0,.28); padding:24px;}
+  .auth-card img{width:170px;height:auto;display:block;margin-bottom:18px;}
+  .auth-card h2{font-size:20px;margin-bottom:7px;}
+  .auth-desc{font-size:12.5px;color:var(--ink-muted);line-height:1.6;margin-bottom:16px;}
+  .auth-status{border:1px solid var(--line);border-radius:9px;background:var(--surface-2);padding:10px 12px;font-size:12px;color:var(--ink-muted);margin-bottom:12px;white-space:pre-line;}
+  .auth-status.error{border-color:var(--bad);background:var(--bad-soft);color:var(--bad);}
+  .auth-status.good{border-color:var(--good);background:var(--good-soft);color:var(--good);}
+  .auth-init{display:none;margin-top:12px;padding:12px;border:1px solid var(--accent-soft-2);background:var(--accent-soft);border-radius:10px;}
+  .auth-init.show{display:block;}
+  .auth-init strong{display:block;margin-bottom:5px;color:var(--accent-ink);}
+  .auth-foot{font-size:10.5px;color:var(--ink-faint);margin-top:12px;line-height:1.55;}
+
+  .access-modal{background:var(--surface);max-width:650px;}
+  .access-body{padding:18px 20px 22px;}
+  .access-help{font-size:11.5px;color:var(--ink-muted);line-height:1.55;margin-bottom:14px;}
+  .access-grid{display:grid;grid-template-columns:1fr 1fr;gap:14px;}
+  .access-grid textarea{min-height:170px;font-family:'IBM Plex Mono',monospace;font-size:12px;}
+  @media(max-width:680px){.access-grid{grid-template-columns:1fr;}}
+  .access-actions{display:flex;justify-content:flex-end;gap:8px;margin-top:14px;}
+  .modified-by{font-size:10.5px;color:var(--ink-faint);margin-left:6px;}
+
+</style>
+
+<div class="app">
+  <!-- ===================== SIDEBAR ===================== -->
+  <aside class="sidebar">
+    <div class="brand">
+      <img class="brand-logo" id="brandLogo" alt="수학도서관" src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAoAAAACUCAMAAAA0y2i1AAAAYFBMVEUAAADbZCX9+PXxbynniVbypWnmk2b2sKL+AADssJDie0T7eXbml23ZZCa0aiDZZCXrq4i8NzD//wD0za/ee0Xyx7C0aWisrFn//n9/AAB+fn713c9/fwDee0bqqYarq6szE5ddAAAAIHRSTlMA/Q4I5RKkFgFf7wNmnANYmwMBJp9WAwMCAgJKAl/PA5+NCIwAACgWSURBVHja7V2HdqM4FJXVkTCxwTVt//8vV4WiBghsJ5nEOmd3JhObpst9/T0A7rhgpf4rqBAbtXABT8sPwQCkG/N1WkAAuATP9Vwj64wQcX9WP0CKN90SDYeLjymhcwD6BkDlnSE443P95fUe0B9X8BMbZyFQL+ZQAN1DCAoBv/S/vT4f+nP1iwNGaaH+6KADjtiF30bAVQxIvYNsdoZZ21MU+ozw+eyfSytrheYqClFHXT79bTaFLz5zD9v4MFZnUP9oJbw9I3hK4T+8pLRmAX9vZSUDr1odBDDAzaYEqwyIMyiCA2EGNMhh3Z4RtgeGUvLnhvzBhS5GAMOO54ixXUP8vYD9ysNHCNwYQV8DZn86GgqETx78iws2RKlgioE4byHXqJ+aFP+htecgMQceNcS7M0Jt26hLgIwB8OTAv7ROoMAbrJSyU/t3raGdUvK3uEVRQ4DgCIHNoHUq8F0ALEX79+f6O3avBZpSyoxZcKS7wuhiIf4wnLU/JJowZisQ2sJK1TyDd2V3mzNqk8dhw+f6YwDcCKYoyEo/rr1zod0KZvnvYh03o/AEoIwwzfozXjppvCFPGfyXVgUPHRy0i48hpFQzErCVKOYDaCdw3MEpK1nZt40IEMhrxZuIGYaknavx6RX8U/Zvz0u0N0JDk4E28+ZvA96wOoQT40idKyBBCjqpzcCu/bfDelPnuf5FGxg0Hc0dW+9w6IApNb3NmrnQ2i+TnkJ5BezgGzb2lLLuT7nS1/hc/94irRaIe4loArNw7+FPYaqalYkSMNF9Gk4TrjF1h9CehZsEvcyHVgU8PRXBv2CBGBiWAxqYJw0tR83T32DBagROR4uViC6EC28DQN7nKzyjcn9nlQaC0N18aSJwA0BwAzKcItCV2YoDp/RAUCPPIVPoc5IuIqJ9M8S8BEdWP70xv3ldlNC0bFP1eDhoOjo78KAgJ/kA+jrjbs6MPbm2iIBKwKP+nFgnwGpWxuWavIfn+meW0bpMcEMOlKf0L8U9g/UBOVmMvwwESmV6iyE3S4t47FolTBPiz3bHMEb8xf57YmrRA+TM7vfJccFpeeiEQEpwzbAEFIN9BiGOWQQq3PeJhkbzhB0BmhRsi+jiGZP7xevUgo4htd3XjgI/XBdgpj8EeTZLLgKldhsOZkfhECBsdQK8Jvn1q3xXx2Phr+Obd8uyCtdPsOr5+RSs9e84P4V3uMR/+9qJXaMG9hRIweCCKfIcwigMsGVzYIdAAevuGMYKQt3VFD/WIEZAhHeMd0//5YJV9ZxTah/ye2uEbkGvAZa34E8jcM55yHoE7kAHOX0x594ipg+MichqH618kkJgG9+xC0AoUbTCEDdfv0Z4GUV3dPa9biReKwPvXBeTRXe44PkPml4jLz0FYthB4SMXf8UmvdR+1HMcWPRa4KGziAG/Qkc7hD+VAfEUAHmcy6azeb87xEgSZLGNg6zydCZT68ygPhaJ9zzfb+EWqunYq2xZR8BeMqOcN2M/ir8cCu0fSNESiva8uE/pYTIYAvKSWNl0wAErSjoFQDEPQLh+pe+pmbmjTADm3H+VAuA2H4AEll6iKa/bV7r990z8KVtWbG5CIG19110mIJS1s3f0UWoVATR1xWTZ+cpbGDBlu+WuXQo1LKxgtF4FtBSAkBA2vRrzAhB8AwNydwMERKBqkdeWr+XZnyS45UOQbTWLQL7vcC+6sBzxr+wLhVEGAB21h0iCAgAiR+8jTcPoDADpagDiNAAT0shToxVvE1LgSQAmyTtYQogSAHWHoRDIBqATfWslH+Q2J6bc9N7BDE8OCfNL4WEZAi/thdjosNp/dPWO2bTJMnf3goIC45sZsAmLnYO1mwbg52oA0jEGxJMAbDcfzwAw7xIsN+B1AJRD6LWnQPtC0nzJR/yD2PxmuJADWyrqJLC6jIP//dODOFBrUnQZACUo6cFd/vex9ztykYhNARCCY6RG3gRAc08NnQQg1xW45T0AKBrQyFMgSLIBGEqgAlSS90gQ8ApzjuFXmyv86f1byoF7A3wsjDVEYMAq9KGWYyRspgFYLRGa2rCT81Ywu58ITvFb4gGS+i4AVISvbrEu1zKg/yiVIVwPW1/GtidL+I8gjvjPxJVxiMAoaurC+7Rvhu0noWJ0eFg0TrFFVHe1kZN4XwxANg1A9Vy479AW5UvWGrPW1T0FDsoEAGcZEIuRFRy5UrdYrANg5Edl4DLUhuQdJsBf06I2KicuZl3ifS0Iv7zDqGzpYZ5AGDPgtNtnMQDJLANyEL7Ftzoo+eE2AE54h6JqitUA7AvQ3aP1j7fgkeIPi2gFJj/rty5qqECjr3qoUkQkOhqWkSH3wBJNHnuyym8HIMpalwlquRmA40pX8Kz4egaM3FSKfc7tCeIrek15tcaVJzL3cVx4tm0ndkudpUWjfXxYDN/NO8vyOyqVe5u91jLgjRx4DwCm+e8ESbAz5BYAiqhGnLTaZwPZWOJCJqLYHAL9j3ftORhgdaQAs8dF+E+xLxDDu4r4fxSAWU43U8F2AwBj4VMhowTiWO2fA6A4BpJrDoE+AFvRJnTyK5k79F3jubFEnQHACbV5R0givW+QlYCqtZPGsLoiguwnUPXbAah9ZvcE4AGqZ1am1aA5AMY9A5tpBAYArI3DTF1BnFnzQAAGzvhl7ZeQBh91mycKSo/QK2D43QDE4L4AFLDNb0joXDMATOUNTnNgAEDLRQr5gRf6sSJY8kTk6pB1OnX1cCdSqgh0Gkj8bgCaasY76oDaatMaWMrzOw3ANGlMIjAEoHGCkziOohZ/mBFySdm0AmbE/pS2XOBRbbiH0O8GoInW3s8KNi6wKxCmYdUiAI4JrSkEhgCsNSMbh0v00eZRAGTpm8oIvZwn2b1vPvzLAWjSVVYDUMJDwgrRvcRh4vlPAXDccTGBwBCAukGSSGoG+GF+QDni1Guuco7/3oK+7TjtO/+HARgmYNfGVETecfktOuApfvovCoCgTOLpdTw8+DmReD/uD4wAyAHdQpTIJzpA9DACxCNv1HnGueLhT+wYhMxTCHHbbeSXMWAFPtwtNM6SdQCUnFSxC+wF7CUgHyMAxOm1g6ab+QQCkytKsmKgLIFMJOmp53fm+8v9TWA09nLMaIFB3xz81pr9wpPCuuVxDMAujiF/PADDyAsxYNt5T+kmNwyJszBs/3E0GrkfyQx/nRZz2RnlECazRIsHGcEB2RZ+z0KYHY4rALpIneJU+M0UZZIBwb/BgChyRmiB67lNqZ3YtgaAHOqmFzLS6tY1wIdzluaSlQCgkpRHOtN08HYBvPNQtZtwPQbpYhi0hXSVz4tQ162FAOyjdGR4Lg8AIL0DALdR+lcAwNZbvAKARAdA1QOKlMCXyS/LdHEAkTMrWV0g82jJZibqfKV7ZwVKHvSf8/AjJnJigv3tS/cDnYbY/g5kzHFAHgjA7R0ASHEKgNvINlwFQP2VpoYh2Xz8hFZATcIpcv+0VCVjaZTJ7SLwbRSBtS85ejc59O0002v2nwWgovljQUMASrh1jkpACoBxfXBUx6wfPt75Ldhmy0CSBc03rHHfXrRVUhdveF1XJ0uzs+SvT/8Y1pcAgcq0kCMcfQxyiGT3hLxLF4D/wwCMPcUKgF4HqqbViQIAbkcva4/I6eIh6hQWRDQT6v4evGzuuLajhBa8FQJyzwsIZSX3t/IfAQH+jEbmFxjgI0hOnCDhA0f9A/Wtam3IRAD8Gh0wCUB4cdY8AJVyBbcRAEWE6pABu4xt52V/RVVndXJO9N+UWsVjfUtMeXy/CoAyML92Wi2QXNMMhBJdO4uc8Fe+UihDFLzbsPX7BXZJkZxKEWRLDO3U6+io/32PFTxfEwKyGNAHsgIgd/zQXS9xIEf6EnT72Tb+FnhLd8TemTxb4cVr/0onPb5fBcBgf4fOHNDqp5CUdNuWHpJVc9dPwfxZZ8elP0iHwsRgCuQ/CDoGQBPR/BY/YAhA846oozasaRfzC+dGAXjwAcgGBR33WJkBoJ595Ywq39DScKGNXZz87062I/06BvQTLiwJQabfGVhQLDKvd9wvGUxroq6niPmFvEoMAyTDbfnIYkDRJBkQfT0DbjVYpGfWis0aADraR0+AswCMA06Y6sxJo9/4sYDJtKevAqCfomcb6JsWrXCHlxRvjMBPSd9C+A5jz+esgO5muejJ7gEEo5raMQbUEaKfAUCAxuPeSwA4ROLwAJVZAKZCHriERhR5WuABXMH3A9B/UiYqezbcJxLW8bLFiXrOzNsc2oRzOWFgSxgIAqeKtAkeOByMEL++MmUFfxEAIzsO3gWAvQdUsftlDIBdrNXb0hijYmf0GzeqNL2jXwZA5rwvGFa1rJKpd3TVXGG/V4vO3KsSkTaPBBUEGxcRtb+/ovcPSd8PqD393wRAEKUTyTsBEMdQyXHDJE8uFAsSx7MjppsRfRkAwWnIEysAOQVwGLZ3KQFCWNAwbQ/JdPDQG6Rj0pyH4HXgvSLv7ZvQvBZBcuX3ABCGiUviXgDUqVJbHLz8Ib3xfeykhVWy+4OSP4j1Go1S6Tn7fgBeLkNZEtVtEiDNyuZaHiFl4+MnZJhvj538mMhMOnWqDvV3/XUlAPdyn7FGc+CaMFmxLZh1e/qzcg0ALZga4qktWaG4kR66SgMf3gxYT84Y+DoG5J0r0IwLOeLNuqTl2PtSBPCbqO3WZ3ZZ0MuRPAdIuxK7755opmYj4Dd0RojD6QS8r/MDRgCs9tx4k8FCAMLTSD6z0gTb5DadVg9hHgDx2qaeuzkA1voaWqsJ6xrNkcKLRp5XOGDooNWBtPQNIFjgVILg+RpATVlvnIduaCnXATC3N0w5JqrjhCKbWVEP+9DAGxgQ1sFjzUlGGGsjvvmEiOgnh8EeNUJJd5gDwHWvJgdzANSzGZS+Rcydk7EWkiszE04W14IWunRyXoPUET/YGO9ZkCQeROM0nIHf6A2/WcTmABAAvEaGjOqKcdvVKMV4JhbcwpR4RRvqlUqmdWZmw9RjJR2f0LRDwG2r8dEkEJ8B92vauiM+y4Cw/VU7wGkEf5tmVaWwokCLvhz42aiL/t+RRunbBPgVmQJj32g5tophDgBXtkkdBWDcvobCak0yAg8YcOypZgGwGt1Maq8YSq1u4dEhgz4DXtcFyecA+ApNcbD2j4tRD+f6YZrcbBk/LdCyZDX21CeqVBX++hSteQDK0a1ZBUBYR5UGGIA1DBiQ+ohalQlAjkbbIBZGJdWEU5QNyBPBDwIg1D24rA5IgyILT6nmK3um1gAtHgsEGUo8lD1oRnnLGdidJYIlpHcEYJ0oHwsniE8BUB32s3Mmi5SH2V9KNOQlpI77gbDJMcfQ9MTn4DsB6CisBR/dlpWnB1O3tyKjC44Y6EcwCOwsAOrXjgaNtYJ3T8Stt8amgpOE4GCByJgB4BKdtMwF4KVuRt9YfUqddsJIXj7gAwEICQPv9nJGp48U8CdM79KPqil9khB0p2N70N1NMW+EJFZgR+zWGPsuStC3A3CqtWJjlf4q1w/oAJDM6lOc8GUMyPTgEQxHC+EFRD9h5h+wLeyUzvBCtSw6vOiumwD43vwgbDICQHgKiyDDPuOJDpVwjORj/Bx+AAOqN2OCAo/BOJMFDMjmAkNLRXDbpqgcv+VVlSsS3bRkMmgXXsk1tK+1eA1aVq6I2phu4NmBOJF4Z31x/S0AnKBARTdYh0LYQgAq5XEHAYKTqpJJCFsAQKi5T8DRpyB+1ARhqPQWhLSTaY/8zuu3rBsASJyGX3is2mfaCobkJX+R/Ko4eR01K0vtGaeTzJICoGmXcJwgQanjA33v1DwAGiWaxq1zcyqnphwwuxtXsTJHoCbLZ0neAEBXBRxmqFE/2X19j+jVfsAZQ1i7PKbTMEYAKExiFxmLPZhQ2jIAcusLpKM+jjUEmD35Ij96vaoWsH40AF0JLAb9U8D6NR+AZIFmwhcAcLwZijIs6cxIolEAmvEMqdwo2GWyLALghTdiGNiZMpi+CYBfOWl1PQBdr/bO0eb89PFvYkCFgzEhTPVRdLRvDQCNJhplB2n6E5vFADSaKh2dIrnSArk/ANnKcugHA/B9wJyuG6LDDzVfBsDIMK/S6RuLOiOMR30afeHHiS9PAlCToB/Dg04i3xIAQuuThOLuQbi7imA5VnB+HxpdDUC3/GKnDJLhORZuy7nvYsBuKltyZ0vzzsB1ANyIAro+QS+PeQkAK/0ZOuaEphDBtQD0Zww6K/SZpRf1Ukp+LgBdznOjIhhe4AIA1qCMF0sZCcsACMlIgMt6YhgnKwFoEyllTH/LAAj1ZYhmRFc9PGJoFwl9tnmv/Y8EoEuAJgnQAWThzRFa3h1LQStZh7iwOREHIxxILfWcVgPQ9IdHrWv6iDerAGh0BDzig6Hwlk6BVdKKIyhE0qjB9w8A0Im72LoNpweYcKpo1gFwMwLAZdMy4UiQ37p+2SgC5wFoSJC/gqiMIx+Atij4mCbA2/A3yhkhkrKsHAhYpvvwKwHoSFzRWLidh39ysmrvC8CF7dnqa9oSKacpMAeApsgkrmLLB+BJf2KEAB+Cv7UAzI+U4K8DoLxCR+9GkfN3EMI5RghrmjDnMQlA5tdAbfP6A4oRChTHMQRmAVDDJCbYbACaQcM4TYAl4I/olb8agDwntkzQVwLQ+dbAdk7jzb4JU7YVXGYAUOntXnp4zvOrkrWOO0M/Y4GGTACGAwsWAlD7AGFqehED6CFDgx/LgPArGZAMkgM7Pe2cOad9rCtrTEN9rgK38WgzFOj0vs16MOpTpUgbwmOh1lwATtTwzgHwYg7HYgIUJXjUtK7fA8Da7THgeguc5kBdEmseA0ZdhcYAuCI7VDtKSpwOh6DXbwIggjTpA0x2SXsCMDjVIGpFkADtaGk7i8A7A3BgQMKyN0pG/SeUAqhPONIg/vEAPGnVFEd5WBSCB7au/jUAdL6yC9OTSIjAewNwxWKsQabbo19NzRIVLF8EQGjqk4M0GKrbeKGGsV8KQA7r1EJ1CMAaJD8IB/yVTghuwlLd6Rr7HwBAhz29mAUdywt8OACJDQY2vmf70etnMiCIGXBOo3LwlzDXiK8HfjsAJSiORybbNgiMhnaI/HoAmkQ24VggLfwgJOh4PD5qYuY3A7AZSaphYU3I2Odg4DDBu7S74DQ4Pmgjvx2A7VRoIajtFNC7jo0JIOC1Xg7A8JEtAyBsLZCd69KGRUltO+gV3dj+AQCShC9iYXGwnibvBreKMZfef6DvzFN8vwh2L0BoPctJncLppKdZAHpdJEUJlwGQWQu8u2MM/aaoFOzBrwTgrUliGoCD/YHhuIiHHc9giL4dgNyvkBOUddiw5ZCJQVWzAHRDwDozZhEApTlS0d0wVcfyuIGA0xOAYwDs+7FROIWQNkdJO6m/EYCt5URCLZd2DbtaZ2CU9+Q3J6qMDXZ2Wx6hPgdQV4nsuQPAmpiPg3oUgMTLg94F8NMlDUYdrOETgDEAFRHgjW04LGduFpSm0dJaAObkfE9v0aX934WzKNpQuJYw3PMpBuyfsMuAl/YVO5oH4TJgt8YAKG0UkNmj7aJQdambwUDLor8KgAW+gw4ILjoRv8xw11/MJa32Axb3eCCSmEtIVMjhXetHt/44MgHAPhBPXADqDFxYlm2lsAOfRL2/B0BTqyI6AbyLr8z2+4ZMHZj/IgCa4TE3rcaKqho0EOTIRygNSa4EIC3nV9FMDOi1/kjTPPHCYw8K/mz5rTBFHqdRACaXBqA9t9X48iss7ARy2r4SOJ3NUL8bdvVKG36xH3CxUg8qmHlJ6wGYxckTo5brNjkIQ1mn9Q/cqoFGV/W7TOQBEMCqc0PlA9BMrsStfBaxY+KgMdH2dRB3zgr8ZgBCdjnfsno/oITL7joHgDDPzRuxxTgAgexsSg54NX50an0xaAUAh5UNQGIVwNFmWBvIz8MoyuK+4aD4PbwzAMW3FRffDED10FeopVMM2L3tJqxwnihrKPVz84/0MAAyrYnjcpztzVSURwEQxnOt7pn5cP0iEbw0E8BPOh8DIFnTPHgCgOBkH0fb3WLCCYDfik3QsO1RALSKBh3HXzsNsBXByh55veteXExn4r4lKMZ3BaDue+zWbf0QAIJ3LyN5dGB1rZvGL1oCT/VLsxEP2jYKravxXcdG439zjvUgAFoGwhPabheE46aBUnP3zFTu9ESGEN7Z0wh1/6xhSioDNfghq8kaXw+Wz+KYKp3Vs6ph37PvtZpoF2BxMZjCjwFgG8Ycx59w6/T0td9/A+VD213+pF5y7spjYnhvwtYOtWHOzWlkDpE1N3E79fuBAISViZC/jasa7lg8JRv55RGb8eq8v3c/gTrksODPQaAc1pRSUy9nwBmJwz1ldNz2xG+iHbT4OABaNXT8Ldh8eBoZ5+C5ftdCU9FIDc5P2PZEqsAHFlNLBgAUUx/HptOKPfsOT1lU8LlJv3rJCWLDmsU+exf7Quqd/7SdzUSn8Fc98ff7OfBjFADic2MHFz3ozEU68jbg7/rE3x+XwsIgsDWbl+me05/mGn+iPcNIPGZ6gvZz/ZY1mxREH9EVDU3YP10vjif+/goHsmksfEJw57pIuJ/DXwHIc2f+yqrm8m7wnRH4CmZygTF5YDH6c/24dQawnEPgHVcD4G5O6D/x96eWMgqmRaJo7geJdHMuT/37sRGs53rQ4nwGFfh4r8pINnMm+qhWbM/1LdyWu5cEzFjDxV0isRCBBs+IX3Lve3uu70IfQWZY+n1IkILbTZFowHZ4jiZX/EqkdAL0DNX95GUH2oLxQeEXRjq5iojUzNPQaVPkxg0n0xhXxq8Sv3CYm41GR2ijjgH/boKC/OkvX2XaW+ADPSZ36RLOfUZMZ2sxOqkI3iKGIZj092z1nAcpwxS0KpWwd1WvyhYL3drmJ8SLa26WGYeVqM3m7e/thxYcz0ix/+5GSBPzZLt5yIwk32j53v6ZYiA9b9t+X5JXlyO6PCdMoyH33bhvejAp4xjbLkVm+5tS3ENDSzh7JrRMoYUvkByZq2pbEqmragwGYXSorngd75Z3iOUk+x4g+Yn2uO5IemIQQvV/dvnuq+kYQ4bSzmkwEMz4g5VBHxY+BI4aXYaBCBXjStp1NSHTUfRp+FdMvydhWw5c6qJrX9xc3NgNhctyFmD+G3TJHZI6DDiVqCii0KU3/zQD0az7rKIsVrARrfiwzDv7Co5vo0FVeDhAI6OOBYmyzmvAxAt4N/N5jtEhdB+p8kV3EmWAHZ2aCbfBhde2WsMvRF+LA9N54FXrhbAp03DRjdPW6V0j9LctDa1XtvYthXzTKtBlQX/4O13Uucj0JiaZr4z6qJytAnAq6w4GF41fPR803MVz7R2cgVul+gkHBbK6D0Kh10Yc9R+5dSZVfGXOPQihn+8e7DYoka7f4K0GEAJb/Aaa4HkagQnUfZ3UGYYQqq6spAVhxcG0fx4MWGLg5yAKb19e2qwohS6kb+dU2Re7/DiIhC3yvljtUuIikXiKXyz4QGX+kK3SIASmL1t1ScJ9NRzv4BVYzYIQotMJmwXtEmp180L3Ic66ajo1WtsDoB5fv1Wf3m71vKkAgOWL2gT7CfHyMXduA0D7ae2S31Dk8/8efJoKNKOk4Ow6Pgm3GwbP8QMZ+qsogNIN4u4NnxzeUK+XAiD3AMi4HnBPkPqU2qMXJ4avX5CBeXoAnrkDv65BZasPWjqpzAvFzxVyBExJ9bRJSmmp/r5K64eFbg7THQYh0r0RqGoV2729VytzQcvCwm1W3n3lHdgeXO2LtqB7oKytghvfwquM3hk61s8/AUDDEwYREQDNZxSF6Kc612zXArDZmE/r7QREu78Czjnudju622w+1f93BcgqVIVIPalEgzUFwG23DkwD0CPoE2D9r1+kYUDkv10ftmmRegY+AKkCnWRSkr36Xddv7SIdSdj3YN63k/iMD8YhfCgrtH+cn4MDjqqB1uxYs/ai9mjvvRfG3Oj7P50AFQqMSL4qjVVLj+zMLQTUm/omNjkmO9QfxZkAlFr7U58/qoNHjAyhOo5Ogyw2u3nvuWbArdYAX4wI3hxeXhKDUm2vv+yH/R+yDVcAqdPwNBtxVR8iidzOxjpcjQj2f63TSQ0VNJsAgIqaZX9DhbkBXWTXWcbK6oS97LMW9NXqjVFp+4Wcqq4fFqmU2KuWm4bSfFF2h6mqE7mETssjbocydN4CaH0C/SgoM48TGiOkKcC+7XANqJIcudXqSstWEiQGIAfxOHOorYlcAKqXXT1lTVxb4QNQ/fpT86Kp21YKj+KQ8zwAGSGsBaDpycT8IzZKNGgO1IZjjpGknuNR9/7RkK2C3WOtSBQFNE3T8AG8e6J718pn9fpvtX7kKrGSN0IpQ5Tqto5nD4AD3UpbTktAb4canSq6ElKZ9lmjHagu5OYyUSTlmMGp58RpkeMzrjztnYkmeFAFpaOEIO+JzV4DjAFYqUcba9+cZDOguZSWq1kIQKXN9muTA0DciuBWB0TMlUMV2woDF6PN6meS4YmBBiGmCUoUrlAQokRSM/det0Kg7uNkOnOOKh1M9/ZVTwnjT8+KugBdVYu1Pwz4DFjW/Sstmd6oQfkzPHOGqXt/w7YdX8xh6GqlybH8KMtlBeIQMPWlo03cvyYdEfrdU0prKg3h4kJwZxvhXdigw6BFAGQMJAG4iQF4IvkMaO3SFABXhIsUA+rDHdI6oILBlrY4Kuh2FoDqsWuPhnZfmGJv6jta9urJl/ovpT5TJII16N6sTleAWATbMxzVvypgHD0AHrwekHxQ/rTL1wloQFLt99X+1HaOUzpMEU0shOxq9bFWlJTL8qWkOrcwYsh6lnnCs8yGLOj/1AWpS7r4jqNWEKs3H7iD3cl7iRl4XfI2wJQIfnlBkbrL8gFozdJDQgSrm6f+milx0AxojwcsACtZh4hqG35oZzRs5l450/5Ga9A6Ek83wEOGcb1QizADQBTB3VgZ8NACMNhZ4lRRfn44ADwoIms6iCn4HFvpq3bLrbZwmi+cbPfoQlMg90Mt+n+tRYppsy72xdrWp9jEPCr/mZ7M7ROrVQxBOB+C3R1oT2Snu8I9wGKRKzoJwLGtywQgMMOpC2WRVvtt4G2rtDpu8Wm9J3gGgBf1srWrQegjbJSnuEUrYlqab/QfGzF7fW+FceafkDbtYFF45z/rds20VCQpmncNQBg8g8L8Wp1UbYJmwMYHINWeJ6GM5LKAvhuG6mD+uzT5Bm/U0eP/C9yylG6tP0b3XjkBbU8zP3LQzUzA1ojji3vWn638bknYnMyPKkLtLL9YpDVKsByMkDm5KoCOU4segmAvz+9GKR2Z7bQQgAjxlQD0mQm8bH1Chq3f+NjK6WLZAChlNoUidmeJVD1Hu27Uy6VpkAf0U91f9VQ6FP5a6F9TpYheY0e0UVY1VUOCXrYOAKHxDHauDDE4XqTT4YcNJqb5pfrdiRfYjdyde9wIaszTtSlQF3k1041tmNfACzqKcO/w77MhhBt45iYwBjsjvvdfKhNtYdfUMQaswXoAEhPCMSxHR1t54002kAfXnGaWkdvbZnphOAjmaIdpNJqFjq05/fbWhPz8rt1Ib63XNYrm1YpVX0CJKruxTjFZg3WMlbCi6z1g4KcwdK6c5+YPK9S7w6EYSF/2poswai/575b2VF0Muj8e6y9EKXLcH/pjYDq8CZzV9kn1fqSyIMfSWO0XAL5RBKtXQ9ujAis5sjUNdXy3JPmvDKfPzlES8fMwA0piO9OJrxXpVKI53+dLlFZXe3dZqqNQ2+CPKhMFBvilzq93sf7AyIf2cDMiydZxdb8Gra+s2KuNfdGK8ag9KIavEFy1zoL6d+M4wKW6vbsTvFQ9BPUL0Trz9DMy+A6rlfr7IcaHY5J4mNfNQxQLC0hGAJjq65QJQNO+tewoAoclpcYF3PPZfCzYPHidl4Q3bE8Iike24I3162yMIjingNQAvZilHqf5M/DEaDPD6zIVTPQEfs+qQARXOnzc7UDpxIL1Y+mGsQpspPEJavKDagOhbRNo8CfoRz+01Ux+ghR33ftaxd/C706JSTYXQrT5hfZ6FQAx6AYmWe4rDcxEY1hSAquk8pOBICwpHsT0QudkEoDKCMIyOlK2CJZ6dgrXHva98WagEIAv/U9aY5gF4IkbLd5YpxxFAKQ6oNIukd9UeFRmM+ZMSYzdocOkRLZNANCEj20mUONYKKRmJpq629mAv9o7YgSgwNgm+BCDLqsotnUaB2UUX0BRtNMkWqqiENw17VNb1dDiqy3AvNhgTdcmRNjoYmHkmWYAeFaft95zxJjJ1mHdnRHAlorgTZ4fMJsBOdRzxuwPbwdF26cbAdh6jkUy0rE3YVYnyDwLwFr7tZR9Ltj+pP42lQtEk9kwDoaTABzRjGV/ZdeKGRNAR3vFzubp2xbu2qWBqq4HuOMhgN3wN21y3jvr2EKwS7IeMvDbKZ4NQCYYrMSZOHacrl8Gux/ESdtFl6V1Kpr4cYoBSSTLNQAPGRm4J9PjnyoBRw966ruEkQjunYBZANwZoWhG94gtDRKuNADxcLxcBtTBnpG8Ie5Oyo4B2M/HBnUagI7FNERRCsMWBGnmlCaybyUy7Xr0ShNjATaJmthaIas/S2Krh0SbArB/QNJtXbWecZ3VQtoU7RaArUMQmotqW6p36oBVJpQpruUCInruOzgel1VLJdt4pnt7ZjaNrnvbHYtITSdg5zXyzgDgJ7bD4k0qBo4A+OkdLxuAE/mAg1MaTzAgSjLgLn012Bs4Dls/sta6qt660eNoLt2Dxq7BJTuCguDOs4kG0/E6nKP17LSvQe+G1Hq4GEjKfl7g0kPFG1Y31YBvX7AhCBGnB7dDuXBhH3T7GZuxFn2BB8fLzFfS87zmPsv18LDJ9yxqQh5dTS8+hPbCNOqkzVHp7KKzO3sXAQI6k+69x/52mKzKO5G86+3URyzSsqxS+exVQTNAbEjfNiTde/ngvnMSKqOqPDbQ3BrWL9XCup00A2Z/NGmGDL6tuzwwzo3uS/gV/KsrrMCwhRfMs74/ehML8a2O5hl5/B9v8yyO4LE9ql47oHcuZ+kPi9VhIOGEZS4oUbVH4c9o5AEvEkk5JsiXDYKAcPIVuLiHy7/514xTy9nEhumrcQL4OvwrHJ+udcT47p9DL4850EHK+mKJqROND++RIdu2SApF+9YjrTmvPS3hpQdAGyj26ll04OEEnusnMqDZq1IZSrvSqINXXzhYyDmmoW2Fqq1fkxlPwVe06JNtqwSlaXNbF1IMzkyTHxnEFYysg8cXam5M+wafjYx+6jq7+kOUhaeNEAGvHb0wqz2zNvah9bIv2dm+WczOAp4PdZP1HqZyPTyhw8/Pff7BS7J9pRdLJp8aV/sgZSvj+bDBMAzv1Qwrxxax6iq1XQ6I67/Q/5qQsJBJc1/kyX7/7qpr64juqBHaxCt8awOEVQjsjZ5KdgogtKkSzb3bAz/XT1knY3IWpgVQXZuuHD0Q+H9feSWvJujResmvFavrmlWm0EpR9JPkfi8CnWCw4ZxdT39f3fCnahMThXM1NhRcPxuw/drFufG3aAdhw1iX9HwE39GgnvWOS1wcWdNmMeZVfD3Xv+upibzVJQTo9VuupRqSTX+aj/m5HsiB7qab8PG3+TV0RYjjOxf6ap4GyG9HoO3Ht8V4S3cNAN87HqZNNtV9iajJvHrqf//s+h/i3vW0Wl+tcwAAAABJRU5ErkJggg==">
+      <div class="brand-text">
+        <h1>내신대비 주간보고서</h1>
+        <p>중등부 · 학부모 발송용 리포트</p>
+      </div>
+    </div>
+
+    <div class="side-actions">
+      <button class="btn btn-primary btn-block" id="btnNewStudent">+ 새 학생 리포트</button>
+      <button class="btn btn-sm btn-block" id="btnManage">🗂 리포트 관리</button>
+    </div>
+
+    <div class="side-search">
+      <span aria-hidden="true">🔍</span>
+      <input type="text" id="searchInput" placeholder="학생 이름·학교·시험명 검색">
+    </div>
+
+    <ul class="side-list" id="studentList"></ul>
+
+    <div class="sidebar-foot">
+      <details>
+        <summary>학원 기본값 설정</summary>
+        <div class="grid" style="margin-top:10px; gap:8px;">
+          <div class="field">
+            <label>학원명 (리포트 상단 표기)</label>
+            <input type="text" id="cfgAcademy" placeholder="예: OOO수학학원">
+          </div>
+          <div class="field">
+            <label>기본 담당 강사</label>
+            <input type="text" id="cfgTeacher" placeholder="예: 홍재화T">
+          </div>
+        </div>
+      </details>
+      <div class="user-card" id="userCard">
+        <div class="user-top" id="userTop"></div>
+        <div class="user-actions">
+          <button class="btn btn-ghost btn-sm" id="btnLogout" style="flex:1">로그아웃</button>
+          <button class="btn btn-sm admin-only" id="btnAccessManage" style="flex:1">사용자 관리</button>
+        </div>
+      </div>
+      <div class="sync-badge local" id="syncBadge"></div>
+      <button class="btn btn-ghost btn-sm btn-block" id="btnSharedSetup">🔗 공유 연결 설정</button>
+      <button class="btn btn-ghost btn-sm btn-block" id="btnExportAll">📦 전체 백업(JSON) 내보내기</button>
+      <label class="btn btn-ghost btn-sm btn-block" style="cursor:pointer;">
+        ➕ 백업 병합 불러오기
+        <input type="file" id="mergeFile" accept="application/json" style="display:none;">
+      </label>
+      <label class="btn btn-ghost btn-sm btn-block" style="cursor:pointer;">
+        📂 백업으로 전체 교체
+        <input type="file" id="importFile" accept="application/json" style="display:none;">
+      </label>
+    </div>
+  </aside>
+
+  <!-- ===================== MAIN ===================== -->
+  <main class="main" id="mainArea"></main>
+</div>
+
+<div class="modal-veil" id="manageVeil">
+  <div class="modal manage-modal">
+    <div class="modal-bar">
+      <span class="modal-bar-title">🗂 리포트 관리</span>
+      <div style="display:flex; gap:8px; align-items:center; flex-wrap:wrap;">
+        <div class="side-search" style="margin:0; min-width:190px;">
+          <span aria-hidden="true">🔍</span>
+          <input type="text" id="manageSearch" placeholder="학생·학교·시험명 검색">
+        </div>
+        <button class="btn btn-sm btn-danger admin-only" id="btnBulkDelete">선택 삭제</button>
+        <button class="btn btn-sm btn-ghost" id="btnCloseManage">닫기 ✕</button>
+      </div>
+    </div>
+    <div class="manage-body" id="manageBody"></div>
+  </div>
+</div>
+
+<div class="modal-veil" id="previewVeil">
+  <div class="modal">
+    <div class="modal-bar print-hide">
+      <span class="modal-bar-title">학부모 발송본 (A4 1장)</span>
+      <div style="display:flex; gap:8px; flex-wrap:wrap;">
+        <button class="btn btn-sm btn-primary" id="btnCopyImage">📋 이미지 복사</button>
+        <button class="btn btn-sm" id="btnSaveImage">🖼 이미지 저장</button>
+        <button class="btn btn-sm" id="btnPrintPreview">🖨 인쇄/PDF</button>
+        <button class="btn btn-sm" id="btnDownloadFromPreview">⬇ HTML 저장</button>
+        <button class="btn btn-sm btn-ghost" id="btnClosePreview">닫기 ✕</button>
+      </div>
+    </div>
+    <div class="report-stage" id="reportStage">
+      <div class="report-scaler" id="reportScaler">
+        <div class="report-shadow" id="reportMount"></div>
+      </div>
+    </div>
+  </div>
+</div>
+
+
+<!-- ===================== FIREBASE LOGIN ===================== -->
+<div class="auth-veil" id="authVeil">
+  <div class="auth-card">
+    <img id="authLogo" alt="수학도서관">
+    <h2>주간보고서 공유 로그인</h2>
+    <div class="auth-desc">허용된 수학도서관 선생님만 같은 학생 리포트 데이터에 접속할 수 있습니다. 모든 변경 내용은 Firestore에 실시간으로 모입니다.</div>
+    <div class="auth-status" id="authStatus">Firebase 연결을 확인하고 있습니다…</div>
+    <button class="btn btn-primary btn-block" id="btnGoogleLogin">Google 계정으로 로그인</button>
+    <div class="auth-init" id="authInitBox">
+      <strong>최초 관리자 설정</strong>
+      <div style="font-size:12px;line-height:1.55;margin-bottom:9px;">아직 공유 공간의 관리자가 없습니다. 처음 사용하는 원장/관리자 계정이라면 아래 버튼을 눌러 이 계정을 최초 관리자로 등록하세요.</div>
+      <button class="btn btn-primary btn-block" id="btnInitWorkspace">이 계정을 최초 관리자로 등록</button>
+    </div>
+    <button class="btn btn-block" id="btnLocalMode" style="margin-top:8px;">이 기기에서만 사용하기 (로그인 없이)</button>
+    <div class="auth-foot" id="authFoot">※ 여러 선생님이 함께 쓰려면 인터넷 주소(https)에 올린 뒤 그 주소로 접속해주세요.</div>
+  </div>
+</div>
+
+<!-- ===================== ACCESS MANAGEMENT ===================== -->
+<div class="modal-veil" id="accessVeil">
+  <div class="modal access-modal">
+    <div class="modal-bar">
+      <div class="modal-bar-title">🔐 공유 사용자 관리</div>
+      <button class="btn btn-sm btn-ghost" id="btnCloseAccess">닫기 ✕</button>
+    </div>
+    <div class="access-body">
+      <div class="access-help">한 줄에 Google 이메일 주소 하나씩 입력하세요. <b>허용 사용자</b>는 학생 리포트 추가·수정·조회가 가능하고, <b>관리자</b>는 사용자 관리와 학생 리포트 삭제까지 가능합니다. 관리자 이메일은 반드시 허용 사용자 목록에도 포함되어야 합니다.</div>
+      <div class="access-grid">
+        <div class="field">
+          <label>허용 사용자 이메일</label>
+          <textarea id="allowedEmails" placeholder="teacher1@gmail.com&#10;teacher2@gmail.com"></textarea>
+        </div>
+        <div class="field">
+          <label>관리자 이메일</label>
+          <textarea id="adminEmails" placeholder="director@gmail.com"></textarea>
+        </div>
+      </div>
+      <div class="access-actions">
+        <button class="btn" id="btnReloadAccess">현재 설정 다시 불러오기</button>
+        <button class="btn btn-primary" id="btnSaveAccess">사용자 설정 저장</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div class="toast" id="toast"></div>
+
+<!-- ===================================================================
+     공유 설정 (Firebase)
+     ───────────────────────────────────────────────────────────────
+     아래 6개 값을 채우면, 이 파일을 받은 선생님들이 같은 데이터를
+     함께 쓰고 모든 입력이 한 곳(Firestore)에 모입니다.
+     값을 비워두면 "이 기기에만 저장"되는 로컬 모드로 동작합니다.
+     (설정값 얻는 방법은 함께 드린 '공유 설정 안내' 문서를 참고하세요)
+     =================================================================== -->
+<script>
+window.MATHLIB_FIREBASE_CONFIG = {
+  apiKey:            "AIzaSyDM2dCFlxEdbKvrmhJC_ipBkD31Nxa1FDE",
+  authDomain:        "mathlibrary-bd75b.firebaseapp.com",
+  projectId:         "mathlibrary-bd75b",
+  storageBucket:     "mathlibrary-bd75b.firebasestorage.app",
+  messagingSenderId: "182367021115",
+  appId:             "1:182367021115:web:d39b4084b3c7362bb7541e"
+};
+</script>
+<script>
+/* 공유 설정값이 채워져 있을 때만 공유 서버(Firebase) 라이브러리를 불러옵니다.
+   설정이 비어 있으면 아무것도 불러오지 않고 이 기기 저장 모드로 바로 시작합니다. */
+(function(){
+  var c = window.MATHLIB_FIREBASE_CONFIG || {};
+  var ready = !!(c.apiKey && c.projectId && c.authDomain
+    && String(c.apiKey).indexOf("여기에") === -1 && String(c.projectId).indexOf("여기에") === -1);
+  window.__MATHLIB_SHARED_READY = ready;
+  if(!ready) return;
+  var base = "https://www.gstatic.com/firebasejs/12.18.0/";
+  ["firebase-app-compat.js","firebase-auth-compat.js","firebase-firestore-compat.js"].forEach(function(f){
+    document.write('<script src="' + base + f + '"><\/script>');
+  });
+})();
+</script>
+<script>
+(function(){
+"use strict";
+
+/* ===== 수학도서관 로고 (data URI, 완전 자체 포함) ===== */
+var LOGO_H = (document.getElementById("brandLogo") || {}).src || "";
+var LOGO_MARK = "data:image/png;base64,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";
+
+/* ============================================================
+   DATA MODEL
+   ============================================================ */
+var STORE_KEY = "wr_studio_v3";
+function clone(o){ return JSON.parse(JSON.stringify(o)); }
+
+/* ① 내신교재 구성요소 : 주차별 달성률(%) 직접 입력 */
+var BOOK_TEMPLATE = [
+  {group:"A",  name:"A1 교과서_천재(김동재,김화경)",     pct:[null,null,null,null]},
+  {group:"",   name:"A2 교과서_비상·미래앤·동아(강)",   pct:[null,null,null,null]},
+  {group:"B",  name:"중단원 스텝업(2·3·4레벨)",         pct:[null,null,null,null]},
+  {group:"C",  name:"기출문제 마스터",                  pct:[null,null,null,null]},
+  {group:"D",  name:"고난도 정복하기",                  pct:[null,null,null,null]}
+];
+/* ② 모의고사 교재 : 총 회차 + 주차별 진행 회차 → 누적 달성률 */
+var MOCKBOOK_TEMPLATE = [
+  {group:"모A", name:"모의고사 A형", total:10, w:[0,0,0,0]},
+  {group:"모B", name:"모의고사 B형", total:10, w:[0,0,0,0]},
+  {group:"모C", name:"모의고사 C형", total:10, w:[0,0,0,0]}
+];
+/* ③ 학습지 : 주차별 달성률(%) → 최종(평균) 달성률 */
+var WORKSHEET_TEMPLATE = [
+  {name:"학습지", pct:[null,null,null,null]}
+];
+/* ④ 추가모의고사 : 주차별 추가 / 완료 개수 → 선택 주차까지 누적 달성률 */
+var EXTRAEXAM_TEMPLATE = [
+  {name:"추가모의고사", add:[0,0,0,0], done:[0,0,0,0]}
+];
+function emptyComments(){
+  return {addItems:"", removeItems:"", notes:"", teacherMsg:"", directorMsg:""};
+}
+function mockRow(label, week){
+  return {week:clamp(parseInt(week||1,10),1,4), label:label||"", date:"", scope:"", score:"", note:""};
+}
+
+function newStudent(){
+  var cfg = state.settings;
+  return {
+    id: "s" + Date.now() + Math.random().toString(36).slice(2,7),
+    updatedAt: Date.now(),
+    meta:{
+      examName:"2026년 2학기 중간고사대비",
+      week: 1,
+      teacher: cfg.teacher || "",
+      name:"",
+      school:"",
+      grade:"중2",
+      examRound:"",
+      examScope:"",
+      lastScore:"",
+      weekPlan:["","","",""]
+    },
+    books: clone(BOOK_TEMPLATE),
+    mockBooks: clone(MOCKBOOK_TEMPLATE),
+    worksheets: clone(WORKSHEET_TEMPLATE),
+    extraExams: clone(EXTRAEXAM_TEMPLATE),
+    mocks: [mockRow("1주차",1), mockRow("2주차",2), mockRow("3주차",3), mockRow("4주차",4)],
+    weeklyComments:[emptyComments(), emptyComments(), emptyComments(), emptyComments()]
+  };
+}
+
+/* 이전 버전 데이터를 새 구조로 이관 */
+function migrateStudent(s){
+  if(!s || !s.meta) return s;
+  if(!Array.isArray(s.books)) s.books = clone(BOOK_TEMPLATE);
+  var movedMocks = [];
+  s.books = s.books.filter(function(r){
+    if(/^모/.test(r.group||"")){ movedMocks.push(r); return false; }
+    return true;
+  });
+  s.books.forEach(function(r){
+    if(!Array.isArray(r.pct)) r.pct = [null,null,null,null];
+    delete r.total; delete r.w;
+  });
+  if(!Array.isArray(s.mockBooks)){
+    s.mockBooks = movedMocks.length
+      ? movedMocks.map(function(r){ return {group:r.group, name:(r.name||"").replace(/\(10회\)/,"").trim(), total:10, w:[0,0,0,0]}; })
+      : clone(MOCKBOOK_TEMPLATE);
+  }
+  if(!Array.isArray(s.worksheets)) s.worksheets = clone(WORKSHEET_TEMPLATE);
+  if(!Array.isArray(s.extraExams)) s.extraExams = clone(EXTRAEXAM_TEMPLATE);
+  s.extraExams.forEach(function(r){
+    if((r.name||"").trim() === "추가기출") r.name = "추가모의고사";   // 이전 이름 자동 변경
+    if(!Array.isArray(r.add)) r.add=[0,0,0,0];
+    if(!Array.isArray(r.done)) r.done=[0,0,0,0];
+  });
+  if(!Array.isArray(s.mocks)) s.mocks = [];
+  s.mocks.forEach(function(m,i){
+    var wm = parseInt(m.week,10);
+    if(!(wm>=1 && wm<=4)){
+      var mt = String(m.label||"").match(/([1-4])\s*주/);
+      wm = mt ? parseInt(mt[1],10) : clamp(i+1,1,4);
+    }
+    m.week = clamp(wm,1,4);
+  });
+  if(!Array.isArray(s.weeklyComments)){
+    s.weeklyComments=[emptyComments(),emptyComments(),emptyComments(),emptyComments()];
+    if(s.comments){
+      var legacyWeek = clamp(parseInt(s.meta.week||1,10),1,4);
+      s.weeklyComments[legacyWeek-1] = Object.assign(emptyComments(), s.comments);
+    }
+  }
+  while(s.weeklyComments.length<4) s.weeklyComments.push(emptyComments());
+  s.weeklyComments = s.weeklyComments.slice(0,4).map(function(c){ return Object.assign(emptyComments(), c||{}); });
+  delete s.comments;
+  delete s.extra;
+  s.meta.week = clamp(parseInt(s.meta.week||1,10),1,4);
+  return s;
+}
+
+var state = loadState();
+function loadState(){
+  try{
+    var raw = localStorage.getItem(STORE_KEY);
+    if(raw){
+      var parsed = JSON.parse(raw);
+      if(parsed && parsed.students){
+        parsed.students.forEach(migrateStudent);
+        return parsed;
+      }
+    }
+  }catch(e){}
+  return {settings:{academy:"", teacher:""}, students:[], activeId:null};
+}
+function persist(){
+  try{ localStorage.setItem(STORE_KEY, JSON.stringify(cleanState(state))); }catch(e){}
+}
+
+/* 저장용 정리 : 화면 렌더링에 쓰인 임시 참조(_로 시작하는 키)는 빼고 순수 데이터만 남깁니다 */
+function cleanValue(v){
+  if(Array.isArray(v)) return v.map(cleanValue);
+  if(v && typeof v === "object"){
+    if(v.nodeType) return undefined;             // DOM 노드는 저장하지 않습니다
+    var out = {};
+    Object.keys(v).forEach(function(k){
+      if(k.charAt(0) === "_") return;
+      var cv = cleanValue(v[k]);
+      if(cv !== undefined) out[k] = cv;
+    });
+    return out;
+  }
+  return v;
+}
+function cleanStudent(s){ return cleanValue(s); }
+function cleanState(st){
+  return { settings: st.settings, activeId: st.activeId, students: (st.students||[]).map(cleanStudent) };
+}
+
+var activeTab = "info";
+
+/* 주차 선택은 사용자 화면 상태입니다. 다른 선생님의 화면 주차를 바꾸지 않습니다. */
+var WEEK_VIEW_KEY = "wr_week_view_v1";
+var weekViewState = (function(){
+  try{ return JSON.parse(localStorage.getItem(WEEK_VIEW_KEY)) || {}; }catch(e){ return {}; }
+})();
+function getSelectedWeek(s){
+  if(!s) return 1;
+  var w = parseInt(weekViewState[s.id],10);
+  if(!(w>=1 && w<=4)) w = clamp(parseInt((s.meta&&s.meta.week)||1,10),1,4);
+  return w;
+}
+function setSelectedWeek(s, w){
+  if(!s) return;
+  weekViewState[s.id] = clamp(parseInt(w||1,10),1,4);
+  try{ localStorage.setItem(WEEK_VIEW_KEY, JSON.stringify(weekViewState)); }catch(e){}
+  renderMain();
+}
+function touchWeek(s, w){
+  if(!s) return;
+  var ww = clamp(parseInt(w||getSelectedWeek(s),10),1,4);
+  s.meta.week = Math.max(clamp(parseInt(s.meta.week||1,10),1,4), ww);
+  touch(s);
+}
+function commentsForWeek(s, w){
+  if(!Array.isArray(s.weeklyComments)) migrateStudent(s);
+  return s.weeklyComments[clamp(parseInt(w||1,10),1,4)-1];
+}
+
+
+/* ============================================================
+   HELPERS
+   ============================================================ */
+function $(sel, root){ return (root||document).querySelector(sel); }
+function $all(sel, root){ return Array.prototype.slice.call((root||document).querySelectorAll(sel)); }
+function el(tag, attrs, children){
+  var node = document.createElement(tag);
+  attrs = attrs || {};
+  Object.keys(attrs).forEach(function(k){
+    var v = attrs[k];
+    if(v === null || v === undefined || v === false) return;   // 값이 없으면 속성을 만들지 않습니다
+    if(k === "class") node.className = v;
+    else if(k === "html") node.innerHTML = v;
+    else if(k.indexOf("on") === 0 && typeof v === "function") node.addEventListener(k.slice(2), v);
+    else if(k === "checked") node.checked = true;
+    else node.setAttribute(k, v);
+  });
+  (children||[]).forEach(function(c){ if(c) node.appendChild(typeof c === "string" ? document.createTextNode(c) : c); });
+  return node;
+}
+function escapeHtml(str){
+  return String(str==null?"":str).replace(/[&<>"']/g, function(c){
+    return {"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c];
+  });
+}
+function nl2br(str){ return escapeHtml(str).replace(/\n/g,"<br>"); }
+function fmtPct(x){ return Math.round(x*100) + "%"; }
+function clamp(x,a,b){ return Math.max(a, Math.min(b,x)); }
+function num(v){ var n = parseFloat(v); return isNaN(n) ? 0 : n; }
+
+function activeStudent(){
+  return state.students.find(function(s){ return s.id === state.activeId; }) || null;
+}
+function stampEditor(s){
+  if(!s) return;
+  s.updatedAt = Date.now();
+  if(currentUser){
+    s.updatedByEmail = currentUser.email || "";
+    s.updatedByName = currentUser.displayName || currentUser.email || "";
+  }
+}
+function touch(s){ stampEditor(s); persist(); showSavedPulse(); schedulePush(s); }
+
+var toastTimer;
+function toast(msg){
+  var t = $("#toast");
+  t.textContent = msg;
+  t.classList.add("show");
+  clearTimeout(toastTimer);
+  toastTimer = setTimeout(function(){ t.classList.remove("show"); }, 2200);
+}
+
+/* cumulative progress ratio at week index (0..3) - used for the 학습지/추가모의고사 table */
+function cumRatio(row, wi){
+  var total = num(row.total);
+  if(total <= 0) return null;
+  var done = 0;
+  for(var i=0;i<=wi;i++) done += num(row.w[i]);
+  return clamp(done/total, 0, 1.5);
+}
+function rowTotalsAcross(rows){
+  var total = rows.reduce(function(a,r){ return a + num(r.total); }, 0);
+  var byWeek = [0,0,0,0];
+  rows.forEach(function(r){ r.w.forEach(function(v,i){ byWeek[i]+=num(v); }); });
+  return {total:total, byWeek:byWeek};
+}
+
+/* weekly achievement (%) helpers - used for the 교재 구성요소 / 학습지 tables */
+function pctOr(v){ return (v==null || v==="") ? null : clamp(num(v),0,999); }
+function weeklyAverages(rows){
+  var out = [];
+  for(var i=0;i<4;i++){
+    var vals = rows.map(function(r){ return pctOr(r.pct[i]); }).filter(function(v){ return v!=null; });
+    out.push(vals.length ? (vals.reduce(function(a,b){return a+b;},0)/vals.length) : null);
+  }
+  return out;
+}
+/* 한 행의 최종(평균) 달성률 - 입력된 주차만 평균 */
+function rowFinalPct(row, upToWeek){
+  var lim = upToWeek==null ? 4 : clamp(parseInt(upToWeek,10),1,4);
+  var vals = (row.pct||[]).slice(0,lim).map(pctOr).filter(function(v){ return v!=null; });
+  if(!vals.length) return null;
+  return vals.reduce(function(a,b){return a+b;},0)/vals.length;
+}
+/* 여러 행의 전체 평균 달성률 - 선택 주차까지 누적 */
+function overallPct(rows, upToWeek){
+  var vals = (rows||[]).map(function(r){ return rowFinalPct(r, upToWeek); }).filter(function(v){ return v!=null; });
+  if(!vals.length) return null;
+  return vals.reduce(function(a,b){return a+b;},0)/vals.length;
+}
+
+/* 모의고사 교재 : 누적 진행 회차 / 총 회차 */
+function mockBookDone(row, upToWeek){
+  var n = 0, lim = upToWeek==null ? 4 : clamp(upToWeek,0,4);
+  for(var i=0;i<lim;i++) n += num(row.w[i]);
+  return n;
+}
+function mockBookRatio(row, upToWeek){
+  var total = num(row.total);
+  if(total <= 0) return null;
+  return clamp(mockBookDone(row, upToWeek)/total, 0, 1.5);
+}
+function mockBookTotals(rows, upToWeek){
+  var total = 0, done = 0;
+  (rows||[]).forEach(function(r){ total += num(r.total); done += mockBookDone(r, upToWeek); });
+  return {total:total, done:done, ratio: total>0 ? clamp(done/total,0,1.5) : null};
+}
+
+/* 추가모의고사 : 주차별 추가/완료 개수 → 선택 주차까지 누적 달성률 */
+function extraExamTotals(rows, upToWeek){
+  var lim = upToWeek==null ? 4 : clamp(parseInt(upToWeek,10),1,4);
+  var add = 0, done = 0, byWeek = [];
+  for(var i=0;i<4;i++){
+    var a = 0, d = 0;
+    (rows||[]).forEach(function(r){ a += num((r.add||[])[i]); d += num((r.done||[])[i]); });
+    byWeek.push({add:a, done:d});
+    if(i < lim){ add += a; done += d; }
+  }
+  return {add:add, done:done, byWeek:byWeek, ratio: add>0 ? clamp(done/add,0,1.5) : null};
+}
+function extraExamRowRatio(row, upToWeek){
+  var lim = upToWeek==null ? 4 : clamp(parseInt(upToWeek,10),1,4);
+  var a = (row.add||[]).slice(0,lim).reduce(function(x,y){ return x+num(y); },0);
+  var d = (row.done||[]).slice(0,lim).reduce(function(x,y){ return x+num(y); },0);
+  return a>0 ? clamp(d/a,0,1.5) : null;
+}
+
+/* cross-student 모의고사 평균 (같은 시험대비명 + 같은 회차명 기준) */
+function mockStats(examName, label){
+  var lab = (label||"").trim();
+  if(!lab) return {avg:null, count:0};
+  var scores = [];
+  state.students.forEach(function(st){
+    if((st.meta.examName||"") !== (examName||"")) return;
+    (st.mocks||[]).forEach(function(m){
+      if((m.label||"").trim() !== lab) return;
+      var n = parseFloat(m.score);
+      if(!isNaN(n)) scores.push(n);
+    });
+  });
+  if(!scores.length) return {avg:null, count:0};
+  return {avg: scores.reduce(function(a,b){return a+b;},0)/scores.length, count: scores.length};
+}
+
+/* ============================================================
+   SIDEBAR RENDER
+   ============================================================ */
+function renderSidebar(){
+  var cfg = state.settings;
+  $("#cfgAcademy").value = cfg.academy || "";
+  $("#cfgTeacher").value = cfg.teacher || "";
+
+  var q = ($("#searchInput").value||"").trim().toLowerCase();
+  var list = $("#studentList");
+  list.innerHTML = "";
+
+  var items = filterStudents(q);
+
+  if(items.length === 0 && q){
+    list.appendChild(el("li",{class:"side-empty"},["검색 결과가 없습니다"]));
+    return;
+  }
+
+  // 학년별 폴더로 묶습니다
+  var groups = {};
+  items.forEach(function(s){
+    var g = (s.meta.grade || "").trim() || "학년 미지정";
+    (groups[g] = groups[g] || []).push(s);
+  });
+  var order = ["중1","중2","중3"];
+  // 중1·중2·중3 폴더는 학생이 없어도 항상 보여줍니다
+  var keys = order.slice()
+    .concat(Object.keys(groups).filter(function(k){ return order.indexOf(k) === -1; }).sort());
+
+  var searching = !!q;
+  keys.forEach(function(g){
+    var rows = groups[g] || [];
+    if(searching && rows.length === 0) return;   // 검색 중에는 빈 폴더를 숨깁니다
+    // 현재 선택된 학생이 있어도 사용자가 폴더를 직접 접고 펼칠 수 있게 합니다.
+    // 검색 중에는 검색 결과를 바로 볼 수 있도록 해당 폴더를 자동으로 펼칩니다.
+    var open = searching || !isFolderCollapsed(g);
+
+    list.appendChild(el("li",{
+      class:"folder-row" + (open ? " open" : ""),
+      role:"button",
+      tabindex:"0",
+      "aria-expanded": open ? "true" : "false",
+      title: open ? "클릭하면 학생 목록을 접습니다" : "클릭하면 학생 목록을 펼칩니다",
+      onclick:function(){ toggleFolder(g); renderSidebar(); },
+      onkeydown:function(e){
+        if(e.key === "Enter" || e.key === " "){
+          e.preventDefault();
+          toggleFolder(g);
+          renderSidebar();
+        }
+      }
+    },[
+      el("span",{class:"folder-caret"},[open ? "▾" : "▸"]),
+      el("span",{class:"folder-icon"},[open ? "📂" : "📁"]),
+      el("span",{class:"folder-name"},[g]),
+      el("span",{class:"folder-count"},[String(rows.length)])
+    ]));
+
+    if(!open) return;
+
+    if(rows.length === 0){
+      list.appendChild(el("li",{class:"folder-empty"},["아직 등록된 학생이 없습니다"]));
+      return;
+    }
+
+    rows.forEach(function(s){
+      var li = el("li",{
+        class:"side-item in-folder" + (s.id === state.activeId ? " active" : ""),
+        title:(s.meta.name||"이름 미입력") + " · " + (s.meta.school||"학교 미입력") + " · " + (s.meta.examName||""),
+        onclick: function(){ openStudent(s); }
+      },[
+        el("div",{class:"side-item-line"},[
+          el("span",{class:"side-item-name"},[s.meta.name || "이름 미입력"]),
+          el("span",{class:"side-item-school"},[s.meta.school || "학교 미입력"]),
+          el("span",{class:"side-item-week"},[(clamp(parseInt(s.meta.week||1,10),1,4))+"주"])
+        ])
+      ]);
+      list.appendChild(li);
+    });
+  });
+}
+
+/* 폴더 펼침/접힘 상태는 이 브라우저에만 저장합니다 */
+var FOLDER_KEY = "wr_folders_v1";
+var folderCollapsed = (function(){
+  try{ return JSON.parse(localStorage.getItem(FOLDER_KEY)) || {}; }catch(e){ return {}; }
+})();
+function isFolderCollapsed(g){ return !!folderCollapsed[g]; }
+function toggleFolder(g){
+  folderCollapsed[g] = !folderCollapsed[g];
+  try{ localStorage.setItem(FOLDER_KEY, JSON.stringify(folderCollapsed)); }catch(e){}
+}
+
+function filterStudents(q){
+  q = (q||"").trim().toLowerCase();
+  return state.students
+    .slice()
+    .sort(function(a,b){ return b.updatedAt - a.updatedAt; })
+    .filter(function(s){
+      if(!q) return true;
+      var hay = (s.meta.name+" "+s.meta.school+" "+s.meta.grade+" "+s.meta.examName).toLowerCase();
+      return hay.indexOf(q) > -1;
+    });
+}
+function openStudent(s){
+  state.activeId = s.id;
+  persist();
+  activeTab = "info";
+  closeManage();
+  renderAll();
+}
+
+/* ============================================================
+   MAIN EDITOR RENDER
+   ============================================================ */
+function renderAll(){
+  renderSidebar();
+  renderMain();
+}
+
+function renderMain(){
+  var root = $("#mainArea");
+  root.innerHTML = "";
+  var s = activeStudent();
+
+  if(!s){
+    root.appendChild(el("div",{class:"empty-state"},[
+      el("div",{class:"mark"},["📐"]),
+      el("h3",{},["학생을 선택하거나 새로 추가하세요"]),
+      el("p",{},["왼쪽에서 '+ 새 학생 리포트'를 눌러 시작합니다. 담당 교재 진행률, 주말 모의고사, 학교 프린트 진행 상황을 입력하면 학부모용 HTML 리포트를 바로 만들 수 있어요."]),
+      el("button",{class:"btn btn-primary", onclick:function(){ addStudent(); }},["+ 새 학생 리포트 시작"])
+    ]));
+    return;
+  }
+
+  root.appendChild(buildTopbar(s));
+  root.appendChild(buildTabs());
+
+  var panels = el("div",{});
+  panels.appendChild(buildInfoPanel(s));
+  panels.appendChild(buildBooksPanel(s));
+  panels.appendChild(buildExamsPanel(s));
+  panels.appendChild(buildCommentsPanel(s));
+  root.appendChild(panels);
+
+  root.appendChild(buildSaveBar(s));
+}
+
+function buildWeekSelector(s){
+  var cur = getSelectedWeek(s);
+  var wrap = el("div",{class:"week-selector", role:"group", "aria-label":"리포트 주차 선택"});
+  [1,2,3,4].forEach(function(w){
+    wrap.appendChild(el("button",{
+      class:"week-select-btn" + (cur===w ? " active" : ""),
+      type:"button",
+      title:w+"주차 리포트 보기",
+      onclick:function(e){ e.stopPropagation(); setSelectedWeek(s,w); }
+    },[w+"주차"]));
+  });
+  return wrap;
+}
+
+function buildTopbar(s){
+  var w = getSelectedWeek(s);
+  var top = el("div",{class:"topbar"},[
+    el("div",{},[
+      el("div",{class:"top-title-line"},[
+        el("h2",{},[s.meta.name ? (s.meta.name + " 학생 리포트") : "새 학생 리포트"]),
+        buildWeekSelector(s)
+      ]),
+      el("div",{class:"sub"},[(s.meta.examName||"") + " · 1~" + w + "주차 누적 보기"])
+    ]),
+    el("div",{class:"topbar-actions"},[
+      el("button",{class:"btn", onclick:function(){ duplicateStudent(s); }},["⎘ 다음 시험대비로 복제"]),
+      el("button",{class:"btn btn-danger", onclick:function(){ removeStudent(s); }},["🗑 삭제"]),
+      el("button",{class:"btn btn-primary", onclick:function(){ openPreview(s); }},["📄 학부모 발송본 보기"])
+    ])
+  ]);
+  return top;
+}
+
+var TABS = [
+  {id:"info", label:"기본정보"},
+  {id:"books", label:"교재 진행"},
+  {id:"exams", label:"모의고사"},
+  {id:"comments", label:"코멘트"}
+];
+function buildTabs(){
+  var wrap = el("div",{class:"tabs"});
+  TABS.forEach(function(t){
+    wrap.appendChild(el("div",{
+      class:"tab" + (activeTab===t.id ? " active":""),
+      onclick:function(){ activeTab = t.id; renderMain(); }
+    },[t.label]));
+  });
+  return wrap;
+}
+
+function panelWrap(id, children){
+  return el("div",{class:"panel" + (activeTab===id ? " active":""), "data-panel":id}, children);
+}
+
+/* ---------- Panel: 기본정보 ---------- */
+function buildInfoPanel(s){
+  var m = s.meta;
+  function field(labelTxt, value, onInput, opts){
+    opts = opts || {};
+    var input = el(opts.tag||"input", Object.assign({
+      type: opts.type||"text",
+      value: value==null?"":value,
+      placeholder: opts.placeholder||"",
+      oninput: function(e){ onInput(e.target.value); touch(s); renderSidebar(); syncTopbar(); }
+    }, opts.attrs||{}));
+    if(opts.tag==="select"){
+      input.innerHTML = "";
+      (opts.options||[]).forEach(function(o){
+        var op = el("option",{value:o}, [o]);
+        if(o===value) op.selected = true;
+        input.appendChild(op);
+      });
+    }
+    return el("div",{class:"field"},[ el("label",{},[labelTxt]), input ]);
+  }
+
+  var card1 = el("div",{class:"card"},[
+    el("h3",{},["보고서 기본정보"]),
+    el("div",{class:"hint"},["리포트 상단에 표시되는 공통 정보입니다. 주차 선택은 상단의 1주차~4주차 버튼에서 합니다."]),
+    el("div",{class:"grid grid-3"},[
+      field("시험 대비명", m.examName, function(v){ m.examName=v; }, {placeholder:"2026년 2학기 중간고사대비"}),
+      field("담당 강사", m.teacher, function(v){ m.teacher=v; }, {placeholder:"홍재화T"}),
+      field("학생 이름", m.name, function(v){ m.name=v; }, {placeholder:"홍길동"}),
+      field("학교", m.school, function(v){ m.school=v; }, {placeholder:"수도중"}),
+      field("학년 구분", m.grade, function(v){ m.grade=v; }, {tag:"select", options:["중1","중2","중3"]})
+    ])
+  ]);
+
+  var card2 = el("div",{class:"card"},[
+    el("h3",{},["시험 정보"]),
+    el("div",{class:"grid grid-3"},[
+      field("내신회차", m.examRound, function(v){ m.examRound=v; }, {placeholder:"주2회 8회차"}),
+      field("시험범위", m.examScope, function(v){ m.examScope=v; }, {placeholder:"연립일차방정식~일차함수"}),
+      field("지난 시험 성적", m.lastScore, function(v){ m.lastScore=v; }, {placeholder:"88점"})
+    ])
+  ]);
+
+  var wpRow = el("div",{class:"weekplan-row"});
+  ["1주차","2주차","3주차","4주차"].forEach(function(lab,i){
+    var input = el("input",{
+      type:"text", value:m.weekPlan[i]||"", placeholder:"예: A",
+      oninput:function(e){ m.weekPlan[i]=e.target.value; touchWeek(s,i+1); }
+    });
+    wpRow.appendChild(el("div",{class:"weekplan-chip"},[ el("label",{},[lab]), input ]));
+  });
+  var card3 = el("div",{class:"card"},[
+    el("h3",{},["주차별 진행 교재 코드"]),
+    el("div",{class:"hint"},["예: 1주_A → 2주_B → 3주_C → 4주_전체오답(IA). 내신교재 구성안의 A/B/C/D/모A/모B/모C 표기를 그대로 씁니다."]),
+    wpRow
+  ]);
+
+  return panelWrap("info", [card1, card2, card3]);
+}
+
+function syncTopbar(){
+  var s = activeStudent(); if(!s) return;
+  var h2 = $(".topbar h2"); var sub = $(".topbar .sub");
+  var w = getSelectedWeek(s);
+  if(h2) h2.textContent = s.meta.name ? (s.meta.name + " 학생 리포트") : "새 학생 리포트";
+  if(sub) sub.textContent = (s.meta.examName||"") + " · 1~" + w + "주차 누적 보기";
+}
+
+/* ---------- Panel: 교재 진행 ---------- */
+function pctCellContent(pct, emptyLabel){
+  var frag = document.createDocumentFragment();
+  if(pct==null){
+    frag.appendChild(el("span",{class:"pct-empty-hint", style:"font-size:11px;color:var(--ink-faint)"},[emptyLabel||"미입력"]));
+  } else {
+    frag.appendChild(el("div",{class:"pct-bar-wrap"},[
+      el("div",{class:"pct-track"},[ el("div",{class:"pct-fill", style:"width:"+Math.min(100,pct*100)+"%; " + (pct>=1?"background:var(--good);":"")}) ]),
+      el("span",{class:"pct-num"},[fmtPct(pct)])
+    ]));
+  }
+  return frag;
+}
+
+/* ---- ② 모의고사 교재 : 총 회차 + 주차별 회차 → 누적 달성률 ---- */
+function buildMockBookTable(s, rows){
+  var curWeek = getSelectedWeek(s);
+  var table = el("table",{class:"book-table"});
+  table.appendChild(el("thead",{},[ el("tr",{},[
+    el("th",{style:"width:44px"},[""]),
+    el("th",{},["모의고사 교재"]),
+    el("th",{style:"width:74px"},["총 회차"]),
+    el("th",{style:"width:62px"},["1주"]),
+    el("th",{style:"width:62px"},["2주"]),
+    el("th",{style:"width:62px"},["3주"]),
+    el("th",{style:"width:62px"},["4주"]),
+    el("th",{style:"width:76px"},[curWeek+"주 누적"]),
+    el("th",{style:"width:112px"},["누적 달성률"]),
+    el("th",{style:"width:30px"},[""])
+  ])]));
+  var tbody = el("tbody");
+
+  function refreshDerived(){
+    rows.forEach(function(row){
+      var ratio = mockBookRatio(row,curWeek);
+      row._doneCell.textContent = mockBookDone(row,curWeek) + " / " + num(row.total);
+      row._pctCell.innerHTML = "";
+      row._pctCell.appendChild(pctCellContent(ratio, "총 회차 입력"));
+    });
+    var t = mockBookTotals(rows,curWeek);
+    totalCells.done.textContent = t.done + " / " + t.total;
+    totalCells.pct.innerHTML = "";
+    totalCells.pct.appendChild(pctCellContent(t.ratio, "총 회차 입력"));
+    refreshChart();
+  }
+
+  rows.forEach(function(row, ri){
+    var doneCell = el("td",{class:"num", style:"font-size:11.5px;color:var(--ink-muted)"},[mockBookDone(row,curWeek) + " / " + num(row.total)]);
+    var pctCell = el("td",{class:"pct-cell"});
+    pctCell.appendChild(pctCellContent(mockBookRatio(row,curWeek), "총 회차 입력"));
+    row._doneCell = doneCell; row._pctCell = pctCell;
+
+    var tr = el("tr",{},[
+      el("td",{class:"grp-cell"},[ el("input",{class:"grp-input", type:"text", value:row.group||"",
+        oninput:function(e){ row.group=e.target.value; touch(s); }}) ]),
+      el("td",{},[ el("input",{class:"item-input", type:"text", value:row.name,
+        oninput:function(e){ row.name=e.target.value; touch(s); refreshChart(); }}) ]),
+      el("td",{},[ el("input",{class:"num-input total-input", type:"number", min:"0", value:row.total,
+        oninput:function(e){ row.total=num(e.target.value); touch(s); refreshDerived(); }}) ])
+    ]);
+    row.w.forEach(function(wv, wi){
+      tr.appendChild(el("td",{},[ el("input",{class:"num-input", type:"number", min:"0", value:wv,
+        oninput:function(e){ row.w[wi]=num(e.target.value); touchWeek(s,wi+1); refreshDerived(); }}) ]));
+    });
+    tr.appendChild(doneCell);
+    tr.appendChild(pctCell);
+    tr.appendChild(el("td",{},[ el("button",{class:"row-del", title:"행 삭제", onclick:function(){
+      rows.splice(ri,1); touch(s); rerenderBooksOnly(s);
+    }},["✕"]) ]));
+    tbody.appendChild(tr);
+  });
+
+  var t0 = mockBookTotals(rows,curWeek);
+  var totalCells = {};
+  var totalRow = el("tr",{class:"group-total"});
+  totalRow.appendChild(el("td",{},[""]));
+  totalRow.appendChild(el("td",{},["전체"]));
+  totalRow.appendChild(el("td",{class:"num"},[String(t0.total)]));
+  for(var i=0;i<4;i++){
+    (function(idx){
+      var sum = rows.reduce(function(a,r){ return a+num(r.w[idx]); },0);
+      totalRow.appendChild(el("td",{class:"num"},[String(sum)]));
+    })(i);
+  }
+  totalCells.done = el("td",{class:"num"},[t0.done + " / " + t0.total]);
+  totalRow.appendChild(totalCells.done);
+  totalCells.pct = el("td",{});
+  totalCells.pct.appendChild(pctCellContent(t0.ratio, "총 회차 입력"));
+  totalRow.appendChild(totalCells.pct);
+  totalRow.appendChild(el("td"));
+  tbody.appendChild(totalRow);
+  table.appendChild(tbody);
+
+  var chart = buildMockBookChart(rows,curWeek);
+  function refreshChart(){ var fresh = buildMockBookChart(rows,curWeek); chart.replaceWith(fresh); chart = fresh; }
+
+  var wrap = el("div",{});
+  wrap.appendChild(el("div",{class:"table-wrap"},[table]));
+  wrap.appendChild(chart);
+  return wrap;
+}
+
+function buildMockBookChart(rows,curWeek){
+  curWeek = curWeek || 4;
+  var wrap = el("div",{class:"summary-chart"},[
+    el("div",{class:"summary-chart-head"},[
+      el("h4",{},[curWeek+"주차까지 누적 달성률 그래프"]),
+      el("span",{style:"font-size:11px;color:var(--ink-faint)"},["누적 진행 회차 ÷ 총 회차"])
+    ])
+  ]);
+  var list = el("div",{class:"hbar-list"});
+  rows.forEach(function(row){
+    var ratio = mockBookRatio(row,curWeek);
+    list.appendChild(el("div",{class:"hbar-row"},[
+      el("span",{class:"hbar-label"},[(row.group? row.group+" " : "") + (row.name||"")]),
+      el("div",{class:"hbar-track"},[ el("div",{class:"hbar-fill" + (ratio!=null&&ratio>=1?" done":""), style:"width:"+(ratio==null?0:Math.min(100,ratio*100))+"%"}) ]),
+      el("span",{class:"hbar-val"},[ratio==null?"-":Math.round(ratio*100)+"%"]),
+      el("span",{class:"hbar-sub"},[num(row.total)>0 ? (mockBookDone(row,curWeek)+"/"+num(row.total)+"회") : ""])
+    ]));
+  });
+  var t = mockBookTotals(rows,curWeek);
+  list.appendChild(el("div",{class:"hbar-row total"},[
+    el("span",{class:"hbar-label"},["전체"]),
+    el("div",{class:"hbar-track"},[ el("div",{class:"hbar-fill", style:"width:"+(t.ratio==null?0:Math.min(100,t.ratio*100))+"%"}) ]),
+    el("span",{class:"hbar-val"},[t.ratio==null?"-":Math.round(t.ratio*100)+"%"]),
+    el("span",{class:"hbar-sub"},[t.total>0 ? (t.done+"/"+t.total+"회") : ""])
+  ]));
+  wrap.appendChild(list);
+  return wrap;
+}
+
+/* ---- ③ 학습지 : 주차별 달성률(%) → 최종(평균) 달성률 ---- */
+function buildWorksheetTable(s, rows){
+  var curWeek = getSelectedWeek(s);
+  var table = el("table",{class:"book-table"});
+  table.appendChild(el("thead",{},[ el("tr",{},[
+    el("th",{},["학습지"]),
+    el("th",{style:"width:70px"},["1주 %"]),
+    el("th",{style:"width:70px"},["2주 %"]),
+    el("th",{style:"width:70px"},["3주 %"]),
+    el("th",{style:"width:70px"},["4주 %"]),
+    el("th",{style:"width:112px"},[curWeek+"주 누적"]),
+    el("th",{style:"width:30px"},[""])
+  ])]));
+  var tbody = el("tbody");
+
+  function refreshDerived(){
+    rows.forEach(function(row){
+      var f = rowFinalPct(row,curWeek);
+      row._pctCell.innerHTML = "";
+      row._pctCell.appendChild(pctCellContent(f==null?null:f/100, "미입력"));
+    });
+    var o = overallPct(rows,curWeek);
+    totalPctCell.innerHTML = "";
+    totalPctCell.appendChild(pctCellContent(o==null?null:o/100, "미입력"));
+  }
+
+  rows.forEach(function(row, ri){
+    var pctCell = el("td",{class:"pct-cell"});
+    var f0 = rowFinalPct(row,curWeek);
+    pctCell.appendChild(pctCellContent(f0==null?null:f0/100, "미입력"));
+    row._pctCell = pctCell;
+
+    var tr = el("tr",{},[
+      el("td",{},[ el("input",{class:"item-input", type:"text", value:row.name,
+        oninput:function(e){ row.name=e.target.value; touch(s); }}) ])
+    ]);
+    row.pct.forEach(function(pv, wi){
+      tr.appendChild(el("td",{},[ el("div",{class:"pct-input-wrap"},[
+        el("input",{class:"num-input pct-input", type:"number", min:"0", max:"999", value: pv==null?"":pv,
+          oninput:function(e){ row.pct[wi] = e.target.value==="" ? null : num(e.target.value); touchWeek(s,wi+1); refreshDerived(); }}),
+        el("span",{class:"pct-suffix"},["%"])
+      ]) ]));
+    });
+    tr.appendChild(pctCell);
+    tr.appendChild(el("td",{},[ el("button",{class:"row-del", title:"행 삭제", onclick:function(){
+      rows.splice(ri,1); touch(s); rerenderBooksOnly(s);
+    }},["✕"]) ]));
+    tbody.appendChild(tr);
+  });
+
+  var totalRow = el("tr",{class:"group-total"});
+  totalRow.appendChild(el("td",{},["전체 평균"]));
+  for(var i=0;i<4;i++){
+    (function(idx){
+      var avg = weeklyAverages(rows)[idx];
+      totalRow.appendChild(el("td",{class:"num"},[avg==null?"-":Math.round(avg)+"%"])) ;
+    })(i);
+  }
+  var totalPctCell = el("td",{});
+  var o0 = overallPct(rows,curWeek);
+  totalPctCell.appendChild(pctCellContent(o0==null?null:o0/100, "미입력"));
+  totalRow.appendChild(totalPctCell);
+  totalRow.appendChild(el("td"));
+  tbody.appendChild(totalRow);
+  table.appendChild(tbody);
+  return el("div",{class:"table-wrap"},[table]);
+}
+
+/* ---- ④ 추가모의고사 : 주차별 추가/완료 → 최종 달성률 ---- */
+function buildExtraExamTable(s, rows){
+  var curWeek = getSelectedWeek(s);
+  var table = el("table",{class:"book-table"});
+  var head1 = el("tr",{},[ el("th",{rowspan:"2"},["추가모의고사 항목"]) ]);
+  ["1주","2주","3주","4주"].forEach(function(w){
+    head1.appendChild(el("th",{colspan:"2", style:"text-align:center; width:120px"},[w]));
+  });
+  head1.appendChild(el("th",{rowspan:"2", style:"width:112px"},[curWeek+"주 누적"]));
+  head1.appendChild(el("th",{rowspan:"2", style:"width:30px"},[""]));
+  var head2 = el("tr",{});
+  for(var k=0;k<4;k++){
+    head2.appendChild(el("th",{style:"width:60px; font-size:10px"},["추가"]));
+    head2.appendChild(el("th",{style:"width:60px; font-size:10px"},["완료"]));
+  }
+  table.appendChild(el("thead",{},[head1, head2]));
+  var tbody = el("tbody");
+
+  function refreshDerived(){
+    rows.forEach(function(row){
+      var r = extraExamRowRatio(row,curWeek);
+      row._pctCell.innerHTML = "";
+      row._pctCell.appendChild(pctCellContent(r, "추가 기록 없음"));
+    });
+    var t = extraExamTotals(rows,curWeek);
+    t.byWeek.forEach(function(w,i){
+      totalCells.add[i].textContent = String(w.add);
+      totalCells.done[i].textContent = String(w.done);
+    });
+    totalPctCell.innerHTML = "";
+    totalPctCell.appendChild(pctCellContent(t.ratio, "추가 기록 없음"));
+  }
+
+  rows.forEach(function(row, ri){
+    var pctCell = el("td",{class:"pct-cell"});
+    pctCell.appendChild(pctCellContent(extraExamRowRatio(row,curWeek), "추가 기록 없음"));
+    row._pctCell = pctCell;
+
+    var tr = el("tr",{},[
+      el("td",{},[ el("input",{class:"item-input", type:"text", value:row.name,
+        oninput:function(e){ row.name=e.target.value; touch(s); }}) ])
+    ]);
+    for(var wi=0; wi<4; wi++){
+      (function(idx){
+        tr.appendChild(el("td",{},[ el("input",{class:"num-input", style:"width:52px", type:"number", min:"0", value:(row.add||[])[idx]||0,
+          oninput:function(e){ row.add[idx]=num(e.target.value); touchWeek(s,idx+1); refreshDerived(); }}) ]));
+        tr.appendChild(el("td",{},[ el("input",{class:"num-input", style:"width:52px", type:"number", min:"0", value:(row.done||[])[idx]||0,
+          oninput:function(e){ row.done[idx]=num(e.target.value); touchWeek(s,idx+1); refreshDerived(); }}) ]));
+      })(wi);
+    }
+    tr.appendChild(pctCell);
+    tr.appendChild(el("td",{},[ el("button",{class:"row-del", title:"행 삭제", onclick:function(){
+      rows.splice(ri,1); touch(s); rerenderBooksOnly(s);
+    }},["✕"]) ]));
+    tbody.appendChild(tr);
+  });
+
+  var t0 = extraExamTotals(rows,curWeek);
+  var totalCells = {add:[], done:[]};
+  var totalRow = el("tr",{class:"group-total"});
+  totalRow.appendChild(el("td",{},["합계"]));
+  t0.byWeek.forEach(function(w){
+    var a = el("td",{class:"num"},[String(w.add)]);
+    var d = el("td",{class:"num"},[String(w.done)]);
+    totalCells.add.push(a); totalCells.done.push(d);
+    totalRow.appendChild(a); totalRow.appendChild(d);
+  });
+  var totalPctCell = el("td",{});
+  totalPctCell.appendChild(pctCellContent(t0.ratio, "추가 기록 없음"));
+  totalRow.appendChild(totalPctCell);
+  totalRow.appendChild(el("td"));
+  tbody.appendChild(totalRow);
+  table.appendChild(tbody);
+  return el("div",{class:"table-wrap"},[table]);
+}
+
+/* ---- 교재 구성요소: 주차별 달성률(%) 직접 입력 + 결과 그래프 ---- */
+function achBarsCell(row, currentWeek){
+  var wrap = el("div",{class:"ach-bars"});
+  ["w1","w2","w3","w4"].forEach(function(wk, i){
+    var v = pctOr(row.pct[i]);
+    var h = v==null ? 2 : Math.max(2, Math.min(100, v));
+    var bar = el("div",{
+      class:"ach-bar " + wk + (v!=null ? " has-val" : "") + (currentWeek===i+1 ? " current" : ""),
+      style:"height:"+h+"%",
+      title:(i+1)+"주 달성률: " + (v==null ? "미입력" : Math.round(v)+"%")
+    });
+    wrap.appendChild(el("div",{class:"ach-bar-col"},[bar]));
+  });
+  return el("td",{class:"ach-chart-cell"},[wrap]);
+}
+
+function buildAchievementTable(s, rows){
+  var table = el("table",{class:"book-table"});
+  var thead = el("thead",{},[ el("tr",{},[
+    el("th",{style:"width:44px"},[""]),
+    el("th",{},["교재구성 요소"]),
+    el("th",{style:"width:70px"},["1주 %"]),
+    el("th",{style:"width:70px"},["2주 %"]),
+    el("th",{style:"width:70px"},["3주 %"]),
+    el("th",{style:"width:70px"},["4주 %"]),
+    el("th",{style:"width:112px"},["결과 그래프"]),
+    el("th",{style:"width:30px"},[""])
+  ])]);
+  table.appendChild(thead);
+  var tbody = el("tbody");
+  var curWeek = getSelectedWeek(s);
+
+  rows.forEach(function(row, ri){
+    var chartCell = achBarsCell(row, curWeek);
+    row._chartCell = chartCell;
+
+    var tr = el("tr",{},[
+      el("td",{class:"grp-cell"},[ el("input",{class:"grp-input", type:"text", value:row.group||"",
+        oninput:function(e){ row.group=e.target.value; touch(s); }}) ]),
+      el("td",{},[ el("input",{class:"item-input", type:"text", value:row.name,
+        oninput:function(e){ row.name=e.target.value; touch(s); }}) ])
+    ]);
+    row.pct.forEach(function(pv, wi){
+      var iw = el("div",{class:"pct-input-wrap"},[
+        el("input",{class:"num-input pct-input", type:"number", min:"0", max:"999", value: pv==null?"":pv,
+          oninput:function(e){
+            row.pct[wi] = e.target.value==="" ? null : num(e.target.value);
+            touchWeek(s,wi+1);
+            var fresh = achBarsCell(row, getSelectedWeek(s));
+            row._chartCell.replaceWith(fresh);
+            row._chartCell = fresh;
+            refreshSummary();
+          }}),
+        el("span",{class:"pct-suffix"},["%"])
+      ]);
+      tr.appendChild(el("td",{},[iw]));
+    });
+    tr.appendChild(chartCell);
+    tr.appendChild(el("td",{},[ el("button",{class:"row-del", title:"행 삭제", onclick:function(){
+      rows.splice(ri,1); touch(s); rerenderBooksOnly(s);
+    }},["✕"]) ]));
+    tbody.appendChild(tr);
+  });
+
+  table.appendChild(tbody);
+
+  var summaryChart = buildSummaryChart(rows);
+  function refreshSummary(){
+    var fresh = buildSummaryChart(rows);
+    summaryChart.replaceWith(fresh);
+    summaryChart = fresh;
+  }
+
+  var wrap = el("div",{});
+  wrap.appendChild(el("div",{class:"table-wrap"},[table]));
+  wrap.appendChild(summaryChart);
+  return wrap;
+}
+
+function buildSummaryChart(rows){
+  var avgs = weeklyAverages(rows);
+  var wrap = el("div",{class:"summary-chart"},[
+    el("div",{class:"summary-chart-head"},[
+      el("h4",{},["주차별 평균 달성률 그래프"]),
+      el("span",{style:"font-size:11px;color:var(--ink-faint)"},["항목별로 입력한 달성률의 평균입니다"])
+    ])
+  ]);
+  var bars = el("div",{class:"summary-bars"});
+  avgs.forEach(function(v, i){
+    var h = v==null ? 3 : Math.max(3, Math.min(100, v));
+    bars.appendChild(el("div",{class:"summary-bar-col"},[
+      el("span",{class:"summary-bar-val" + (v==null?" empty":"")},[v==null?"-":Math.round(v)+"%"]),
+      el("div",{class:"summary-bar-track"},[ el("div",{class:"summary-bar-fill" + (v==null?" empty":""), style:"height:"+h+"%"}) ]),
+      el("span",{class:"summary-bar-label"},[(i+1)+"주"])
+    ]));
+  });
+  wrap.appendChild(bars);
+  return wrap;
+}
+
+function rerenderBooksOnly(s){
+  var panel = $('.panel[data-panel="books"]');
+  if(!panel) return;
+  var scrollX = window.scrollY;
+  var fresh = buildBooksPanel(s);
+  panel.replaceWith(fresh);
+  window.scrollTo(0, scrollX);
+}
+
+function buildBooksPanel(s){
+  var card1 = el("div",{class:"card"},[
+    el("div",{class:"card-head"},[
+      el("div",{},[ el("h3",{},["① 내신교재 구성요소 달성률"]), el("div",{class:"hint",style:"margin-bottom:0"},["항목별로 그 주에 실제 달성한 비율(%)을 입력합니다. 각 주차의 실제 달성률을 입력합니다. 선택한 주차는 그래프에서 강조되고, 발송 리포트의 평균은 선택 주차까지 누적 계산됩니다."]) ])
+    ]),
+    buildAchievementTable(s, s.books),
+    el("button",{class:"btn btn-sm add-row-btn", onclick:function(){
+      s.books.push({group:"", name:"새 항목", pct:[null,null,null,null]}); touch(s); rerenderBooksOnly(s);
+    }},["+ 항목 추가"])
+  ]);
+
+  var card2 = el("div",{class:"card"},[
+    el("div",{class:"card-head"},[
+      el("div",{},[ el("h3",{},["② 모의고사 교재"]), el("div",{class:"hint",style:"margin-bottom:0"},["교재별 총 회차와 주차별 진행 회차를 기록합니다. 누적 달성률은 상단에서 선택한 주차까지 자동 계산됩니다."]) ])
+    ]),
+    buildMockBookTable(s, s.mockBooks),
+    el("button",{class:"btn btn-sm add-row-btn", onclick:function(){
+      s.mockBooks.push({group:"", name:"새 모의고사", total:10, w:[0,0,0,0]}); touch(s); rerenderBooksOnly(s);
+    }},["+ 항목 추가"])
+  ]);
+
+  var card3 = el("div",{class:"card"},[
+    el("div",{class:"card-head"},[
+      el("div",{},[ el("h3",{},["③ 학습지"]), el("div",{class:"hint",style:"margin-bottom:0"},["주차별 달성률(%)을 입력하면 상단에서 선택한 주차까지의 평균이 누적 달성률로 계산됩니다."]) ])
+    ]),
+    buildWorksheetTable(s, s.worksheets),
+    el("button",{class:"btn btn-sm add-row-btn", onclick:function(){
+      s.worksheets.push({name:"새 학습지", pct:[null,null,null,null]}); touch(s); rerenderBooksOnly(s);
+    }},["+ 항목 추가"])
+  ]);
+
+  var card4 = el("div",{class:"card"},[
+    el("div",{class:"card-head"},[
+      el("div",{},[ el("h3",{},["④ 추가모의고사"]), el("div",{class:"hint",style:"margin-bottom:0"},["주차별 추가 모의고사 수와 완료 수를 기록합니다. 오른쪽 누적 달성률은 상단에서 선택한 주차까지의 기록으로 계산됩니다."]) ])
+    ]),
+    buildExtraExamTable(s, s.extraExams),
+    el("button",{class:"btn btn-sm add-row-btn", onclick:function(){
+      s.extraExams.push({name:"추가모의고사", add:[0,0,0,0], done:[0,0,0,0]}); touchWeek(s,getSelectedWeek(s)); rerenderBooksOnly(s);
+    }},["+ 항목 추가"])
+  ]);
+
+  return panelWrap("books", [card1, card2, card3, card4]);
+}
+
+/* ---------- Panel: 모의고사 · 학교프린트 ---------- */
+function mockAvgSummaryBlock(s, week){
+  var seen = {}, labels = [];
+  (s.mocks||[]).forEach(function(m){
+    if(clamp(parseInt(m.week||1,10),1,4) !== week) return;
+    var lab = (m.label||"").trim();
+    if(!lab || seen[lab]) return;
+    seen[lab] = true; labels.push(lab);
+  });
+  var box = el("div",{class:"mock-avg-list"});
+  if(!labels.length){
+    box.appendChild(el("div",{class:"side-empty"},["회차명을 입력하면 같은 회차를 치른 전체 학생 평균이 여기에 표시됩니다"]));
+    return box;
+  }
+  labels.forEach(function(lab){
+    var st = mockStats(s.meta.examName, lab);
+    box.appendChild(el("div",{class:"mock-avg-row"},[
+      el("span",{class:"lab"},[lab]),
+      st.avg==null
+        ? el("span",{class:"cnt"},["아직 채점된 점수가 없습니다"])
+        : el("span",{},[ el("span",{class:"val"},[Math.round(st.avg*10)/10 + "점"]), el("span",{class:"cnt"},["  · 응시 " + st.count + "명 평균 (같은 시험대비 전체 학생 기준)"]) ])
+    ]));
+  });
+  return box;
+}
+
+function buildExamsPanel(s){
+  var curWeek = getSelectedWeek(s);
+  var avgBlock = mockAvgSummaryBlock(s,curWeek);
+  function refreshAvg(){ var fresh = mockAvgSummaryBlock(s,curWeek); avgBlock.replaceWith(fresh); avgBlock = fresh; }
+  var weekRows = (s.mocks||[]).filter(function(m){ return clamp(parseInt(m.week||1,10),1,4)===curWeek; });
+
+  var mockCard = el("div",{class:"card"},[
+    el("div",{class:"card-head"},[
+      el("div",{},[
+        el("h3",{},["주말 모의고사 · " + curWeek + "주차"]),
+        el("div",{class:"week-note"},["다른 주차 기록은 상단 주차 버튼으로 전환합니다"])
+      ]),
+      el("button",{class:"btn btn-sm", onclick:function(){
+        var n = weekRows.length + 1;
+        s.mocks.push(mockRow(curWeek+"주차"+(n>1?("-"+n):""),curWeek));
+        touchWeek(s,curWeek); rerenderExamsOnly(s);
+      }},["+ 회차 추가"])
+    ]),
+    el("div",{class:"hint"},["선택한 주차의 시행일, 범위, 점수, 코멘트를 기록합니다. 이전 주차 데이터는 그대로 누적 보관됩니다."]),
+    (function(){
+      var wrap = el("div",{class:"mock-list"});
+      if(weekRows.length===0) wrap.appendChild(el("div",{class:"side-empty"},[curWeek+"주차에 등록된 모의고사가 없습니다"]));
+      weekRows.forEach(function(m){
+        var row = el("div",{class:"mock-row"},[
+          el("input",{type:"text", value:m.label, placeholder:"회차명 (예: "+curWeek+"주차)", oninput:function(e){ m.label=e.target.value; touchWeek(s,curWeek); refreshAvg(); }}),
+          el("input",{type:"date", value:m.date, oninput:function(e){ m.date=e.target.value; touchWeek(s,curWeek); }}),
+          el("input",{type:"text", value:m.scope, placeholder:"범위", oninput:function(e){ m.scope=e.target.value; touchWeek(s,curWeek); }}),
+          el("input",{type:"number", value:m.score, placeholder:"점수", oninput:function(e){ m.score=e.target.value; touchWeek(s,curWeek); refreshAvg(); }}),
+          el("input",{type:"text", value:m.note, placeholder:"코멘트", oninput:function(e){ m.note=e.target.value; touchWeek(s,curWeek); }}),
+          el("button",{class:"row-del", onclick:function(){
+            var idx=s.mocks.indexOf(m); if(idx>-1) s.mocks.splice(idx,1); touchWeek(s,curWeek); rerenderExamsOnly(s);
+          }},["✕"])
+        ]);
+        wrap.appendChild(row);
+      });
+      return wrap;
+    })(),
+    el("div",{class:"hint",style:"margin:14px 0 0"},["전체 학생 평균"]),
+    avgBlock
+  ]);
+
+  return panelWrap("exams", [mockCard]);
+}
+function rerenderExamsOnly(s){
+  var panel = $('.panel[data-panel="exams"]');
+  if(!panel) return;
+  panel.replaceWith(buildExamsPanel(s));
+}
+
+/* ---------- Panel: 코멘트 · 성적 ---------- */
+function buildCommentsPanel(s){
+  var curWeek = getSelectedWeek(s);
+  var c = commentsForWeek(s,curWeek);
+  function ta(labelTxt, key, placeholder, rows){
+    return el("div",{class:"field"},[
+      el("label",{},[labelTxt]),
+      el("textarea",{rows:rows||3, placeholder:placeholder||"", oninput:function(e){ c[key]=e.target.value; touchWeek(s,curWeek); }},[c[key]||""])
+    ]);
+  }
+
+  var intro = el("div",{class:"card", style:"padding:12px 16px"},[
+    el("div",{class:"week-note"},[curWeek+"주차 코멘트를 작성 중입니다 · 1~4주차 내용은 서로 덮어쓰지 않고 각각 누적 저장됩니다."])
+  ]);
+  var card1 = el("div",{class:"card"},[
+    el("h3",{},[curWeek+"주차 구성 변경"]),
+    el("div",{class:"grid grid-2"},[
+      ta("추가 구성요소","addItems","학생 상황에 맞춰 추가로 준 교재/문제"),
+      ta("삭제/조정 구성요소","removeItems","이번 주 제외하거나 축소한 항목")
+    ])
+  ]);
+
+  var card2 = el("div",{class:"card"},[
+    el("h3",{},[curWeek+"주차 특이사항 · 전달사항"]),
+    ta("특이사항","notes","결석, 태도, 이해도 등 특이사항"),
+    ta("학부모 전달사항","teacherMsg","이번 주 학습 진행에 대한 담당 선생님 코멘트", 4)
+  ]);
+
+  var card3 = el("div",{class:"card"},[
+    el("h3",{},[curWeek+"주차 원장님 메시지"]),
+    el("div",{class:"hint"},["선택한 주차의 발송 리포트 하단에 표시됩니다."]),
+    ta("원장님 메시지","directorMsg","학부모님께 전하는 종합 코멘트 및 당부", 4)
+  ]);
+
+  return panelWrap("comments", [intro, card1, card2, card3]);
+}
+
+/* ---------- Save bar ---------- */
+function buildSaveBar(s){
+  return el("div",{class:"save-bar"},[
+    el("div",{class:"save-status"},[ el("span",{class:"dot"}), (syncState==="shared" ? "공유 DB + 이 브라우저에 자동 저장" : "이 브라우저에 자동 저장") + " · 마지막 저장 " + new Date(s.updatedAt).toLocaleString("ko-KR") + (s.updatedByName ? (" · " + s.updatedByName) : "") ]),
+    el("div",{style:"display:flex; gap:8px;"},[
+      el("button",{class:"btn", onclick:function(){ downloadReport(s); }},["⬇ HTML 파일 저장"]),
+      el("button",{class:"btn btn-primary", onclick:function(){ openPreview(s); }},["📄 학부모 발송본 보기"])
+    ])
+  ]);
+}
+
+/* ============================================================
+   STUDENT ACTIONS
+   ============================================================ */
+function addStudent(){
+  var s = newStudent();
+  state.students.push(s);
+  state.activeId = s.id;
+  stampEditor(s);
+  persist();
+  pushStudent(s);
+  activeTab = "info";
+  renderAll();
+  toast("새 학생 리포트를 시작합니다");
+}
+function studentLabel(s){
+  var who = s.meta.name || "이름 미입력";
+  var where = [s.meta.school, s.meta.grade].filter(Boolean).join(" ");
+  return who + (where ? (" (" + where + ")") : "");
+}
+function removeStudent(s){
+  if(!isAdmin()){ toast("학생 리포트 삭제는 관리자만 가능합니다"); return; }
+  if(!confirm(studentLabel(s) + " 학생의 '" + (s.meta.examName||"내신대비") + "' 1~4주차 누적 리포트 전체를 삭제할까요?\n삭제한 리포트는 되돌릴 수 없습니다.")) return;
+  state.students = state.students.filter(function(x){ return x.id !== s.id; });
+  if(state.activeId === s.id) state.activeId = state.students[0] ? state.students[0].id : null;
+  deleteStudentShared(s.id);
+  persist();
+  renderAll();
+  refreshManage();
+  toast(studentLabel(s) + " 리포트를 삭제했습니다");
+}
+function duplicateStudent(s){
+  var copy = JSON.parse(JSON.stringify(s));
+  copy.id = "s" + Date.now() + Math.random().toString(36).slice(2,7);
+  copy.updatedAt = Date.now();
+  copy.meta.week = 1;
+  copy.books.forEach(function(r){ r.pct=[null,null,null,null]; });
+  (copy.mockBooks||[]).forEach(function(r){ r.w=[0,0,0,0]; });
+  (copy.worksheets||[]).forEach(function(r){ r.pct=[null,null,null,null]; });
+  (copy.extraExams||[]).forEach(function(r){ r.add=[0,0,0,0]; r.done=[0,0,0,0]; });
+  copy.mocks = [mockRow("1주차",1), mockRow("2주차",2), mockRow("3주차",3), mockRow("4주차",4)];
+  copy.weeklyComments = [emptyComments(),emptyComments(),emptyComments(),emptyComments()];
+  delete copy.comments;
+  state.students.push(copy);
+  state.activeId = copy.id;
+  stampEditor(copy);
+  persist();
+  pushStudent(copy);
+  activeTab = "info";
+  closeManage();
+  renderAll();
+  toast("다음 시험대비용으로 복제했습니다. 기본정보를 확인해주세요");
+}
+
+/* ============================================================
+   리포트 관리 (전체 목록에서 수정 / 복제 / 삭제)
+   ============================================================ */
+var manageChecked = {};
+var manageOpenTeachers = {};   // 담당 선생님 폴더 펼침 상태 (처음에는 모두 접힌 상태)
+
+function openManage(){
+  manageChecked = {};
+  manageOpenTeachers = {};
+  $("#manageSearch").value = "";
+  $("#manageVeil").classList.add("open");
+  refreshManage();
+}
+function closeManage(){ $("#manageVeil").classList.remove("open"); }
+function isManageOpen(){ return $("#manageVeil") && $("#manageVeil").classList.contains("open"); }
+function refreshManage(){
+  if(!isManageOpen()) return;
+  var body = $("#manageBody");
+  body.innerHTML = "";
+  body.appendChild(buildManageTable());
+}
+
+function buildManageTable(){
+  var q = ($("#manageSearch").value||"");
+  var items = filterStudents(q);
+  var wrap = el("div",{});
+
+  if(state.students.length === 0){
+    wrap.appendChild(el("div",{class:"manage-empty"},["아직 만들어진 리포트가 없습니다. '+ 새 학생 리포트'로 시작해보세요."]));
+    return wrap;
+  }
+  wrap.appendChild(el("div",{class:"manage-count"},[
+    "전체 " + state.students.length + "개" + (q ? (" 중 검색 결과 " + items.length + "개") : "") + " · 담당 선생님 이름을 클릭하면 담당 학생 목록이 펼쳐집니다 · 체크한 리포트는 위의 '선택 삭제'로 한 번에 지울 수 있습니다"
+  ]));
+  if(items.length === 0){
+    wrap.appendChild(el("div",{class:"manage-empty"},["검색 결과가 없습니다."]));
+    return wrap;
+  }
+
+  var table = el("table",{class:"manage-table"});
+  var allChecked = items.every(function(s){ return manageChecked[s.id]; });
+  table.appendChild(el("thead",{},[ el("tr",{},[
+    el("th",{style:"width:34px"},[ el("input",{type:"checkbox", checked: allChecked && items.length>0 ? "checked" : null,
+      onchange:function(e){
+        items.forEach(function(s){ manageChecked[s.id] = e.target.checked; });
+        refreshManage();
+      }}) ]),
+    el("th",{},["학생"]),
+    el("th",{},["시험 대비"]),
+    el("th",{style:"width:70px"},["주차"]),
+    el("th",{style:"width:150px"},["마지막 수정"]),
+    el("th",{style:"width:210px"},[""])
+  ])]));
+
+  var tbody = el("tbody");
+
+  // 담당 선생님별로 묶어서 보여줍니다
+  var byTeacher = {};
+  items.forEach(function(s){
+    var t = (s.meta.teacher || "").trim() || "담당 미지정";
+    (byTeacher[t] = byTeacher[t] || []).push(s);
+  });
+  var teacherNames = Object.keys(byTeacher).sort(function(a,b){
+    if(a === "담당 미지정") return 1;
+    if(b === "담당 미지정") return -1;
+    return a.localeCompare(b, "ko");
+  });
+
+  var searching = !!q.trim();
+  teacherNames.forEach(function(tName){
+    var rows = byTeacher[tName];
+    var open = searching || !!manageOpenTeachers[tName];   // 검색 중에는 자동으로 펼칩니다
+    var groupAllChecked = rows.every(function(s){ return manageChecked[s.id]; });
+    var headTr = el("tr",{class:"manage-group" + (open ? " is-open" : "")},[
+      el("td",{},[ el("input",{type:"checkbox", checked: groupAllChecked ? "checked" : null,
+        title:"이 선생님의 리포트 전체 선택",
+        onclick:function(e){ e.stopPropagation(); },
+        onchange:function(e){
+          rows.forEach(function(s){ manageChecked[s.id] = e.target.checked; });
+          refreshManage();
+        }}) ]),
+      el("td",{colspan:"5", class:"manage-group-cell",
+        title: open ? "클릭하면 접힙니다" : "클릭하면 담당 학생이 보입니다",
+        onclick:function(){
+          manageOpenTeachers[tName] = !manageOpenTeachers[tName];
+          refreshManage();
+        }},[
+        el("span",{class:"manage-group-caret"},[open ? "▾" : "▸"]),
+        el("span",{class:"manage-group-name"},["👤 " + tName]),
+        el("span",{class:"manage-group-count"},[rows.length + "개"])
+      ])
+    ]);
+    tbody.appendChild(headTr);
+
+  if(!open) return;
+  rows.forEach(function(s){
+    var tr = el("tr",{class: s.id===state.activeId ? "is-active" : ""},[
+      el("td",{},[ el("input",{type:"checkbox", checked: manageChecked[s.id] ? "checked" : null,
+        onchange:function(e){ manageChecked[s.id] = e.target.checked; }}) ]),
+      el("td",{},[
+        el("div",{class:"manage-name"},[s.meta.name || "이름 미입력"]),
+        el("div",{class:"manage-sub"},[[s.meta.school, s.meta.grade].filter(Boolean).join(" · ") || "학교 미입력"])
+      ]),
+      el("td",{},[
+        el("div",{},[s.meta.examName || "시험 대비명 미입력"]),
+        el("div",{class:"manage-sub"},[s.meta.teacher ? ("담당 " + s.meta.teacher) : ""])
+      ]),
+      el("td",{},[ el("span",{class:"manage-week"},[(s.meta.week||1) + "주차"]) ]),
+      el("td",{class:"manage-sub"},[ new Date(s.updatedAt).toLocaleString("ko-KR") + (s.updatedByName ? (" · " + s.updatedByName) : "") ]),
+      el("td",{},[ el("div",{class:"manage-actions"},[
+        el("button",{class:"mini-btn", onclick:function(){ openStudent(s); }},["✏️ 수정"]),
+        el("button",{class:"mini-btn", onclick:function(){ openPreviewFor(s); }},["📄 발송본"]),
+        el("button",{class:"mini-btn", onclick:function(){ duplicateStudent(s); }},["⎘ 복제"]),
+        el("button",{class:"mini-btn danger admin-only", onclick:function(){ removeStudent(s); }},["🗑 삭제"])
+      ]) ])
+    ]);
+    tbody.appendChild(tr);
+  });
+  });
+  table.appendChild(tbody);
+  wrap.appendChild(el("div",{class:"table-wrap"},[table]));
+  return wrap;
+}
+
+function openPreviewFor(s){
+  state.activeId = s.id;
+  persist();
+  closeManage();
+  renderAll();
+  openPreview(s);
+}
+
+function bulkDeleteChecked(){
+  if(!isAdmin()){ toast("학생 리포트 삭제는 관리자만 가능합니다"); return; }
+  var ids = Object.keys(manageChecked).filter(function(id){ return manageChecked[id]; });
+  if(!ids.length){ toast("삭제할 리포트를 먼저 체크해주세요"); return; }
+  if(!confirm("체크한 리포트 " + ids.length + "개를 삭제할까요?\n삭제한 리포트는 되돌릴 수 없습니다.")) return;
+  state.students = state.students.filter(function(s){ return ids.indexOf(s.id) === -1; });
+  if(ids.indexOf(state.activeId) > -1) state.activeId = state.students[0] ? state.students[0].id : null;
+  ids.forEach(deleteStudentShared);
+  manageChecked = {};
+  persist();
+  renderAll();
+  refreshManage();
+  toast(ids.length + "개 리포트를 삭제했습니다");
+}
+function showSavedPulse(){
+  var bar = $(".save-status");
+  if(bar) bar.innerHTML = "";
+  var s = activeStudent();
+  if(bar && s){
+    bar.appendChild(el("span",{class:"dot"}));
+    bar.appendChild(document.createTextNode(" 저장됨 · " + new Date(s.updatedAt).toLocaleTimeString("ko-KR")));
+  }
+}
+
+/* ============================================================
+   REPORT (PARENT-FACING) RENDERING
+   ============================================================ */
+function buildReportHTML(s){
+  var academy = state.settings.academy || "";
+  var week = getSelectedWeek(s);
+  var curWeek = week;
+
+  /* ---------- 헤더 ---------- */
+  var titleStr = (s.meta.examName||"내신대비") + " 주간보고서";
+  var head = '<div class="rp-head">'
+    + '<div class="rp-head-left">'
+    +   '<img class="rp-logo" src="' + LOGO_H + '" alt="수학도서관">'
+    +   '<div class="rp-head-titles">'
+    +     '<div class="rp-eyebrow">중등부 내신대비</div>'
+    +     '<div class="rp-title">' + escapeHtml(titleStr) + '</div>'
+    +   '</div>'
+    + '</div>'
+    + '<div class="rp-head-right">'
+    +   '<div class="rp-student">' + escapeHtml(s.meta.name||"학생")
+    +     (s.meta.school||s.meta.grade ? '<small>' + escapeHtml([s.meta.school, s.meta.grade].filter(Boolean).join(" ")) + '</small>' : '')
+    +   '</div>'
+    +   '<span class="rp-week-badge">' + (week + "주차 누적 리포트") + '</span>'
+    + '</div>'
+    + '</div>';
+
+  /* ---------- 정보 스트립 ---------- */
+  var wpText = (s.meta.weekPlan||[]).map(function(v,i){ return (i<curWeek && v) ? ((i+1)+"주 "+v) : null; }).filter(Boolean).join(" · ");
+  var infoItems = [
+    ["담당 선생님", s.meta.teacher],
+    ["내신회차", s.meta.examRound],
+    ["시험범위", s.meta.examScope],
+    ["직전 성적", s.meta.lastScore]
+  ];
+  // 입력되지 않은 항목은 칸 자체를 만들지 않고, 남은 칸이 폭을 나눠 갖습니다
+  var filledInfo = infoItems.filter(function(it){ return it[1]; });
+  var infoStrip = filledInfo.length
+    ? ('<div class="rp-info" style="grid-template-columns:repeat(' + filledInfo.length + ',1fr)">'
+        + filledInfo.map(function(it){
+            return '<div class="rp-info-item"><div class="l">'+escapeHtml(it[0])+'</div>'
+              + '<div class="v">' + escapeHtml(it[1]) + '</div></div>';
+          }).join("") + '</div>')
+    : "";
+
+  /* ---------- ① 교재 구성요소 달성률 ---------- */
+  function weekCellsHtml(pctArr){
+    return ["1","2","3","4"].map(function(lab,i){
+      var v = i<curWeek ? pctOr(pctArr[i]) : null;
+      var h = v==null ? 2 : Math.max(2, Math.min(100, v));
+      return '<div class="rp-ach-week' + (curWeek===i+1?' current':'') + '">'
+        + '<div class="bar-track"><div class="bar-fill" style="height:'+h+'%"></div></div>'
+        + '<div class="lab">' + (v==null ? "" : Math.round(v)+"%") + '</div>'
+        + '</div>';
+    }).join("");
+  }
+  var achHead = '<div class="rp-ach-head"><span class="sp"></span><span class="wks">'
+    + ["1주","2주","3주","4주"].map(function(w){ return '<span class="wk">'+w+'</span>'; }).join("")
+    + '</span><span class="avg">평균</span></div>';
+  var achRows = (s.books||[]).map(function(row){
+    var f = rowFinalPct(row,curWeek);
+    return '<div class="rp-ach-row">'
+      + '<span class="rp-ach-tag' + (row.group?'':' blank') + '">' + escapeHtml(row.group||"") + '</span>'
+      + '<span class="rp-ach-name">' + escapeHtml(row.name||"") + '</span>'
+      + '<span class="rp-ach-weeks">' + weekCellsHtml(row.pct||[]) + '</span>'
+      + '<span class="rp-ach-avg">' + (f==null ? "" : Math.round(f)+"%") + '</span>'
+      + '</div>';
+  }).join("");
+  var bookPanel = '<div class="rp-panel">'
+    + '<div class="rp-panel-title"><span class="no">1</span>내신교재 구성요소 달성률'
+    +   '<span class="sub">' + (wpText ? escapeHtml(wpText) : "주차별 달성률 / 평균") + '</span></div>'
+    + achHead + achRows
+    + '</div>';
+
+  /* ---------- 종합 달성률 게이지 ---------- */
+  var bookAvg  = overallPct(s.books,curWeek);
+  var mbTotals = mockBookTotals(s.mockBooks,curWeek);
+  var mbPct    = mbTotals.ratio==null ? null : mbTotals.ratio*100;
+  var wsAvg    = overallPct(s.worksheets,curWeek);
+  var eeTotals = extraExamTotals(s.extraExams,curWeek);
+  var eePct    = eeTotals.ratio==null ? null : eeTotals.ratio*100;
+  var partsAll = [bookAvg, mbPct, wsAvg, eePct].filter(function(v){ return v!=null; });
+  var totalPct = partsAll.length ? partsAll.reduce(function(a,b){return a+b;},0)/partsAll.length : null;
+
+  var R = 56, C = 2*Math.PI*R;
+  var dash = totalPct==null ? 0 : Math.min(100,totalPct)/100*C;
+  var gauge = '<div class="rp-panel rp-gauge-panel">'
+    + '<div class="rp-gauge">'
+    +   '<svg viewBox="0 0 132 132">'
+    +     '<circle cx="66" cy="66" r="'+R+'" fill="none" stroke="var(--rp-track)" stroke-width="13"></circle>'
+    +     (dash > 0.5
+        ? ('<circle cx="66" cy="66" r="'+R+'" fill="none" stroke="var(--rp-accent)" stroke-width="13" stroke-linecap="round"'
+           + ' stroke-dasharray="'+dash.toFixed(1)+' '+(C-dash).toFixed(1)+'"></circle>')
+        : "")
+    +   '</svg>'
+    +   '<div class="rp-gauge-center">'
+    +     '<div class="rp-gauge-num">' + (totalPct==null ? "" : Math.round(totalPct)+"%") + '</div>'
+    +     '<div class="rp-gauge-lab">종합 달성률</div>'
+    +   '</div>'
+    + '</div>'
+    + '<div class="rp-gauge-lab" style="margin-top:-2px">주차별 평균 달성률</div>'
+    + '<div class="rp-weekbars">' + weeklyAverages(s.books).map(function(v,i){
+        if(i>=curWeek) v=null;
+        var h = v==null ? 3 : Math.max(3, Math.min(100, v));
+        return '<div class="rp-weekbar">'
+          + '<span class="v' + (v==null?' empty':'') + '">' + (v==null?"":Math.round(v)+"%") + '</span>'
+          + '<div class="t"><div class="f" style="height:'+h+'%"></div></div>'
+          + '<span class="l">'+(i+1)+'주</span>'
+          + '</div>';
+      }).join("") + '</div>'
+    + '</div>';
+
+  /* ---------- ② 모의고사 교재 ---------- */
+  var mbRows = (s.mockBooks||[]).map(function(row){
+    var ratio = mockBookRatio(row,curWeek);
+    return '<div class="rp-hbar">'
+      + '<span class="rp-hbar-name">' + escapeHtml((row.group? row.group+" " : "") + (row.name||"")) + '</span>'
+      + '<span class="rp-hbar-track"><span class="rp-hbar-fill' + (ratio!=null&&ratio>=1?' done':'') + '" style="width:'+(ratio==null?0:Math.min(100,ratio*100))+'%; display:block; height:100%"></span></span>'
+      + '<span class="rp-hbar-val">' + (ratio==null?"":Math.round(ratio*100)+"%") + '</span>'
+      + '<span class="rp-hbar-sub">' + (num(row.total)>0 ? (mockBookDone(row,curWeek)+"/"+num(row.total)+"회") : "") + '</span>'
+      + '</div>';
+  }).join("");
+  var mockBookPanel = '<div class="rp-panel">'
+    + '<div class="rp-panel-title"><span class="no">2</span>모의고사 교재 진행'
+    +   '<span class="sub">' + (mbTotals.total>0 ? ("전체 "+mbTotals.done+"/"+mbTotals.total+"회") : "") + '</span></div>'
+    + mbRows
+    + '</div>';
+
+  /* ---------- ③④ 학습지 / 추가모의고사 ---------- */
+  var statPanel = '<div class="rp-panel">'
+    + '<div class="rp-panel-title"><span class="no">3</span>학습지 · 추가모의고사</div>'
+    + '<div class="rp-stats">'
+    +   '<div class="rp-stat"><div class="k">학습지 달성률</div>'
+    +     '<div class="row"><span class="n' + (wsAvg==null?' empty':'') + '">' + (wsAvg==null?"":Math.round(wsAvg)+"%") + '</span>'
+    +     '<span class="d">' + (wsAvg==null?"":"주차 평균") + '</span></div>'
+    +     '<div class="track"><div class="fill" style="width:'+(wsAvg==null?0:Math.min(100,wsAvg))+'%"></div></div>'
+    +   '</div>'
+    +   '<div class="rp-stat"><div class="k">추가모의고사 완료율</div>'
+    +     '<div class="row"><span class="n' + (eePct==null?' empty':'') + '">' + (eePct==null?"":Math.round(eePct)+"%") + '</span>'
+    +     '<span class="d">' + (eeTotals.add>0 ? (eeTotals.done+"/"+eeTotals.add+"건") : "") + '</span></div>'
+    +     '<div class="track"><div class="fill" style="width:'+(eePct==null?0:Math.min(100,eePct))+'%"></div></div>'
+    +   '</div>'
+    + '</div></div>';
+
+  /* ---------- ⑤ 주말 모의고사 ---------- */
+  var mockRows = (s.mocks||[]).filter(function(m){ return clamp(parseInt(m.week||1,10),1,4)<=curWeek && (m.date||m.scope||m.score||m.note); });
+  var mockHtml = "", hasAvg = false;
+  if(mockRows.length){
+    mockHtml = mockRows.map(function(m){
+      var scoreNum = parseFloat(m.score);
+      var has = !isNaN(scoreNum);
+      var stats = has ? mockStats(s.meta.examName, m.label) : {avg:null,count:0};
+      var scale = Math.max(100, has?scoreNum:0, stats.avg||0);
+      scale = Math.ceil(scale/10)*10;
+      var meta = [m.date, m.scope].filter(Boolean).join(" · ");
+      var avgMark = "", diffHtml = '<span class="rp-mock-diff na"></span>';
+      if(has && stats.avg!=null && stats.count>=2){
+        hasAvg = true;
+        var avgPct = clamp(stats.avg/scale*100,0,100);
+        avgMark = '<span class="rp-mock-avgmark" style="left:'+avgPct+'%"></span>';
+        var diff = Math.round((scoreNum - stats.avg)*10)/10;
+        diffHtml = '<span class="rp-mock-diff ' + (diff>=0?'up':'down') + '">평균 ' + (diff>=0?"+":"") + diff + '</span>';
+      } else {
+        diffHtml = '<span class="rp-mock-diff na"></span>';
+      }
+      return '<div class="rp-mock-item">'
+        + '<span class="rp-mock-name"><span class="r">' + escapeHtml(m.label||"회차") + '</span>'
+        +   (meta ? '<span class="d">'+escapeHtml(meta)+'</span>' : '') + '</span>'
+        + '<span class="rp-mock-track"><span class="rp-mock-fill" style="display:block; height:100%; width:'
+        +   (has ? clamp(scoreNum/scale*100,0,100) : 0) + '%"></span>' + avgMark + '</span>'
+        + '<span class="rp-mock-score">' + (has ? (m.score+"점") : "") + '</span>'
+        + diffHtml
+        + '</div>';
+    }).join("");
+    if(hasAvg) mockHtml += '<div class="rp-mock-legend"><span><i></i>세로선 = 같은 회차 전체 학생 평균</span></div>';
+  } else {
+    mockHtml = "";
+  }
+  var mockPanel = '<div class="rp-panel">'
+    + '<div class="rp-panel-title"><span class="no">4</span>주말 모의고사 성적</div>'
+    + mockHtml + '</div>';
+
+  /* ---------- ⑥ 코멘트 ---------- */
+  var c = commentsForWeek(s,curWeek);
+  function note(label, val, cls){
+    if(!val) return "";   // 미입력 항목은 아예 표시하지 않습니다
+    return '<div class="rp-note-block"><div class="rp-note-label">'+escapeHtml(label)+'</div>'
+      + '<div class="rp-note' + (cls?(' '+cls):'') + '">' + nl2br(val) + '</div></div>';
+  }
+  var changeBits = [c.addItems ? ("추가: "+c.addItems) : "", c.removeItems ? ("조정: "+c.removeItems) : ""].filter(Boolean).join("\n");
+  var notePanel = '<div class="rp-panel">'
+    + '<div class="rp-panel-title"><span class="no">5</span>' + week + '주차 학습 특이사항 · 전달사항</div>'
+    + note("특이사항", c.notes)
+    + note("전달사항", c.teacherMsg)
+    + (changeBits ? note("교재 구성 변경", changeBits) : "")
+    + '</div>';
+  var msgPanel = '<div class="rp-panel rp-msg-panel">'
+    + '<div class="rp-panel-title"><span class="no">6</span>' + week + '주차 원장님 메시지</div>'
+    + '<div class="rp-note">' + (c.directorMsg ? nl2br(c.directorMsg) : "") + '</div>'
+    + '</div>';
+
+  /* ---------- 조립 ---------- */
+  return '<div class="report">'
+    + head
+    + infoStrip
+    + '<div class="rp-grid-2">' + bookPanel + gauge + '</div>'
+    + '<div class="rp-grid-3">' + mockBookPanel + statPanel + '</div>'
+    + mockPanel
+    + '<div class="rp-grid-3">' + notePanel + msgPanel + '</div>'
+    + '<div class="rp-foot">'
+    +   '<img class="rp-foot-mark" src="' + LOGO_MARK + '" alt="">'
+    +   escapeHtml(academy||"수학도서관") + ' · ' + escapeHtml(s.meta.name||"") + ' 학생 ' + week + '주차 누적 주간보고서 · '
+    +   new Date().toLocaleDateString("ko-KR")
+    + '</div>'
+    + '</div>';
+}
+
+function reportStandaloneDoc(s){
+  var titleStr = (s.meta.name||"학생") + " 학생 내신대비 주간보고서 (" + getSelectedWeek(s) + "주차)";
+  var body = buildReportHTML(s);
+  var css = $("style").textContent;
+  // 전체 스타일시트를 함께 담아 어떤 환경에서도 그대로 열리는 단일 파일로 만듭니다
+  return '<!doctype html>\n<html lang="ko"><head><meta charset="utf-8">'
+    + '<meta name="viewport" content="width=device-width, initial-scale=1">'
+    + '<title>' + escapeHtml(titleStr) + '</title>'
+    + '<style>' + css
+    + '\nbody{background:#f5f2ee; margin:0;}'
+    + '\n.report-stage{min-height:100vh; align-items:flex-start;}'
+    + '\n@media (max-width:840px){ .report-stage{padding:8px;} }'
+    + '</style>'
+    + '</head><body>'
+    + '<div class="report-stage"><div class="report-scaler" id="scaler"><div class="report-shadow">' + body + '</div></div></div>'
+    + '<script>(function(){function fit(){var st=document.querySelector(".report-stage"),sc=document.getElementById("scaler");'
+    + 'if(!st||!sc)return;var avail=st.clientWidth-32;var k=Math.min(1,avail/794);sc.style.transform="scale("+k+")";'
+    + 'sc.style.height=(1123*k)+"px";sc.style.width="794px";}fit();window.addEventListener("resize",fit);})();<\/script>'
+    + '</body></html>';
+}
+
+/* ---------- preview modal wiring ---------- */
+function fitReportScale(){
+  var stage = $("#reportStage"), scaler = $("#reportScaler");
+  if(!stage || !scaler) return;
+  var avail = stage.clientWidth - 32;
+  var k = Math.min(1, avail / 794);
+  scaler.style.transform = "scale(" + k + ")";
+  scaler.style.width = "794px";
+  scaler.style.height = (1123 * k) + "px";
+}
+function openPreview(s){
+  $("#reportMount").innerHTML = buildReportHTML(s);
+  $("#previewVeil").classList.add("open");
+  fitReportScale();
+}
+function closePreview(){ $("#previewVeil").classList.remove("open"); }
+
+/* ============================================================
+   리포트를 이미지(PNG)로 만들기 - 외부 라이브러리 없이 SVG foreignObject 사용
+   ============================================================ */
+function reportToPngBlob(scale){
+  scale = scale || 2;
+  var node = $("#reportMount .report");
+  if(!node) return Promise.reject(new Error("리포트를 찾을 수 없습니다"));
+
+  var W = 794, H = 1123;
+  // @import 줄은 SVG 안에서 쓸 수 없으므로 제거하고, XML에서 문제가 되는 문자를 이스케이프합니다
+  var cssText = $("style").textContent
+    .replace(/@import[^\n]*\n?/g, "")
+    .replace(/&/g, "&amp;")
+    .replace(/</g, "&lt;");
+  var clone = node.cloneNode(true);
+  clone.style.margin = "0";
+
+  // XHTML로 직렬화 (foreignObject는 올바른 XML만 받습니다)
+  var wrapper = document.createElement("div");
+  wrapper.appendChild(clone);
+  var xhtml = new XMLSerializer().serializeToString(wrapper.firstChild);
+
+  var svg = '<svg xmlns="http://www.w3.org/2000/svg" width="' + W + '" height="' + H + '" viewBox="0 0 ' + W + ' ' + H + '">'
+    + '<foreignObject width="100%" height="100%">'
+    + '<div xmlns="http://www.w3.org/1999/xhtml">'
+    + '<style>' + cssText + '</style>'
+    + xhtml
+    + '</div></foreignObject></svg>';
+
+  var svgUrl = "data:image/svg+xml;charset=utf-8," + encodeURIComponent(svg);
+
+  return new Promise(function(resolve, reject){
+    var img = new Image();
+    img.onload = function(){
+      try{
+        var canvas = document.createElement("canvas");
+        canvas.width = W * scale; canvas.height = H * scale;
+        var ctx = canvas.getContext("2d");
+        ctx.fillStyle = "#ffffff";
+        ctx.fillRect(0,0,canvas.width,canvas.height);
+        ctx.drawImage(img, 0, 0, canvas.width, canvas.height);
+        canvas.toBlob(function(blob){
+          blob ? resolve(blob) : reject(new Error("이미지 변환에 실패했습니다"));
+        }, "image/png");
+      }catch(err){ reject(err); }
+    };
+    img.onerror = function(){ reject(new Error("이미지 렌더링에 실패했습니다")); };
+    img.src = svgUrl;
+  });
+}
+
+function imageFileName(s){
+  return (s.meta.name||"학생") + "_" + getSelectedWeek(s) + "주차_주간보고서.png";
+}
+
+function copyReportImage(){
+  var s = activeStudent(); if(!s) return;
+  toast("이미지를 만드는 중입니다…");
+  reportToPngBlob(2).then(function(blob){
+    if(navigator.clipboard && window.ClipboardItem){
+      return navigator.clipboard.write([ new ClipboardItem({ "image/png": blob }) ])
+        .then(function(){ toast("이미지를 복사했습니다. 카톡·문자에 붙여넣기 하세요"); })
+        .catch(function(){ return saveBlobAsFile(blob, imageFileName(s), "복사가 차단되어 이미지 파일로 저장했습니다"); });
+    }
+    return saveBlobAsFile(blob, imageFileName(s), "이 브라우저는 복사를 지원하지 않아 파일로 저장했습니다");
+  }).catch(function(err){
+    toast("이미지를 만들지 못했습니다. 화면 캡쳐를 이용해주세요");
+  });
+}
+
+function saveReportImage(){
+  var s = activeStudent(); if(!s) return;
+  toast("이미지를 만드는 중입니다…");
+  reportToPngBlob(2).then(function(blob){
+    return saveBlobAsFile(blob, imageFileName(s), "이미지를 저장했습니다");
+  }).catch(function(){
+    toast("이미지를 만들지 못했습니다. 화면 캡쳐를 이용해주세요");
+  });
+}
+
+function saveBlobAsFile(blob, fname, okMsg){
+  return (async function(){
+    try{
+      if(window.claude && typeof window.claude.use === "function"){
+        var downloads = await window.claude.use("downloads");
+        if(downloads && downloads.save){
+          var buf = await blob.arrayBuffer();
+          await downloads.save({filename: fname, data: buf});
+          toast(okMsg + ": " + fname);
+          return;
+        }
+      }
+    }catch(e){ /* fall through */ }
+    var url = URL.createObjectURL(blob);
+    var a = document.createElement("a");
+    a.href = url; a.download = fname;
+    document.body.appendChild(a); a.click(); document.body.removeChild(a);
+    setTimeout(function(){ URL.revokeObjectURL(url); }, 4000);
+    toast(okMsg + ": " + fname);
+  })();
+}
+
+function downloadReport(s){
+  var doc = reportStandaloneDoc(s);
+  var blob = new Blob([doc], {type:"text/html"});
+  var url = URL.createObjectURL(blob);
+  var fname = (s.meta.name||"학생") + "_" + (s.meta.examName||"내신대비").replace(/\s+/g,"") + "_" + getSelectedWeek(s) + "주차_리포트.html";
+
+  async function trySave(){
+    try{
+      if(window.claude && typeof window.claude.use === "function"){
+        var downloads = await window.claude.use("downloads");
+        if(downloads && downloads.save){
+          var buf = await blob.arrayBuffer();
+          await downloads.save({filename: fname, data: buf});
+          toast("저장했습니다: " + fname);
+          return;
+        }
+      }
+    }catch(e){ /* fall through to anchor download */ }
+    var a = document.createElement("a");
+    a.href = url; a.download = fname;
+    document.body.appendChild(a); a.click(); document.body.removeChild(a);
+    toast("다운로드했습니다: " + fname);
+  }
+  trySave();
+}
+
+/* ============================================================
+   FIREBASE 공유 저장소 / 인증 / 권한
+   - Google 로그인
+   - 최초 로그인 사용자가 공유 공간 관리자 초기화
+   - 관리자: 사용자 관리 + 삭제
+   - 선생님: 조회/추가/수정
+   - Firestore 실시간 동기화
+   ============================================================ */
+var sharedDb = null;
+var firebaseAuth = null;
+var syncBackend = "local";   // local | artifact | firebase
+var currentUser = null;
+var accessConfig = null;
+var currentRole = "guest";      // guest | teacher | admin
+var syncState = "connecting";   // connecting | signedout | setup | denied | shared | error | local
+var pushTimers = {};
+var settingsTimer = null;
+var lastLocalEditAt = 0;
+var localOnlyPending = [];
+var unsubscribeStudents = null;
+var unsubscribeSettings = null;
+var unsubscribeAccess = null;
+
+function normEmail(v){ return String(v||"").trim().toLowerCase(); }
+function uniqEmails(arr){
+  var seen = {};
+  return (arr||[]).map(normEmail).filter(function(x){
+    if(!x || seen[x]) return false;
+    seen[x] = true; return true;
+  });
+}
+function emailsFromTextarea(id){ return uniqEmails(($(id).value||"").split(/[\n,;\s]+/)); }
+function isAdmin(){ return syncBackend === "artifact" ? true : currentRole === "admin"; }
+function isAuthorized(){ return syncBackend === "artifact" ? true : (currentRole === "admin" || currentRole === "teacher"); }
+function hasFirebaseConfig(){
+  var c = window.MATHLIB_FIREBASE_CONFIG || {};
+  return !!(c.apiKey && c.projectId && c.authDomain && String(c.apiKey).indexOf("여기에")===-1 && String(c.projectId).indexOf("여기에")===-1);
+}
+function setSyncState(v){ syncState = v; renderSyncBadge(); }
+function setAuthMessage(msg, kind){
+  var box = $("#authStatus"); if(!box) return;
+  box.textContent = msg || "";
+  box.className = "auth-status" + (kind ? (" " + kind) : "");
+}
+function showAuth(){ $("#authVeil").classList.remove("hidden"); }
+function hideAuth(){ $("#authVeil").classList.add("hidden"); }
+function showInitWorkspace(show){ $("#authInitBox").classList.toggle("show", !!show); }
+function clearSharedSubscriptions(){
+  [unsubscribeStudents,unsubscribeSettings,unsubscribeAccess].forEach(function(fn){ try{ if(fn) fn(); }catch(e){} });
+  unsubscribeStudents = unsubscribeSettings = unsubscribeAccess = null;
+}
+
+function renderUserCard(){
+  var card = $("#userCard"); if(!card) return;
+  var top = $("#userTop"); top.innerHTML = "";
+  if(!currentUser){ card.classList.remove("show"); document.body.classList.remove("is-admin"); return; }
+  var avatar = currentUser.photoURL ? el("img",{class:"user-avatar",src:currentUser.photoURL,referrerpolicy:"no-referrer"}) : el("div",{class:"user-avatar-fallback"},[(currentUser.displayName||currentUser.email||"U").slice(0,1)]);
+  top.appendChild(avatar);
+  top.appendChild(el("div",{class:"user-meta"},[
+    el("div",{class:"user-name"},[currentUser.displayName || "Google 사용자"]),
+    el("div",{class:"user-email"},[currentUser.email || ""])
+  ]));
+  top.appendChild(el("span",{class:"user-role"},[isAdmin()?"관리자":"선생님"]));
+  card.classList.add("show");
+  document.body.classList.toggle("is-admin", isAdmin());
+}
+
+function initSharedSync(){
+  var logo = $("#authLogo"); if(logo) logo.src = LOGO_H;
+
+  // ① Firebase 설정이 채워져 있으면 공유(Firebase) 모드
+  if(hasFirebaseConfig()){
+    syncBackend = "firebase";
+    showAuth(); showInitWorkspace(false);
+    if(location.protocol === "file:"){
+      setAuthMessage("파일을 직접 열면 Google 로그인이 막힐 수 있습니다.\n공유해서 쓰실 때는 인터넷 주소(https)로 올려두고 그 주소로 접속해주세요.", "error");
+    }
+    if(typeof firebase === "undefined"){
+      // 공유 서버 파일을 불러오지 못한 환경에서는 앱을 막지 않고 대체 저장소로 넘어갑니다
+      hideAuth();
+      tryArtifactShared();
+      return;
+    }
+    try{
+      if(!firebase.apps.length) firebase.initializeApp(window.MATHLIB_FIREBASE_CONFIG);
+      firebaseAuth = firebase.auth();
+      sharedDb = firebase.firestore();
+      setSyncState("connecting");
+      firebaseAuth.onAuthStateChanged(handleAuthState);
+    }catch(e){
+      console.error(e); setSyncState("error");
+      setAuthMessage("공유 서버 연결에 실패했습니다. 설정값을 확인해주세요.\n" + (e.message||e), "error");
+    }
+    return;
+  }
+
+  // ② 설정이 없으면 앱을 막지 않고 바로 사용 가능하게 합니다
+  hideAuth();
+  tryArtifactShared();
+}
+
+/* Claude 아티팩트 링크로 열었을 때 제공되는 공유 저장소를 사용합니다 */
+function tryArtifactShared(){
+  if(!(window.claude && typeof window.claude.use === "function")){ setSyncState("local"); return; }
+  setSyncState("connecting");
+  Promise.resolve(window.claude.use("db")).then(function(db){
+    if(!db){ setSyncState("local"); return; }
+    syncBackend = "artifact";
+    sharedDb = db;
+    subscribeShared();
+    setSyncState("shared");
+  }).catch(function(){ setSyncState("local"); });
+}
+
+/* 공유 설정이 없을 때도 로그인/설정 창을 다시 열어볼 수 있게 합니다 */
+function openSharedSetup(){
+  if(hasFirebaseConfig()){ showAuth(); return; }
+  showAuth();
+  setSyncState(syncBackend === "artifact" ? "shared" : "local");
+  setAuthMessage("이 파일에는 아직 공유 서버 설정이 들어있지 않습니다.\n파일 상단의 '공유 설정(Firebase)' 부분에 설정값 6개를 넣어 인터넷 주소로 올리면, 이 파일을 받은 선생님들의 입력이 한 곳에 모입니다.", "error");
+  var btn = $("#btnGoogleLogin"); if(btn) btn.disabled = true;
+}
+
+function signInGoogle(){
+  if(!firebaseAuth) return;
+  var provider = new firebase.auth.GoogleAuthProvider();
+  provider.setCustomParameters({prompt:"select_account"});
+  setAuthMessage("Google 로그인 창을 여는 중입니다…");
+  firebaseAuth.signInWithPopup(provider).catch(function(e){
+    console.error(e);
+    setAuthMessage("로그인에 실패했습니다.\n" + (e.message||e), "error");
+  });
+}
+function signOutShared(){ if(firebaseAuth) firebaseAuth.signOut(); }
+
+function handleAuthState(user){
+  clearSharedSubscriptions();
+  currentUser = user || null; accessConfig = null; currentRole = "guest";
+  renderUserCard();
+  if(!user){
+    setSyncState("signedout"); showAuth(); showInitWorkspace(false);
+    $("#btnGoogleLogin").disabled = false;
+    setAuthMessage("Google 계정으로 로그인해주세요. 관리자가 허용한 계정만 학생 데이터를 열 수 있습니다.");
+    return;
+  }
+  $("#btnGoogleLogin").disabled = true;
+  setSyncState("connecting"); showAuth();
+  setAuthMessage((user.email||"로그인 계정") + "의 접근 권한을 확인하고 있습니다…");
+  loadAccessConfig(true);
+}
+
+function loadAccessConfig(firstLoad){
+  if(!sharedDb || !currentUser) return;
+  var ref = sharedDb.doc("config/access");
+  ref.get().then(function(snap){
+    if(!snap.exists){
+      setSyncState("setup"); currentRole = "guest"; renderUserCard(); showAuth(); showInitWorkspace(true);
+      setAuthMessage("공유 공간이 아직 초기화되지 않았습니다.\n원장/관리자 계정으로 로그인했다면 최초 관리자 등록을 진행하세요.");
+      return;
+    }
+    applyAccessConfig(snap.data()||{}, firstLoad);
+    unsubscribeAccess = ref.onSnapshot(function(s){ if(s.exists) applyAccessConfig(s.data()||{}, false); });
+  }).catch(function(e){
+    console.error(e); setSyncState("error"); setAuthMessage("접근 설정을 읽지 못했습니다. Firestore와 보안 규칙을 확인해주세요.\n"+(e.message||e),"error");
+  });
+}
+
+function applyAccessConfig(data, firstLoad){
+  accessConfig = data || {};
+  var email = normEmail(currentUser && currentUser.email);
+  var allowed = uniqEmails(accessConfig.allowedEmails||[]);
+  var admins = uniqEmails(accessConfig.adminEmails||[]);
+  currentRole = admins.indexOf(email)>-1 ? "admin" : (allowed.indexOf(email)>-1 ? "teacher" : "guest");
+  renderUserCard();
+  if(!isAuthorized()){
+    clearStudentSettingsSubscriptions();
+    setSyncState("denied"); showAuth(); showInitWorkspace(false);
+    setAuthMessage("이 Google 계정은 아직 허용 사용자 목록에 없습니다.\n관리자에게 다음 이메일을 등록해달라고 요청하세요.\n" + email, "error");
+    return;
+  }
+  hideAuth(); showInitWorkspace(false); setSyncState("connecting");
+  fillAccessManager();
+  if(firstLoad || !unsubscribeStudents) subscribeShared();
+}
+
+function initializeWorkspace(){
+  if(!sharedDb || !currentUser) return;
+  var email = normEmail(currentUser.email);
+  if(!email){ setAuthMessage("이 계정의 이메일을 확인할 수 없습니다.","error"); return; }
+  setAuthMessage("최초 관리자 공간을 만드는 중입니다…");
+  sharedDb.doc("config/access").set({
+    allowedEmails:[email], adminEmails:[email], createdAt:Date.now(), createdByEmail:email
+  }).then(function(){
+    toast("공유 공간을 만들었습니다"); showInitWorkspace(false); loadAccessConfig(true);
+  }).catch(function(e){
+    console.error(e); setAuthMessage("최초 관리자 등록에 실패했습니다. Firestore 보안 규칙이 배포되었는지 확인해주세요.\n"+(e.message||e),"error");
+  });
+}
+
+function clearStudentSettingsSubscriptions(){
+  try{ if(unsubscribeStudents) unsubscribeStudents(); }catch(e){}
+  try{ if(unsubscribeSettings) unsubscribeSettings(); }catch(e){}
+  unsubscribeStudents = unsubscribeSettings = null;
+}
+function subscribeShared(){
+  if(!sharedDb || !isAuthorized()) return;
+  clearStudentSettingsSubscriptions();
+  try{
+    unsubscribeStudents = sharedDb.collection("students").onSnapshot(function(snap){
+      applySharedSnapshot(snap); setSyncState("shared");
+    }, function(e){ console.error(e); setSyncState("error"); });
+    unsubscribeSettings = sharedDb.doc("settings/shared").onSnapshot(function(snap){
+      if(!snap.exists) return;
+      var d = snap.data() || {};
+      var focused = document.activeElement;
+      if(focused && (focused.id === "cfgAcademy" || focused.id === "cfgTeacher")) return;
+      state.settings.academy = d.academy || "";
+      state.settings.teacher = d.teacher || "";
+      $("#cfgAcademy").value = state.settings.academy;
+      $("#cfgTeacher").value = state.settings.teacher;
+      persist();
+    }, function(e){ console.warn(e); });
+  }catch(e){ console.error(e); setSyncState("error"); }
+}
+
+function editorHasFocus(){
+  var a = document.activeElement;
+  if(!a) return false;
+  var tag = (a.tagName||"").toLowerCase();
+  if(tag !== "input" && tag !== "textarea" && tag !== "select") return false;
+  return !!a.closest("#mainArea");
+}
+function applySharedSnapshot(snap){
+  var remote = [];
+  snap.docs.forEach(function(d){
+    var body = d.data();
+    if(body && body.meta) remote.push(migrateStudent(JSON.parse(JSON.stringify(body))));
+  });
+  var remoteIds = {};
+  remote.forEach(function(s){ remoteIds[s.id] = true; });
+  var keepEditing = editorHasFocus() || (Date.now() - lastLocalEditAt < 4000);
+  var activeId = state.activeId;
+  var byId = {};
+  state.students.forEach(function(s){ byId[s.id] = s; });
+  var next = remote.map(function(s){
+    if(keepEditing && s.id === activeId && byId[s.id]) return byId[s.id];
+    return s;
+  });
+  localOnlyPending = state.students.filter(function(s){ return !remoteIds[s.id]; });
+  var firstSync = !state._syncedOnce;
+  state._syncedOnce = true;
+  if(firstSync && remote.length === 0 && localOnlyPending.length){
+    var seeding = localOnlyPending.slice(); localOnlyPending = [];
+    seeding.forEach(function(s){ pushStudent(s); });
+    toast("이 기기의 리포트 " + seeding.length + "개를 공유 저장소에 올렸습니다");
+    renderSyncBadge(); return;
+  }
+  state.students = next;
+  if(state.activeId && !state.students.some(function(s){ return s.id === state.activeId; })) state.activeId = state.students[0] ? state.students[0].id : null;
+  persist(); renderSidebar(); renderSyncBadge(); refreshManage();
+  if(!editorHasFocus()) renderMain();
+}
+
+function schedulePush(s){
+  lastLocalEditAt = Date.now();
+  if(!sharedDb || !s || !isAuthorized()) return;
+  clearTimeout(pushTimers[s.id]);
+  pushTimers[s.id] = setTimeout(function(){ pushStudent(s); }, 900);
+}
+function pushStudent(s){
+  if(!sharedDb || !s || !isAuthorized()) return Promise.resolve();
+  try{
+    stampEditor(s); persist();
+    var payload = cleanStudent(s);
+    return sharedDb.doc("students/" + s.id).set(payload).catch(function(e){ console.error(e); setSyncState("error"); });
+  }catch(e){ console.error(e); setSyncState("error"); return Promise.reject(e); }
+}
+function deleteStudentShared(id){
+  if(!sharedDb || !isAdmin()) return Promise.resolve();
+  clearTimeout(pushTimers[id]);
+  try{ return sharedDb.doc("students/" + id).delete().catch(function(e){ console.error(e); toast("공유 DB 삭제에 실패했습니다"); }); }catch(e){ return Promise.reject(e); }
+}
+function schedulePushSettings(){
+  if(!sharedDb || !isAuthorized()) return;
+  clearTimeout(settingsTimer);
+  settingsTimer = setTimeout(function(){
+    try{
+      sharedDb.doc("settings/shared").set({academy:state.settings.academy||"",teacher:state.settings.teacher||"",updatedAt:Date.now(),updatedByEmail:(currentUser&&currentUser.email)||""}).catch(function(e){console.warn(e);});
+    }catch(e){}
+  },900);
+}
+function uploadLocalOnly(){
+  if(!sharedDb || !isAuthorized() || !localOnlyPending.length) return;
+  var n = localOnlyPending.length;
+  localOnlyPending.forEach(function(s){ pushStudent(s); });
+  localOnlyPending = []; renderSyncBadge(); toast("이 기기의 리포트 " + n + "개를 공유 저장소에 올렸습니다");
+}
+
+function renderSyncBadge(){
+  var box = $("#syncBadge"); if(!box) return;
+  box.innerHTML = "";
+  var labels = {
+    local:["이 기기에만 저장","다른 선생님과 함께 쓰려면 아래 '공유 연결 설정'을 확인해주세요"],
+    connecting:["공유 저장소 연결 중…",""],
+    signedout:["로그인 필요","Google 계정으로 로그인하면 공유 데이터가 연결됩니다"],
+    setup:["초기 설정 필요","Firebase 설정 또는 최초 관리자 등록이 필요합니다"],
+    denied:["접근 권한 없음","관리자가 이 Google 이메일을 허용해야 합니다"],
+    shared:["공유 저장소 연결됨","실시간 공동 데이터 · " + (isAdmin()?"관리자":"선생님")],
+    error:["공유 저장소 연결 오류","입력 내용은 이 브라우저에도 보존됩니다"]
+  };
+  var L = labels[syncState] || labels.local;
+  var cssState = syncState === "shared" ? "shared" : (syncState === "error" || syncState === "denied" ? "error" : (syncState === "connecting" ? "connecting" : "local"));
+  box.className = "sync-badge " + cssState;
+  box.appendChild(el("div",{class:"sync-badge-top"},[el("span",{class:"sync-dot"}),el("span",{class:"sync-label"},[L[0]])]));
+  if(L[1]) box.appendChild(el("div",{class:"sync-sub"},[L[1]]));
+  if(syncState === "shared" && localOnlyPending.length){
+    box.appendChild(el("button",{class:"btn btn-sm btn-block",style:"margin-top:7px",onclick:uploadLocalOnly},["⬆ 이 기기 리포트 " + localOnlyPending.length + "개 올리기"]));
+  }
+}
+
+function fillAccessManager(){
+  if(!accessConfig) return;
+  $("#allowedEmails").value = uniqEmails(accessConfig.allowedEmails||[]).join("\n");
+  $("#adminEmails").value = uniqEmails(accessConfig.adminEmails||[]).join("\n");
+}
+function openAccessManage(){
+  if(!isAdmin()){ toast("사용자 관리는 관리자만 가능합니다"); return; }
+  fillAccessManager(); $("#accessVeil").classList.add("open");
+}
+function closeAccessManage(){ $("#accessVeil").classList.remove("open"); }
+function saveAccessConfig(){
+  if(!isAdmin() || !sharedDb) return;
+  var allowed = emailsFromTextarea("#allowedEmails");
+  var admins = emailsFromTextarea("#adminEmails");
+  if(!admins.length){ toast("관리자는 최소 1명 필요합니다"); return; }
+  admins.forEach(function(e){ if(allowed.indexOf(e)===-1) allowed.push(e); });
+  sharedDb.doc("config/access").update({
+    allowedEmails:allowed, adminEmails:admins, updatedAt:Date.now(), updatedByEmail:(currentUser&&currentUser.email)||""
+  }).then(function(){ toast("공유 사용자 설정을 저장했습니다"); closeAccessManage(); }).catch(function(e){ console.error(e); toast("사용자 설정 저장에 실패했습니다"); });
+}
+
+/* ============================================================
+   BACKUP / RESTORE
+   ============================================================ */
+function exportAllBackup(){
+  var blob = new Blob([JSON.stringify(cleanState(state),null,2)], {type:"application/json"});
+  var url = URL.createObjectURL(blob);
+  var fname = "위클리리포트_백업_" + new Date().toISOString().slice(0,10) + ".json";
+  async function trySave(){
+    try{
+      if(window.claude && typeof window.claude.use === "function"){
+        var downloads = await window.claude.use("downloads");
+        if(downloads && downloads.save){
+          var buf = await blob.arrayBuffer();
+          await downloads.save({filename: fname, data: buf});
+          toast("백업 저장 완료");
+          return;
+        }
+      }
+    }catch(e){}
+    var a = document.createElement("a");
+    a.href=url; a.download=fname; document.body.appendChild(a); a.click(); document.body.removeChild(a);
+    toast("백업 파일을 다운로드했습니다");
+  }
+  trySave();
+}
+function importBackup(file, mode){
+  var reader = new FileReader();
+  reader.onload = function(){
+    try{
+      var parsed = JSON.parse(reader.result);
+      if(!parsed || !Array.isArray(parsed.students)) throw new Error("invalid");
+      parsed.students.forEach(migrateStudent);
+
+      if(mode === "merge"){
+        var byId = {};
+        state.students.forEach(function(s){ byId[s.id] = s; });
+        var added = 0, updated = 0;
+        parsed.students.forEach(function(inc){
+          var cur = byId[inc.id];
+          if(!cur){ state.students.push(inc); byId[inc.id] = inc; added++; pushStudent(inc); }
+          else if((inc.updatedAt||0) > (cur.updatedAt||0)){
+            state.students = state.students.map(function(s){ return s.id===inc.id ? inc : s; });
+            byId[inc.id] = inc; updated++; pushStudent(inc);
+          }
+        });
+        if(!state.activeId && state.students.length) state.activeId = state.students[0].id;
+        persist();
+        renderAll();
+        refreshManage();
+        toast("합쳤습니다 · 새로 추가 " + added + "개, 최신본으로 교체 " + updated + "개");
+      } else {
+        if(!confirm("현재 화면의 리포트를 모두 지우고 백업 파일 내용으로 교체할까요?\n합치려면 '병합 불러오기'를 사용해주세요.")) return;
+        state.students = parsed.students;
+        if(parsed.settings) state.settings = parsed.settings;
+        state.activeId = state.students[0] ? state.students[0].id : null;
+        persist();
+        state.students.forEach(pushStudent);
+        renderAll();
+        refreshManage();
+        toast("백업을 불러왔습니다");
+      }
+    }catch(e){
+      toast("올바른 백업 파일이 아닙니다");
+    }
+  };
+  reader.readAsText(file);
+}
+
+/* ============================================================
+   WIRING
+   ============================================================ */
+function bootstrap(){
+  if(!state.activeId && state.students.length) state.activeId = state.students[0].id;
+  persist(); // 이전 버전 데이터를 새 구조로 이관한 결과를 저장
+
+  renderSyncBadge();
+  initSharedSync();
+
+  $("#btnGoogleLogin").addEventListener("click", signInGoogle);
+  $("#btnLocalMode").addEventListener("click", function(){
+    hideAuth();
+    if(syncBackend === "firebase" && !isAuthorized()) setSyncState("local");
+    toast("이 기기에만 저장되는 상태로 사용합니다");
+  });
+  $("#btnSharedSetup").addEventListener("click", openSharedSetup);
+  $("#btnInitWorkspace").addEventListener("click", initializeWorkspace);
+  $("#btnLogout").addEventListener("click", signOutShared);
+  $("#btnAccessManage").addEventListener("click", openAccessManage);
+  $("#btnCloseAccess").addEventListener("click", closeAccessManage);
+  $("#accessVeil").addEventListener("click", function(e){ if(e.target.id==="accessVeil") closeAccessManage(); });
+  $("#btnSaveAccess").addEventListener("click", saveAccessConfig);
+  $("#btnReloadAccess").addEventListener("click", function(){ loadAccessConfig(false); toast("사용자 설정을 다시 확인합니다"); });
+
+  $("#btnNewStudent").addEventListener("click", addStudent);
+  $("#searchInput").addEventListener("input", renderSidebar);
+  $("#cfgAcademy").addEventListener("input", function(e){ state.settings.academy=e.target.value; persist(); schedulePushSettings(); });
+  $("#cfgTeacher").addEventListener("input", function(e){ state.settings.teacher=e.target.value; persist(); schedulePushSettings(); });
+  $("#btnExportAll").addEventListener("click", exportAllBackup);
+  $("#importFile").addEventListener("change", function(e){ if(e.target.files[0]) importBackup(e.target.files[0], "replace"); e.target.value=""; });
+  $("#mergeFile").addEventListener("change", function(e){ if(e.target.files[0]) importBackup(e.target.files[0], "merge"); e.target.value=""; });
+
+  $("#btnManage").addEventListener("click", openManage);
+  $("#btnCloseManage").addEventListener("click", closeManage);
+  $("#manageVeil").addEventListener("click", function(e){ if(e.target.id==="manageVeil") closeManage(); });
+  $("#manageSearch").addEventListener("input", refreshManage);
+  $("#btnBulkDelete").addEventListener("click", bulkDeleteChecked);
+
+  $("#btnClosePreview").addEventListener("click", closePreview);
+  $("#previewVeil").addEventListener("click", function(e){ if(e.target.id==="previewVeil") closePreview(); });
+  $("#btnPrintPreview").addEventListener("click", function(){ window.print(); });
+  $("#btnDownloadFromPreview").addEventListener("click", function(){ var s=activeStudent(); if(s) downloadReport(s); });
+  $("#btnCopyImage").addEventListener("click", copyReportImage);
+  $("#btnSaveImage").addEventListener("click", saveReportImage);
+  window.addEventListener("resize", function(){ if($("#previewVeil").classList.contains("open")) fitReportScale(); });
+
+  document.addEventListener("keydown", function(e){ if(e.key==="Escape"){ closePreview(); closeManage(); closeAccessManage(); } });
+
+  renderAll();
+}
+
+/* 페이지가 이미 로드된 뒤에 스크립트가 실행되는 환경에서도 반드시 시작되도록 합니다 */
+if(document.readyState === "loading") document.addEventListener("DOMContentLoaded", bootstrap);
+else bootstrap();
+})();
+</script>
+
+<script>
+/* ── 홈화면 앱 · 자동 업데이트 ─────────────────────────────
+   새 파일을 올리면 앱을 다시 열 때 곧바로 최신본으로 바뀝니다.
+   입력 중일 때는 내용이 날아가지 않도록 새로고침을 미룹니다. */
+(function(){
+  if(!('serviceWorker' in navigator)) return;
+  if(location.protocol === 'file:') return;
+
+  var reloading = false, pending = false;
+
+  function typing(){
+    var a = document.activeElement;
+    return !!(a && (a.tagName === 'INPUT' || a.tagName === 'TEXTAREA' || a.isContentEditable));
+  }
+  function applyUpdate(){
+    if(reloading) return;
+    if(typing()){ pending = true; return; }
+    reloading = true;
+    location.reload();
+  }
+
+  navigator.serviceWorker.addEventListener('controllerchange', applyUpdate);
+
+  navigator.serviceWorker.register('./sw.js', { updateViaCache: 'none' })
+    .then(function(reg){
+      reg.update();
+      // 앱을 다시 펼칠 때마다 새 버전이 있는지 확인합니다
+      document.addEventListener('visibilitychange', function(){
+        if(document.visibilityState !== 'visible') return;
+        if(pending && !typing()) return applyUpdate();
+        reg.update();
+      });
+      setInterval(function(){ reg.update(); }, 30*60*1000);
+      reg.addEventListener('updatefound', function(){
+        var sw = reg.installing;
+        if(!sw) return;
+        sw.addEventListener('statechange', function(){
+          if(sw.state === 'installed' && navigator.serviceWorker.controller){
+            sw.postMessage('skip-waiting');
+          }
+        });
+      });
+    })
+    .catch(function(){});
+})();
+</script>
+</body>
+</html>
