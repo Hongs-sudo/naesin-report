@@ -1,5 +1,5 @@
 /* 내신대비 주간보고서 · 서비스워커 */
-var VERSION = 'wr-2026-09-19a';
+var VERSION = 'wr-2026-09-19b';
 var SHELL   = 'shell-' + VERSION;
 var ASSETS  = ['./', './index.html', './manifest.webmanifest',
                './icon-192.png', './icon-512.png', './icon-512-maskable.png'];
