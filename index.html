@@ -245,6 +245,14 @@
   .field textarea{resize:vertical; min-height:64px; line-height:1.5;}
   .field .unit{font-size:11.5px; color:var(--ink-faint); margin-top:4px;}
 
+  .exam-pick{border:1px solid var(--accent-soft-2); background:var(--accent-soft);
+    border-radius:10px; padding:12px 14px;}
+  .exam-pick-label{font-size:11.5px; font-weight:700; color:var(--accent-ink); margin-bottom:9px;}
+  .exam-pick-row{display:grid; grid-template-columns:repeat(4,1fr); gap:12px;}
+  @media (max-width:760px){ .exam-pick-row{grid-template-columns:1fr 1fr;} }
+  .exam-name-view{border:1px dashed var(--accent-soft-2); background:var(--surface);
+    border-radius:8px; padding:9px 10px; font-weight:700; color:var(--accent-ink); font-size:13px;}
+
   .weekplan-row{display:grid; grid-template-columns:repeat(4,1fr); gap:10px;}
   .weekplan-chip{
     border:1px solid var(--line); border-radius:9px; padding:8px 10px; background:var(--surface-2);
@@ -705,6 +713,7 @@
         </div>
       </div>
       <div class="sync-badge local" id="syncBadge"></div>
+      <button class="btn btn-ghost btn-sm btn-block admin-only" id="btnTeacherBook">👥 선생님 명부</button>
       <button class="btn btn-ghost btn-sm btn-block" id="btnSharedSetup">🔗 공유 연결 설정</button>
       <button class="btn btn-ghost btn-sm btn-block" id="btnExportAll">📦 전체 백업(JSON) 내보내기</button>
       <label class="btn btn-ghost btn-sm btn-block" style="cursor:pointer;">
@@ -717,6 +726,17 @@
       </label>
     </div>
   </aside>
+
+  <!-- ===================== 선생님 명부 ===================== -->
+  <div class="modal-veil" id="teacherVeil">
+    <div class="modal manage-modal" style="max-width:640px">
+      <div class="modal-bar">
+        <span class="modal-bar-title">👥 선생님 명부</span>
+        <button class="btn btn-ghost btn-sm" id="btnTeacherClose">닫기 ✕</button>
+      </div>
+      <div class="manage-body" id="teacherBody"></div>
+    </div>
+  </div>
 
   <!-- ===================== MAIN ===================== -->
   <main class="main" id="mainArea"></main>
@@ -852,6 +872,62 @@ var LOGO_MARK = "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAKAAAABkCAMAAAA2a
    DATA MODEL
    ============================================================ */
 var STORE_KEY = "wr_studio_v3";
+
+/* ============================================================
+   시험 종류 · 담당자 · 정렬 기준  (2단계 데이터 뼈대)
+   ============================================================ */
+var EXAM_KINDS   = ["중간", "기말"];
+var GRADE_ORDER  = { "중1": 1, "중2": 2, "중3": 3 };
+
+function gradeRank(g){ return GRADE_ORDER[(g || "").trim()] || 9; }
+
+/* 학년 → 이름 오름차순. 모든 목록의 기본 정렬입니다 */
+function cmpStudent(a, b){
+  var d = gradeRank(a.meta.grade) - gradeRank(b.meta.grade);
+  if(d) return d;
+  var n = (a.meta.name || "").localeCompare(b.meta.name || "", "ko");
+  if(n) return n;
+  return (a.meta.school || "").localeCompare(b.meta.school || "", "ko");
+}
+
+/* {연도, 학기, 중간/기말} → "2026년 2학기 중간고사대비" */
+function examLabel(m){
+  if(!m) return "";
+  if(m.examYear && m.examSemester && m.examKind){
+    return m.examYear + "년 " + m.examSemester + "학기 " + m.examKind + "고사대비";
+  }
+  return m.examName || "";
+}
+/* 시험 종류 키 : 정렬·묶음용 (예: "2026-2-중간") */
+function examKey(m){
+  if(!m) return "";
+  if(m.examYear && m.examSemester && m.examKind){
+    return m.examYear + "-" + m.examSemester + "-" + m.examKind;
+  }
+  return m.examName || "";
+}
+/* 옛 자유입력 이름에서 연도·학기·중간/기말을 읽어냅니다 */
+function parseExamName(nm){
+  nm = String(nm || "");
+  var y   = (nm.match(/(20\d\d)\s*년/) || [])[1];
+  var sem = (nm.match(/([12])\s*학기/) || [])[1];
+  var kind = /기말/.test(nm) ? "기말" : (/중간/.test(nm) ? "중간" : "");
+  return {
+    examYear:     y   ? parseInt(y, 10)   : null,
+    examSemester: sem ? parseInt(sem, 10) : null,
+    examKind:     kind
+  };
+}
+/* 학생 식별키 : 이름|학교|학년 (3단계 학생 명부와 연결됩니다) */
+function studentKey(m){
+  return [(m.name || "").trim(), (m.school || "").trim(), (m.grade || "").trim()].join("|");
+}
+/* 담당 선생님 이름 → 이메일 (관리자가 '선생님 명부'에서 등록) */
+function teacherEmailOf(name){
+  var map = (state && state.settings && state.settings.teacherEmails) || {};
+  return map[(name || "").trim()] || "";
+}
+
 function clone(o){ return JSON.parse(JSON.stringify(o)); }
 
 /* ① 내신교재 구성요소 : 주차별 달성률(%) 직접 입력 */
@@ -889,7 +965,12 @@ function newStudent(){
     id: "s" + Date.now() + Math.random().toString(36).slice(2,7),
     updatedAt: Date.now(),
     meta:{
-      examName:"2026년 2학기 중간고사대비",
+      examYear: cfg.examYear || new Date().getFullYear(),
+      examSemester: cfg.examSemester || 2,
+      examKind: cfg.examKind || "중간",
+      examName:"",                    // examLabel()로 자동 생성됩니다
+      studentId: "",
+      ownerEmail: teacherEmailOf(cfg.teacher || ""),
       week: 1,
       teacher: cfg.teacher || "",
       name:"",
@@ -907,6 +988,26 @@ function newStudent(){
     mocks: [mockRow("1주차",1), mockRow("2주차",2), mockRow("3주차",3), mockRow("4주차",4)],
     weeklyComments:[emptyComments(), emptyComments(), emptyComments(), emptyComments()]
   };
+}
+/* 시험 종류를 고치면 대비명·제목을 즉시 다시 그립니다 */
+function refreshExamName(s){
+  s.meta.examName = examLabel(s.meta);
+  var v = document.getElementById("examNameView");
+  if(v) v.textContent = s.meta.examName || "—";
+  var sub = document.querySelector(".topbar .sub");
+  if(sub) sub.textContent = (s.meta.examName||"") + " · 1~" + getSelectedWeek(s) + "주차 누적 보기";
+  renderSidebar();
+}
+
+/* 이름·학교·학년·시험종류가 바뀌면 파생값을 다시 맞춥니다 */
+function syncDerived(s){
+  if(!s || !s.meta) return s;
+  var lab = examLabel(s.meta);
+  if(lab) s.meta.examName = lab;
+  s.meta.studentId = studentKey(s.meta);
+  var em = teacherEmailOf(s.meta.teacher);
+  if(em) s.meta.ownerEmail = em;
+  return s;
 }
 
 /* 이전 버전 데이터를 새 구조로 이관 */
@@ -955,6 +1056,18 @@ function migrateStudent(s){
   delete s.comments;
   delete s.extra;
   s.meta.week = clamp(parseInt(s.meta.week||1,10),1,4);
+
+  /* --- 2단계 : 시험 종류 구조화 · 담당자 · 학생키 --- */
+  if(!s.meta.examYear || !s.meta.examSemester || !s.meta.examKind){
+    var p = parseExamName(s.meta.examName);
+    if(p.examYear)     s.meta.examYear     = p.examYear;
+    if(p.examSemester) s.meta.examSemester = p.examSemester;
+    if(p.examKind)     s.meta.examKind     = p.examKind;
+  }
+  var lab = examLabel(s.meta);
+  if(lab) s.meta.examName = lab;
+  if(!s.meta.studentId)  s.meta.studentId  = studentKey(s.meta);
+  if(!s.meta.ownerEmail) s.meta.ownerEmail = teacherEmailOf(s.meta.teacher);
   return s;
 }
 
@@ -965,12 +1078,13 @@ function loadState(){
     if(raw){
       var parsed = JSON.parse(raw);
       if(parsed && parsed.students){
-        parsed.students.forEach(migrateStudent);
-        return parsed;
+        parsed.settings = parsed.settings || {};
+        if(!parsed.settings.teacherEmails) parsed.settings.teacherEmails = {};
+        return parsed;   // migrate는 bootstrap에서 settings를 갖춘 뒤 실행합니다
       }
     }
   }catch(e){}
-  return {settings:{academy:"", teacher:""}, students:[], activeId:null};
+  return {settings:{academy:"", teacher:"", teacherEmails:{}}, students:[], activeId:null};
 }
 function persist(){
   try{ localStorage.setItem(STORE_KEY, JSON.stringify(cleanState(state))); }catch(e){}
@@ -1269,7 +1383,7 @@ function filterStudents(q){
   q = (q||"").trim().toLowerCase();
   return state.students
     .slice()
-    .sort(function(a,b){ return b.updatedAt - a.updatedAt; })
+    .sort(cmpStudent)          // 학년 → 이름 오름차순 (모든 목록 공통)
     .filter(function(s){
       if(!q) return true;
       var hay = (s.meta.name+" "+s.meta.school+" "+s.meta.grade+" "+s.meta.examName).toLowerCase();
@@ -1288,6 +1402,7 @@ function openStudent(s){
    MAIN EDITOR RENDER
    ============================================================ */
 function renderAll(){
+  document.body.classList.toggle("is-admin", isAdmin());
   renderSidebar();
   renderMain();
 }
@@ -1386,6 +1501,9 @@ function buildInfoPanel(s){
       oninput: function(e){ onInput(e.target.value); touch(s); renderSidebar(); syncTopbar(); }
     }, opts.attrs||{}));
     if(opts.tag==="select"){
+      input.addEventListener("change", function(e){
+        onInput(e.target.value); touch(s); renderSidebar(); syncTopbar();
+      });
       input.innerHTML = "";
       (opts.options||[]).forEach(function(o){
         var op = el("option",{value:o}, [o]);
@@ -1399,12 +1517,36 @@ function buildInfoPanel(s){
   var card1 = el("div",{class:"card"},[
     el("h3",{},["보고서 기본정보"]),
     el("div",{class:"hint"},["리포트 상단에 표시되는 공통 정보입니다. 주차 선택은 상단의 1주차~4주차 버튼에서 합니다."]),
-    el("div",{class:"grid grid-3"},[
-      field("시험 대비명", m.examName, function(v){ m.examName=v; }, {placeholder:"2026년 2학기 중간고사대비"}),
-      field("담당 강사", m.teacher, function(v){ m.teacher=v; }, {placeholder:"홍재화T"}),
-      field("학생 이름", m.name, function(v){ m.name=v; }, {placeholder:"홍길동"}),
-      field("학교", m.school, function(v){ m.school=v; }, {placeholder:"수도중"}),
-      field("학년 구분", m.grade, function(v){ m.grade=v; }, {tag:"select", options:["중1","중2","중3"]})
+    el("div",{class:"exam-pick"},[
+      el("div",{class:"exam-pick-label"},["시험 종류"]),
+      el("div",{class:"exam-pick-row"},[
+        (function(){
+          var yrs = [], now = new Date().getFullYear();
+          for(var y = now + 1; y >= now - 3; y--) yrs.push(String(y));
+          return field("연도", String(m.examYear || now), function(v){
+            m.examYear = parseInt(v, 10); refreshExamName(s);
+          }, {tag:"select", options:yrs});
+        })(),
+        field("학기", String(m.examSemester || 2), function(v){
+          m.examSemester = parseInt(v, 10); refreshExamName(s);
+        }, {tag:"select", options:["1","2"]}),
+        field("중간 / 기말", m.examKind || "중간", function(v){
+          m.examKind = v; refreshExamName(s);
+        }, {tag:"select", options:EXAM_KINDS}),
+        el("div",{class:"field"},[
+          el("label",{},["시험 대비명 (자동)"]),
+          el("div",{class:"exam-name-view", id:"examNameView"},[examLabel(m) || "—"])
+        ])
+      ])
+    ]),
+    el("div",{class:"grid grid-3", style:"margin-top:12px"},[
+      field("담당 강사", m.teacher, function(v){
+        m.teacher = v;
+        var em = teacherEmailOf(v); if(em) m.ownerEmail = em;
+      }, {placeholder:"홍재화T"}),
+      field("학생 이름", m.name, function(v){ m.name=v; m.studentId=studentKey(m); }, {placeholder:"홍길동"}),
+      field("학교", m.school, function(v){ m.school=v; m.studentId=studentKey(m); }, {placeholder:"수도중"}),
+      field("학년 구분", m.grade, function(v){ m.grade=v; m.studentId=studentKey(m); }, {tag:"select", options:["중1","중2","중3"]})
     ])
   ]);
 
@@ -2047,6 +2189,79 @@ function duplicateStudent(s){
 }
 
 /* ============================================================
+   선생님 명부 : 담당 강사 이름 ↔ 로그인 이메일
+   리포트마다 '담당자'를 확정해 두어야 권한 구분이 가능합니다.
+   ============================================================ */
+function openTeacherBook(){
+  $("#teacherVeil").classList.add("open");
+  renderTeacherBook();
+}
+function closeTeacherBook(){ $("#teacherVeil").classList.remove("open"); }
+
+function renderTeacherBook(){
+  var body = $("#teacherBody");
+  if(!body) return;
+  body.innerHTML = "";
+
+  var map = state.settings.teacherEmails || (state.settings.teacherEmails = {});
+  var names = {};
+  state.students.forEach(function(s){
+    var t = (s.meta.teacher||"").trim();
+    if(t) names[t] = (names[t]||0) + 1;
+  });
+  Object.keys(map).forEach(function(t){ if(!(t in names)) names[t] = 0; });
+  var list = Object.keys(names).sort(function(a,b){ return a.localeCompare(b,"ko"); });
+
+  body.appendChild(el("div",{class:"manage-count"},[
+    "담당 강사 " + list.length + "명 · 이메일을 넣어두면 그 선생님이 로그인했을 때 본인 담당 학생만 보이게 할 수 있습니다"
+  ]));
+
+  if(list.length === 0){
+    body.appendChild(el("div",{class:"manage-empty"},["아직 담당 강사가 지정된 리포트가 없습니다."]));
+    return;
+  }
+
+  var table = el("table",{class:"manage-table", style:"min-width:520px"});
+  table.appendChild(el("thead",{},[ el("tr",{},[
+    el("th",{},["담당 강사"]), el("th",{style:"width:90px"},["리포트"]),
+    el("th",{},["로그인 이메일 (구글 계정)"])
+  ])]));
+  var tb = el("tbody");
+  list.forEach(function(t){
+    tb.appendChild(el("tr",{},[
+      el("td",{},[ el("span",{class:"manage-name"},[t]) ]),
+      el("td",{class:"manage-sub"},[ names[t] + "개" ]),
+      el("td",{},[ el("input",{
+        type:"text", class:"item-input", value: map[t] || "",
+        placeholder:"teacher@gmail.com",
+        oninput:function(e){
+          var v = e.target.value.trim().toLowerCase();
+          if(v) map[t] = v; else delete map[t];
+        }
+      }) ])
+    ]));
+  });
+  table.appendChild(tb);
+  body.appendChild(el("div",{class:"table-wrap"},[table]));
+
+  body.appendChild(el("div",{class:"access-actions"},[
+    el("button",{class:"btn btn-sm", onclick:function(){
+      var n = 0;
+      state.students.forEach(function(s){
+        var em = teacherEmailOf(s.meta.teacher);
+        if(em && s.meta.ownerEmail !== em){ s.meta.ownerEmail = em; s.updatedAt = Date.now(); pushStudent(s); n++; }
+      });
+      persist(); renderAll();
+      toast(n ? (n + "개 리포트에 담당자를 지정했습니다") : "새로 지정할 리포트가 없습니다");
+    }},["담당자 일괄 지정"]),
+    el("button",{class:"btn btn-primary btn-sm", onclick:function(){
+      persist(); schedulePushSettings();
+      toast("선생님 명부를 저장했습니다"); closeTeacherBook();
+    }},["저장"])
+  ]));
+}
+
+/* ============================================================
    리포트 관리 (전체 목록에서 수정 / 복제 / 삭제)
    ============================================================ */
 var manageChecked = {};
@@ -2108,6 +2323,7 @@ function buildManageTable(){
     var t = (s.meta.teacher || "").trim() || "담당 미지정";
     (byTeacher[t] = byTeacher[t] || []).push(s);
   });
+  Object.keys(byTeacher).forEach(function(k){ byTeacher[k].sort(cmpStudent); });
   var teacherNames = Object.keys(byTeacher).sort(function(a,b){
     if(a === "담당 미지정") return 1;
     if(b === "담당 미지정") return -1;
@@ -2616,13 +2832,19 @@ function uniqEmails(arr){
   });
 }
 function emailsFromTextarea(id){ return uniqEmails(($(id).value||"").split(/[\n,;\s]+/)); }
-function isAdmin(){ return syncBackend === "artifact" ? true : currentRole === "admin"; }
-function isAuthorized(){ return syncBackend === "artifact" ? true : (currentRole === "admin" || currentRole === "teacher"); }
+/* 공유 저장소에 연결되지 않은 상태(혼자 쓰는 기기)에서는 모든 기능을 엽니다 */
+function isOffline(){ return syncState === "local" || syncBackend === "artifact" || syncBackend === "local"; }
+function isAdmin(){ return isOffline() ? true : currentRole === "admin"; }
+function isAuthorized(){ return isOffline() ? true : (currentRole === "admin" || currentRole === "teacher"); }
 function hasFirebaseConfig(){
   var c = window.MATHLIB_FIREBASE_CONFIG || {};
   return !!(c.apiKey && c.projectId && c.authDomain && String(c.apiKey).indexOf("여기에")===-1 && String(c.projectId).indexOf("여기에")===-1);
 }
-function setSyncState(v){ syncState = v; renderSyncBadge(); }
+function setSyncState(v){
+  syncState = v;
+  renderSyncBadge();
+  document.body.classList.toggle("is-admin", isAdmin());
+}
 function setAuthMessage(msg, kind){
   var box = $("#authStatus"); if(!box) return;
   box.textContent = msg || "";
@@ -2802,6 +3024,10 @@ function subscribeShared(){
       if(focused && (focused.id === "cfgAcademy" || focused.id === "cfgTeacher")) return;
       state.settings.academy = d.academy || "";
       state.settings.teacher = d.teacher || "";
+      if(d.teacherEmails && typeof d.teacherEmails === "object"){
+        state.settings.teacherEmails = d.teacherEmails;
+        if($("#teacherVeil") && $("#teacherVeil").classList.contains("open")) renderTeacherBook();
+      }
       $("#cfgAcademy").value = state.settings.academy;
       $("#cfgTeacher").value = state.settings.teacher;
       persist();
@@ -2871,7 +3097,13 @@ function schedulePushSettings(){
   clearTimeout(settingsTimer);
   settingsTimer = setTimeout(function(){
     try{
-      sharedDb.doc("settings/shared").set({academy:state.settings.academy||"",teacher:state.settings.teacher||"",updatedAt:Date.now(),updatedByEmail:(currentUser&&currentUser.email)||""}).catch(function(e){console.warn(e);});
+      sharedDb.doc("settings/shared").set({
+        academy:state.settings.academy||"",
+        teacher:state.settings.teacher||"",
+        teacherEmails:state.settings.teacherEmails||{},
+        updatedAt:Date.now(),
+        updatedByEmail:(currentUser&&currentUser.email)||""
+      }).catch(function(e){console.warn(e);});
     }catch(e){}
   },900);
 }
@@ -2883,6 +3115,7 @@ function uploadLocalOnly(){
 }
 
 function renderSyncBadge(){
+  document.body.classList.toggle("is-admin", isAdmin());
   var box = $("#syncBadge"); if(!box) return;
   box.innerHTML = "";
   var labels = {
@@ -2997,6 +3230,9 @@ function importBackup(file, mode){
    WIRING
    ============================================================ */
 function bootstrap(){
+  state.settings = state.settings || {};
+  if(!state.settings.teacherEmails) state.settings.teacherEmails = {};
+  state.students.forEach(migrateStudent);   // settings가 갖춰진 뒤 이관합니다
   if(!state.activeId && state.students.length) state.activeId = state.students[0].id;
   persist(); // 이전 버전 데이터를 새 구조로 이관한 결과를 저장
 
@@ -3009,6 +3245,9 @@ function bootstrap(){
     if(syncBackend === "firebase" && !isAuthorized()) setSyncState("local");
     toast("이 기기에만 저장되는 상태로 사용합니다");
   });
+  $("#btnTeacherBook").addEventListener("click", openTeacherBook);
+  $("#btnTeacherClose").addEventListener("click", closeTeacherBook);
+  $("#teacherVeil").addEventListener("click", function(e){ if(e.target === this) closeTeacherBook(); });
   $("#btnSharedSetup").addEventListener("click", openSharedSetup);
   $("#btnInitWorkspace").addEventListener("click", initializeWorkspace);
   $("#btnLogout").addEventListener("click", signOutShared);
