@@ -423,6 +423,32 @@
   .mini-btn.danger:hover{color:var(--bad); border-color:var(--bad); background:var(--bad-soft);}
   .mini-btn:focus-visible{outline:2px solid var(--accent); outline-offset:1px;}
 
+  /* 학생 명부 */
+  .roster-table{width:100%; border-collapse:collapse; min-width:940px;}
+  .roster-table th{text-align:left; font-size:11px; font-weight:700; color:var(--ink-faint);
+    padding:8px 8px; border-bottom:1px solid var(--line); background:var(--surface-2); white-space:nowrap;}
+  .roster-table td{padding:7px 8px; border-bottom:1px solid var(--line-soft); vertical-align:middle; font-size:12.5px;}
+  .roster-table tr.rost-group td{background:var(--accent-soft); font-weight:700; color:var(--accent-ink);
+    font-size:12px; padding:6px 8px;}
+  .roster-table input, .roster-table select{width:100%; border:1px solid transparent; background:transparent;
+    border-radius:6px; padding:5px 6px; font-size:12.5px;}
+  .roster-table input:hover, .roster-table input:focus,
+  .roster-table select:hover, .roster-table select:focus{border-color:var(--line); background:var(--surface-2); outline:none;}
+  .cell-chip{display:inline-block; font-size:11px; color:var(--ink-muted); background:var(--surface-2);
+    border:1px solid var(--line); border-radius:99px; padding:2px 9px; cursor:pointer; white-space:nowrap;}
+  .cell-chip:hover{border-color:var(--accent); color:var(--accent-ink);}
+  .cell-chip.empty{color:var(--ink-faint); border-style:dashed;}
+  .sched-grid{display:grid; grid-template-columns:repeat(8,1fr); gap:5px; margin:8px 0 4px;}
+  .sched-grid .hd{font-size:10.5px; font-weight:700; color:var(--ink-faint); text-align:center; padding:3px 0;}
+  .sched-cell{border:1px solid var(--line); border-radius:7px; padding:7px 0; text-align:center;
+    font-size:11px; cursor:pointer; background:var(--surface-2); color:var(--ink-muted);}
+  .sched-cell.on{background:var(--accent); border-color:var(--accent); color:#fff; font-weight:700;}
+  .score-row{display:grid; grid-template-columns:90px 70px 80px 80px 34px; gap:6px; align-items:center; margin-bottom:6px;}
+  .sub-panel{background:var(--surface-2); border:1px solid var(--line); border-radius:10px; padding:12px 14px; margin:2px 0 10px;}
+  .sub-panel h4{font-size:12px; font-weight:700; color:var(--accent-ink); margin-bottom:6px;}
+  body.is-staff .staff-only{display:inline-flex !important;}
+  .staff-only{display:none !important;}
+
   /* 학년별 폴더 */
   .folder-row{
     display:flex; align-items:center; gap:7px; cursor:pointer; user-select:none;
@@ -713,6 +739,7 @@
         </div>
       </div>
       <div class="sync-badge local" id="syncBadge"></div>
+      <button class="btn btn-ghost btn-sm btn-block staff-only" id="btnRoster">🎓 학생 명부</button>
       <button class="btn btn-ghost btn-sm btn-block admin-only" id="btnTeacherBook">👥 선생님 명부</button>
       <button class="btn btn-ghost btn-sm btn-block" id="btnSharedSetup">🔗 공유 연결 설정</button>
       <button class="btn btn-ghost btn-sm btn-block" id="btnExportAll">📦 전체 백업(JSON) 내보내기</button>
@@ -726,6 +753,24 @@
       </label>
     </div>
   </aside>
+
+  <!-- ===================== 학생 명부 ===================== -->
+  <div class="modal-veil" id="rosterVeil">
+    <div class="modal manage-modal" style="max-width:1080px">
+      <div class="modal-bar">
+        <span class="modal-bar-title">🎓 학생 명부</span>
+        <div style="display:flex;gap:6px;align-items:center">
+          <div class="side-search" style="padding:5px 9px">
+            <span>🔍</span><input type="text" id="rosterSearch" placeholder="이름·학교·담당 검색">
+          </div>
+          <button class="btn btn-sm admin-only" id="btnRosterFromReports">리포트에서 가져오기</button>
+          <button class="btn btn-sm btn-primary admin-only" id="btnRosterAdd">+ 학생 추가</button>
+          <button class="btn btn-ghost btn-sm" id="btnRosterClose">닫기 ✕</button>
+        </div>
+      </div>
+      <div class="manage-body" id="rosterBody"></div>
+    </div>
+  </div>
 
   <!-- ===================== 선생님 명부 ===================== -->
   <div class="modal-veil" id="teacherVeil">
@@ -877,6 +922,57 @@ var STORE_KEY = "wr_studio_v3";
    시험 종류 · 담당자 · 정렬 기준  (2단계 데이터 뼈대)
    ============================================================ */
 var EXAM_KINDS   = ["중간", "기말"];
+var WEEK_DAYS    = ["월","화","수","목","금","토","일"];
+var PERIODS      = [
+  { key: 1, short: "1교시", time: "4:20~7:10" },
+  { key: 2, short: "2교시", time: "7:10~10:00" }
+];
+function periodLabel(p){
+  var f = PERIODS.filter(function(x){ return x.key === Number(p); })[0];
+  return f ? (f.short + " " + f.time) : String(p);
+}
+/* 시간표 → "월 1교시 · 목 2교시" */
+function scheduleText(list){
+  if(!list || !list.length) return "";
+  return list.slice().sort(function(a,b){
+    var d = WEEK_DAYS.indexOf(a.d) - WEEK_DAYS.indexOf(b.d);
+    return d || (a.p - b.p);
+  }).map(function(x){ return x.d + " " + x.p + "교시"; }).join(" · ");
+}
+/* 지난 성적 목록 → "2026-1학기 기말 73점" (가장 최근 1건) */
+function lastScoreText(scores){
+  if(!scores || !scores.length) return "";
+  var s = scores.slice().sort(cmpScore)[0];
+  return s.year + "년 " + s.sem + "학기 " + s.kind + " " + s.score + "점";
+}
+function cmpScore(a, b){
+  return (b.year - a.year) || (b.sem - a.sem)
+      || ((b.kind === "기말" ? 1 : 0) - (a.kind === "기말" ? 1 : 0));
+}
+function newRosterEntry(){
+  return {
+    id: "r" + Date.now() + Math.random().toString(36).slice(2,6),
+    name: "", school: "", grade: "중2", teacher: "",
+    schedule: [], scores: [], memo: "", active: true,
+    updatedAt: Date.now()
+  };
+}
+function rosterList(){
+  var r = (state.settings && state.settings.roster) || [];
+  return r.slice().sort(function(a,b){
+    var d = gradeRank(a.grade) - gradeRank(b.grade);
+    if(d) return d;
+    return (a.name||"").localeCompare(b.name||"", "ko");
+  });
+}
+function rosterFind(name, school, grade){
+  var r = (state.settings && state.settings.roster) || [];
+  var key = [(name||"").trim(), (school||"").trim(), (grade||"").trim()].join("|");
+  for(var i=0;i<r.length;i++){
+    if([r[i].name, r[i].school, r[i].grade].join("|") === key) return r[i];
+  }
+  return null;
+}
 var GRADE_ORDER  = { "중1": 1, "중2": 2, "중3": 3 };
 
 function gradeRank(g){ return GRADE_ORDER[(g || "").trim()] || 9; }
@@ -1403,6 +1499,7 @@ function openStudent(s){
    ============================================================ */
 function renderAll(){
   document.body.classList.toggle("is-admin", isAdmin());
+  document.body.classList.toggle("is-staff", isAuthorized());
   renderSidebar();
   renderMain();
 }
@@ -2186,6 +2283,203 @@ function duplicateStudent(s){
   closeManage();
   renderAll();
   toast("다음 시험대비용으로 복제했습니다. 기본정보를 확인해주세요");
+}
+
+/* ============================================================
+   학생 명부 (3단계) : 학교·학년·담당T·시간표·지난 성적
+   리포트는 이 명부를 참조합니다. 명부를 고치면 한 곳만 고치면 됩니다.
+   ============================================================ */
+var rosterOpenId = null;      // 시간표·성적 편집을 펼친 학생
+
+function ensureRoster(){
+  state.settings = state.settings || {};
+  if(!Array.isArray(state.settings.roster)) state.settings.roster = [];
+  return state.settings.roster;
+}
+function openRoster(){ ensureRoster(); $("#rosterVeil").classList.add("open"); renderRoster(); }
+function closeRoster(){ rosterOpenId = null; $("#rosterVeil").classList.remove("open"); }
+function isRosterOpen(){ var v=$("#rosterVeil"); return v && v.classList.contains("open"); }
+function rosterSave(){ persist(); schedulePushSettings(); }
+
+function renderRoster(){
+  if(!isRosterOpen()) return;
+  var body = $("#rosterBody"); if(!body) return;
+  body.innerHTML = "";
+  ensureRoster();
+
+  var q = ($("#rosterSearch").value || "").trim().toLowerCase();
+  var all = rosterList();
+  var rows = all.filter(function(r){
+    if(!q) return true;
+    return (r.name + " " + r.school + " " + r.teacher + " " + r.grade).toLowerCase().indexOf(q) > -1;
+  });
+
+  body.appendChild(el("div",{class:"manage-count"},[
+    "명부 " + all.length + "명" + (q ? (" 중 " + rows.length + "명") : "") +
+    " · 학년 → 이름 순 · 시간표와 지난 성적은 칸을 눌러 편집합니다"
+  ]));
+
+  if(all.length === 0){
+    body.appendChild(el("div",{class:"manage-empty"},[
+      "명부가 비어 있습니다. 위의 '리포트에서 가져오기'를 누르면 지금 있는 리포트에서 학생을 자동으로 만들어 드립니다."
+    ]));
+    return;
+  }
+  if(rows.length === 0){
+    body.appendChild(el("div",{class:"manage-empty"},["검색 결과가 없습니다."])); return;
+  }
+
+  var table = el("table",{class:"roster-table"});
+  table.appendChild(el("thead",{},[ el("tr",{},[
+    el("th",{style:"width:64px"},["학년"]),
+    el("th",{style:"width:110px"},["이름"]),
+    el("th",{style:"width:120px"},["학교"]),
+    el("th",{style:"width:110px"},["담당 선생님"]),
+    el("th",{style:"width:190px"},["수업 시간표"]),
+    el("th",{style:"width:190px"},["지난 시험 성적"]),
+    el("th",{style:"width:64px"},["상태"]),
+    el("th",{style:"width:44px"},[""])
+  ])]));
+
+  var tb = el("tbody"), lastGrade = null;
+  rows.forEach(function(r){
+    if(r.grade !== lastGrade){
+      lastGrade = r.grade;
+      var cnt = rows.filter(function(x){ return x.grade === r.grade; }).length;
+      tb.appendChild(el("tr",{class:"rost-group"},[ el("td",{colspan:"8"},[r.grade + " · " + cnt + "명"]) ]));
+    }
+    var editable = isAdmin();
+    function txt(key, ph, w){
+      return el("input",{ type:"text", value:r[key]||"", placeholder:ph, disabled: editable?null:"disabled",
+        oninput:function(e){ r[key]=e.target.value; r.updatedAt=Date.now(); rosterSave(); }});
+    }
+    var tr = el("tr",{},[
+      el("td",{},[ el("select",{disabled: editable?null:"disabled",
+        onchange:function(e){ r.grade=e.target.value; r.updatedAt=Date.now(); rosterSave(); renderRoster(); }},
+        ["중1","중2","중3"].map(function(g){
+          var o=el("option",{value:g},[g]); if(g===r.grade) o.selected=true; return o; })) ]),
+      el("td",{},[ txt("name","이름") ]),
+      el("td",{},[ txt("school","학교") ]),
+      el("td",{},[ txt("teacher","담당T") ]),
+      el("td",{},[ el("span",{class:"cell-chip" + (r.schedule && r.schedule.length ? "" : " empty"),
+        onclick:function(){ rosterOpenId = (rosterOpenId === r.id + ":s") ? null : (r.id + ":s"); renderRoster(); }},
+        [ scheduleText(r.schedule) || "시간표 입력" ]) ]),
+      el("td",{},[ el("span",{class:"cell-chip" + (r.scores && r.scores.length ? "" : " empty"),
+        onclick:function(){ rosterOpenId = (rosterOpenId === r.id + ":g") ? null : (r.id + ":g"); renderRoster(); }},
+        [ lastScoreText(r.scores) || "성적 입력" ]) ]),
+      el("td",{},[ el("span",{class:"cell-chip",
+        onclick:function(){ if(!editable) return; r.active = !r.active; r.updatedAt=Date.now(); rosterSave(); renderRoster(); }},
+        [ r.active === false ? "휴회" : "재원" ]) ]),
+      el("td",{},[ editable ? el("button",{class:"row-del", title:"명부에서 삭제",
+        onclick:function(){
+          if(!confirm(r.name + " 학생을 명부에서 지울까요?\n작성된 리포트는 그대로 남습니다.")) return;
+          var arr = ensureRoster();
+          state.settings.roster = arr.filter(function(x){ return x.id !== r.id; });
+          rosterSave(); renderRoster();
+        }},["🗑"]) : el("span",{},[""]) ])
+    ]);
+    tb.appendChild(tr);
+
+    /* 펼침 : 시간표 */
+    if(rosterOpenId === r.id + ":s"){
+      var box = el("div",{class:"sub-panel"},[ el("h4",{},[r.name + " · 수업 시간표"]) ]);
+      var grid = el("div",{class:"sched-grid"});
+      grid.appendChild(el("div",{class:"hd"},[""]));
+      WEEK_DAYS.forEach(function(d){ grid.appendChild(el("div",{class:"hd"},[d])); });
+      PERIODS.forEach(function(pd){
+        grid.appendChild(el("div",{class:"hd", style:"text-align:left"},[pd.short]));
+        WEEK_DAYS.forEach(function(d){
+          var on = (r.schedule||[]).some(function(x){ return x.d===d && x.p===pd.key; });
+          grid.appendChild(el("div",{class:"sched-cell" + (on ? " on" : ""),
+            title: pd.short + " " + pd.time,
+            onclick:function(){
+              if(!editable) return;
+              r.schedule = r.schedule || [];
+              if(on) r.schedule = r.schedule.filter(function(x){ return !(x.d===d && x.p===pd.key); });
+              else r.schedule.push({d:d, p:pd.key});
+              r.updatedAt=Date.now(); rosterSave(); renderRoster();
+            }},[ on ? "●" : "" ]));
+        });
+      });
+      box.appendChild(grid);
+      box.appendChild(el("div",{class:"manage-sub"},[
+        PERIODS.map(function(x){ return x.short + " " + x.time; }).join("  ·  ")
+      ]));
+      tb.appendChild(el("tr",{},[ el("td",{colspan:"8"},[box]) ]));
+    }
+
+    /* 펼침 : 지난 성적 */
+    if(rosterOpenId === r.id + ":g"){
+      var gb = el("div",{class:"sub-panel"},[ el("h4",{},[r.name + " · 지난 시험 성적"]) ]);
+      r.scores = r.scores || [];
+      var head = el("div",{class:"score-row"},[
+        el("div",{class:"manage-sub"},["연도"]), el("div",{class:"manage-sub"},["학기"]),
+        el("div",{class:"manage-sub"},["중간/기말"]), el("div",{class:"manage-sub"},["점수"]), el("div",{},[""])
+      ]);
+      gb.appendChild(head);
+      r.scores.slice().sort(cmpScore).forEach(function(sc){
+        var yrs=[], now=new Date().getFullYear();
+        for(var y=now; y>=now-4; y--) yrs.push(String(y));
+        function sel(opts, val, set){
+          return el("select",{disabled: editable?null:"disabled", onchange:function(e){ set(e.target.value); r.updatedAt=Date.now(); rosterSave(); renderRoster(); }},
+            opts.map(function(o){ var op=el("option",{value:o},[o]); if(String(o)===String(val)) op.selected=true; return op; }));
+        }
+        gb.appendChild(el("div",{class:"score-row"},[
+          sel(yrs, sc.year, function(v){ sc.year=parseInt(v,10); }),
+          sel(["1","2"], sc.sem, function(v){ sc.sem=parseInt(v,10); }),
+          sel(EXAM_KINDS, sc.kind, function(v){ sc.kind=v; }),
+          el("input",{type:"text", value:sc.score||"", placeholder:"88", disabled: editable?null:"disabled",
+            oninput:function(e){ sc.score=e.target.value.trim(); r.updatedAt=Date.now(); rosterSave(); }}),
+          editable ? el("button",{class:"row-del", onclick:function(){
+            r.scores = r.scores.filter(function(x){ return x !== sc; }); rosterSave(); renderRoster();
+          }},["🗑"]) : el("span",{},[""])
+        ]));
+      });
+      if(editable){
+        gb.appendChild(el("button",{class:"btn btn-sm add-row-btn", onclick:function(){
+          var now=new Date().getFullYear();
+          r.scores.push({year:now, sem:1, kind:"기말", score:""});
+          r.updatedAt=Date.now(); rosterSave(); renderRoster();
+        }},["+ 성적 추가"]));
+      }
+      if(!r.scores.length && !editable) gb.appendChild(el("div",{class:"manage-sub"},["기록된 성적이 없습니다."]));
+      tb.appendChild(el("tr",{},[ el("td",{colspan:"8"},[gb]) ]));
+    }
+  });
+  table.appendChild(tb);
+  body.appendChild(el("div",{class:"table-wrap"},[table]));
+}
+
+/* 지금 있는 리포트에서 학생 명부를 만들어 줍니다 (없는 학생만 추가) */
+function rosterImportFromReports(){
+  var arr = ensureRoster(), added = 0, updated = 0;
+  state.students.forEach(function(s){
+    var m = s.meta;
+    if(!(m.name||"").trim()) return;
+    var hit = rosterFind(m.name, m.school, m.grade);
+    if(!hit){
+      hit = newRosterEntry();
+      hit.name = (m.name||"").trim();
+      hit.school = (m.school||"").trim();
+      hit.grade = (m.grade||"중2").trim();
+      hit.teacher = (m.teacher||"").trim();
+      arr.push(hit); added++;
+    }else{
+      if(!hit.teacher && m.teacher){ hit.teacher = m.teacher; updated++; }
+    }
+    /* 리포트의 '지난 시험 성적'을 직전 학기 성적으로 옮겨 적습니다 */
+    var sc = String(m.lastScore||"").trim();
+    if(sc && /^\d+$/.test(sc)){
+      var y = m.examYear || new Date().getFullYear();
+      var sem = m.examSemester || 2;
+      var prev = (sem === 2) ? {year:y, sem:1, kind:"기말"} : {year:y-1, sem:2, kind:"기말"};
+      hit.scores = hit.scores || [];
+      var dup = hit.scores.some(function(x){ return x.year===prev.year && x.sem===prev.sem && x.kind===prev.kind; });
+      if(!dup){ hit.scores.push({year:prev.year, sem:prev.sem, kind:prev.kind, score:sc}); updated++; }
+    }
+  });
+  rosterSave(); renderRoster();
+  toast("명부에 " + added + "명 추가 · " + updated + "건 보완했습니다");
 }
 
 /* ============================================================
@@ -3024,6 +3318,11 @@ function subscribeShared(){
       if(focused && (focused.id === "cfgAcademy" || focused.id === "cfgTeacher")) return;
       state.settings.academy = d.academy || "";
       state.settings.teacher = d.teacher || "";
+      if(Array.isArray(d.roster)){
+        var editing = document.activeElement;
+        var busy = isRosterOpen() && editing && /INPUT|SELECT/.test(editing.tagName);
+        if(!busy){ state.settings.roster = d.roster; if(isRosterOpen()) renderRoster(); }
+      }
       if(d.teacherEmails && typeof d.teacherEmails === "object"){
         state.settings.teacherEmails = d.teacherEmails;
         if($("#teacherVeil") && $("#teacherVeil").classList.contains("open")) renderTeacherBook();
@@ -3101,6 +3400,7 @@ function schedulePushSettings(){
         academy:state.settings.academy||"",
         teacher:state.settings.teacher||"",
         teacherEmails:state.settings.teacherEmails||{},
+        roster:state.settings.roster||[],
         updatedAt:Date.now(),
         updatedByEmail:(currentUser&&currentUser.email)||""
       }).catch(function(e){console.warn(e);});
@@ -3116,6 +3416,7 @@ function uploadLocalOnly(){
 
 function renderSyncBadge(){
   document.body.classList.toggle("is-admin", isAdmin());
+  document.body.classList.toggle("is-staff", isAuthorized());
   var box = $("#syncBadge"); if(!box) return;
   box.innerHTML = "";
   var labels = {
@@ -3245,6 +3546,16 @@ function bootstrap(){
     if(syncBackend === "firebase" && !isAuthorized()) setSyncState("local");
     toast("이 기기에만 저장되는 상태로 사용합니다");
   });
+  $("#btnRoster").addEventListener("click", openRoster);
+  $("#btnRosterClose").addEventListener("click", closeRoster);
+  $("#rosterVeil").addEventListener("click", function(e){ if(e.target === this) closeRoster(); });
+  $("#rosterSearch").addEventListener("input", renderRoster);
+  $("#btnRosterAdd").addEventListener("click", function(){
+    var r = newRosterEntry();
+    r.teacher = state.settings.teacher || "";
+    ensureRoster().push(r); rosterSave(); renderRoster();
+  });
+  $("#btnRosterFromReports").addEventListener("click", rosterImportFromReports);
   $("#btnTeacherBook").addEventListener("click", openTeacherBook);
   $("#btnTeacherClose").addEventListener("click", closeTeacherBook);
   $("#teacherVeil").addEventListener("click", function(e){ if(e.target === this) closeTeacherBook(); });
