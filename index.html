@@ -451,6 +451,16 @@
   .sched-cell.on{background:var(--accent); border-color:var(--accent); color:#fff; font-weight:700;}
   .score-row{display:grid; grid-template-columns:90px 70px 80px 80px 34px; gap:6px; align-items:center; margin-bottom:6px;}
   .sub-panel{background:var(--surface-2); border:1px solid var(--line); border-radius:10px; padding:12px 14px; margin:2px 0 10px;}
+  .manage-head{display:flex; align-items:center; justify-content:space-between;
+    gap:12px; flex-wrap:wrap; margin-bottom:10px;}
+  .group-pick{display:flex; align-items:center; gap:6px; flex-wrap:wrap;}
+  .group-pick-label{font-size:11px; font-weight:700; color:var(--ink-faint); margin-right:2px;}
+  .pick-btn.sm{padding:5px 11px; font-size:11.5px; border-radius:7px;}
+  .pick-row{display:flex; gap:7px; flex-wrap:wrap;}
+  .pick-btn{border:1px solid var(--line); background:var(--surface); color:var(--ink-muted);
+    border-radius:8px; padding:8px 16px; font-size:13px; font-weight:700; cursor:pointer;}
+  .pick-btn:hover{border-color:var(--accent); color:var(--accent-ink);}
+  .pick-btn.on{background:var(--accent); border-color:var(--accent); color:#fff;}
   .sub-panel h4{font-size:12px; font-weight:700; color:var(--accent-ink); margin-bottom:6px;}
   body.is-staff .staff-only{display:inline-flex !important;}
   /* 매니저(열람 전용) : 입력과 실행 버튼을 잠급니다 */
@@ -607,7 +617,7 @@
   .rp-weekbar .f{width:100%; background:var(--rp-accent); border-radius:3px 3px 0 0; min-height:2px;}
   .rp-weekbar .l{font-size:8.5px; font-weight:700; color:var(--rp-muted);}
 
-  /* 가로 막대 (모의고사 교재) */
+  /* 가로 막대 (주말 모의고사) */
   .rp-hbar{display:flex; align-items:center; gap:8px; padding:3.5px 0;}
   .rp-hbar-name{width:88px; flex:none; font-size:10.5px; font-weight:600; overflow:hidden;
     text-overflow:ellipsis; white-space:nowrap;}
@@ -775,6 +785,17 @@
       </label>
     </div>
   </aside>
+
+  <!-- ===================== 새 리포트 만들기 ===================== -->
+  <div class="modal-veil" id="newVeil">
+    <div class="modal manage-modal" style="max-width:720px">
+      <div class="modal-bar">
+        <span class="modal-bar-title">＋ 새 리포트 만들기</span>
+        <button class="btn btn-ghost btn-sm" id="btnNewClose">닫기 ✕</button>
+      </div>
+      <div class="manage-body" id="newBody"></div>
+    </div>
+  </div>
 
   <!-- ===================== 학생 명부 ===================== -->
   <div class="modal-veil" id="rosterVeil">
@@ -1064,15 +1085,15 @@ var BOOK_TEMPLATE = [
   {group:"C",  name:"기출문제 마스터",                  pct:[null,null,null,null]},
   {group:"D",  name:"고난도 정복하기",                  pct:[null,null,null,null]}
 ];
-/* ② 모의고사 교재 : 총 회차 + 주차별 진행 회차 → 누적 달성률 */
+/* ② 주말 모의고사 : 총 회차 + 주차별 진행 회차 → 누적 달성률 */
 var MOCKBOOK_TEMPLATE = [
   {group:"모A", name:"모의고사 A형", total:10, w:[0,0,0,0]},
   {group:"모B", name:"모의고사 B형", total:10, w:[0,0,0,0]},
   {group:"모C", name:"모의고사 C형", total:10, w:[0,0,0,0]}
 ];
-/* ③ 학습지 : 주차별 달성률(%) → 최종(평균) 달성률 */
+/* ③ 학교 제공 학습지 : 주차별 달성률(%) → 최종(평균) 달성률 */
 var WORKSHEET_TEMPLATE = [
-  {name:"학습지", pct:[null,null,null,null]}
+  {name:"학교 제공 학습지", pct:[null,null,null,null]}
 ];
 /* ④ 추가모의고사 : 주차별 추가 / 완료 개수 → 선택 주차까지 누적 달성률 */
 var EXTRAEXAM_TEMPLATE = [
@@ -1155,6 +1176,9 @@ function migrateStudent(s){
       : clone(MOCKBOOK_TEMPLATE);
   }
   if(!Array.isArray(s.worksheets)) s.worksheets = clone(WORKSHEET_TEMPLATE);
+  s.worksheets.forEach(function(r){
+    if((r.name||"").trim() === "학습지") r.name = "학교 제공 학습지";   // 이전 이름 자동 변경
+  });
   if(!Array.isArray(s.extraExams)) s.extraExams = clone(EXTRAEXAM_TEMPLATE);
   s.extraExams.forEach(function(r){
     if((r.name||"").trim() === "추가기출") r.name = "추가모의고사";   // 이전 이름 자동 변경
@@ -1401,7 +1425,7 @@ function overallPct(rows, upToWeek){
   return vals.reduce(function(a,b){return a+b;},0)/vals.length;
 }
 
-/* 모의고사 교재 : 누적 진행 회차 / 총 회차 */
+/* 주말 모의고사 : 누적 진행 회차 / 총 회차 */
 function mockBookDone(row, upToWeek){
   var n = 0, lim = upToWeek==null ? 4 : clamp(upToWeek,0,4);
   for(var i=0;i<lim;i++) n += num(row.w[i]);
@@ -1772,13 +1796,13 @@ function pctCellContent(pct, emptyLabel){
   return frag;
 }
 
-/* ---- ② 모의고사 교재 : 총 회차 + 주차별 회차 → 누적 달성률 ---- */
+/* ---- ② 주말 모의고사 : 총 회차 + 주차별 회차 → 누적 달성률 ---- */
 function buildMockBookTable(s, rows){
   var curWeek = getSelectedWeek(s);
   var table = el("table",{class:"book-table"});
   table.appendChild(el("thead",{},[ el("tr",{},[
     el("th",{style:"width:44px"},[""]),
-    el("th",{},["모의고사 교재"]),
+    el("th",{},["주말 모의고사"]),
     el("th",{style:"width:74px"},["총 회차"]),
     el("th",{style:"width:62px"},["1주"]),
     el("th",{style:"width:62px"},["2주"]),
@@ -1889,12 +1913,12 @@ function buildMockBookChart(rows,curWeek){
   return wrap;
 }
 
-/* ---- ③ 학습지 : 주차별 달성률(%) → 최종(평균) 달성률 ---- */
+/* ---- ③ 학교 제공 학습지 : 주차별 달성률(%) → 최종(평균) 달성률 ---- */
 function buildWorksheetTable(s, rows){
   var curWeek = getSelectedWeek(s);
   var table = el("table",{class:"book-table"});
   table.appendChild(el("thead",{},[ el("tr",{},[
-    el("th",{},["학습지"]),
+    el("th",{},["학교 제공 학습지"]),
     el("th",{style:"width:70px"},["1주 %"]),
     el("th",{style:"width:70px"},["2주 %"]),
     el("th",{style:"width:70px"},["3주 %"]),
@@ -2155,7 +2179,7 @@ function buildBooksPanel(s){
 
   var card2 = el("div",{class:"card"},[
     el("div",{class:"card-head"},[
-      el("div",{},[ el("h3",{},["② 모의고사 교재"]), el("div",{class:"hint",style:"margin-bottom:0"},["교재별 총 회차와 주차별 진행 회차를 기록합니다. 누적 달성률은 상단에서 선택한 주차까지 자동 계산됩니다."]) ])
+      el("div",{},[ el("h3",{},["② 주말 모의고사"]), el("div",{class:"hint",style:"margin-bottom:0"},["대비 기간에 치를 전체 회차를 정하고, 주차별로 몇 회를 진행했는지 기록합니다. 누적 달성률은 상단에서 선택한 주차까지 자동 계산됩니다."]) ])
     ]),
     buildMockBookTable(s, s.mockBooks),
     el("button",{class:"btn btn-sm add-row-btn", onclick:function(){
@@ -2165,7 +2189,7 @@ function buildBooksPanel(s){
 
   var card3 = el("div",{class:"card"},[
     el("div",{class:"card-head"},[
-      el("div",{},[ el("h3",{},["③ 학습지"]), el("div",{class:"hint",style:"margin-bottom:0"},["주차별 달성률(%)을 입력하면 상단에서 선택한 주차까지의 평균이 누적 달성률로 계산됩니다."]) ])
+      el("div",{},[ el("h3",{},["③ 학교 제공 학습지"]), el("div",{class:"hint",style:"margin-bottom:0"},["주차별 달성률(%)을 입력하면 상단에서 선택한 주차까지의 평균이 누적 달성률로 계산됩니다."]) ])
     ]),
     buildWorksheetTable(s, s.worksheets),
     el("button",{class:"btn btn-sm add-row-btn", onclick:function(){
@@ -2336,17 +2360,177 @@ function renderSaveBar(s){
 /* ============================================================
    STUDENT ACTIONS
    ============================================================ */
-function addStudent(){
+function addStudent(){ openNewReport(); }
+/* ============================================================
+   새 리포트 만들기 (6단계)
+   ① 시험 종류 고르기 → ② 학생 명부에서 고르기 → 생성
+   ============================================================ */
+var newDraft = null;
+
+function openNewReport(){
+  ensureRoster();
+  var now = new Date().getFullYear();
+  newDraft = {
+    step: 1,
+    examYear: state.settings.lastExamYear || now,
+    examSemester: state.settings.lastExamSemester || 2,
+    examKind: state.settings.lastExamKind || "중간",
+    q: "", picked: {}
+  };
+  $("#newVeil").classList.add("open");
+  renderNewReport();
+}
+function closeNewReport(){ newDraft = null; $("#newVeil").classList.remove("open"); }
+function isNewOpen(){ var v=$("#newVeil"); return v && v.classList.contains("open"); }
+
+function renderNewReport(){
+  if(!isNewOpen() || !newDraft) return;
+  var body = $("#newBody"); body.innerHTML = "";
+  var d = newDraft;
+  var label = d.examYear + "년 " + d.examSemester + "학기 " + d.examKind + "고사대비";
+
+  /* ── 1단계 : 시험 종류 ── */
+  if(d.step === 1){
+    body.appendChild(el("div",{class:"manage-count"},["① 어떤 시험을 대비하는 리포트인가요?"]));
+    function pick(labelTxt, opts, cur, set){
+      var wrap = el("div",{class:"field"},[ el("label",{},[labelTxt]) ]);
+      var row = el("div",{class:"pick-row"});
+      opts.forEach(function(o){
+        row.appendChild(el("button",{class:"pick-btn" + (String(o)===String(cur) ? " on" : ""),
+          onclick:function(){ set(o); renderNewReport(); }},[String(o)]));
+      });
+      wrap.appendChild(row); return wrap;
+    }
+    var yrs=[], now=new Date().getFullYear();
+    for(var y=now+1; y>=now-2; y--) yrs.push(y);
+    body.appendChild(el("div",{class:"sub-panel"},[
+      pick("연도", yrs, d.examYear, function(v){ d.examYear=parseInt(v,10); }),
+      pick("학기", [1,2], d.examSemester, function(v){ d.examSemester=parseInt(v,10); }),
+      pick("중간 / 기말", EXAM_KINDS, d.examKind, function(v){ d.examKind=v; })
+    ]));
+    body.appendChild(el("div",{class:"exam-name-view", style:"text-align:center;font-size:15px;padding:12px"},[label]));
+    body.appendChild(el("div",{class:"access-actions"},[
+      el("button",{class:"btn btn-primary", onclick:function(){ d.step=2; renderNewReport(); }},["다음 · 학생 고르기 →"])
+    ]));
+    return;
+  }
+
+  /* ── 2단계 : 학생 고르기 ── */
+  var existing = {};
+  state.students.forEach(function(s){
+    if(examKey(s.meta) === (d.examYear + "-" + d.examSemester + "-" + d.examKind)){
+      existing[studentKey(s.meta)] = true;
+    }
+  });
+  var rows = rosterList().filter(function(r){
+    if(r.active === false) return false;
+    if(!d.q) return true;
+    return (r.name + " " + r.school + " " + r.teacher + " " + r.grade).toLowerCase().indexOf(d.q.toLowerCase()) > -1;
+  });
+
+  body.appendChild(el("div",{class:"manage-count"},[
+    "② " + label + " · 리포트를 만들 학생을 고르세요 (여러 명 선택 가능)"
+  ]));
+
+  if(rosterList().length === 0){
+    body.appendChild(el("div",{class:"manage-empty"},[
+      "학생 명부가 비어 있습니다. '🎓 학생 명부'에서 [리포트에서 가져오기]를 먼저 눌러주세요."
+    ]));
+    body.appendChild(el("div",{class:"access-actions"},[
+      el("button",{class:"btn", onclick:function(){ d.step=1; renderNewReport(); }},["← 이전"]),
+      el("button",{class:"btn btn-primary", onclick:function(){
+        closeNewReport(); addStudentBlank(d);
+      }},["명부 없이 빈 리포트 만들기"])
+    ]));
+    return;
+  }
+
+  var search = el("div",{class:"side-search", style:"margin-bottom:10px"},[
+    el("span",{},["🔍"]),
+    el("input",{type:"text", value:d.q, placeholder:"이름·학교·담당 검색",
+      oninput:function(e){ d.q=e.target.value; renderNewReport(); }})
+  ]);
+  body.appendChild(search);
+
+  var table = el("table",{class:"roster-table", style:"min-width:560px"});
+  table.appendChild(el("thead",{},[ el("tr",{},[
+    el("th",{style:"width:40px"},[""]), el("th",{style:"width:60px"},["학년"]),
+    el("th",{},["이름"]), el("th",{},["학교"]), el("th",{},["담당"]), el("th",{},["상태"])
+  ])]));
+  var tb = el("tbody"), lastG = null;
+  rows.forEach(function(r){
+    if(r.grade !== lastG){
+      lastG = r.grade;
+      tb.appendChild(el("tr",{class:"rost-group"},[ el("td",{colspan:"6"},[r.grade]) ]));
+    }
+    var key = [r.name, r.school, r.grade].join("|");
+    var made = !!existing[key];
+    tb.appendChild(el("tr",{},[
+      el("td",{},[ made ? el("span",{},["✔"]) : el("input",{type:"checkbox",
+        checked: d.picked[r.id] ? "checked" : null,
+        onchange:function(e){ if(e.target.checked) d.picked[r.id]=true; else delete d.picked[r.id]; }}) ]),
+      el("td",{},[r.grade]), el("td",{},[ el("span",{class:"manage-name"},[r.name||"이름 없음"]) ]),
+      el("td",{},[r.school||""]), el("td",{},[r.teacher||""]),
+      el("td",{class:"manage-sub"},[ made ? "이미 있음" : "" ])
+    ]));
+  });
+  table.appendChild(tb);
+  body.appendChild(el("div",{class:"table-wrap"},[table]));
+
+  body.appendChild(el("div",{class:"access-actions"},[
+    el("button",{class:"btn", onclick:function(){ d.step=1; renderNewReport(); }},["← 이전"]),
+    el("button",{class:"btn btn-primary", onclick:function(){ createFromRoster(d); }},["리포트 만들기"])
+  ]));
+}
+
+/* 명부에서 고른 학생들로 리포트를 만듭니다 */
+function createFromRoster(d){
+  var ids = Object.keys(d.picked);
+  if(!ids.length){ toast("학생을 한 명 이상 골라주세요"); return; }
+  var roster = ensureRoster(), made = 0, first = null;
+  ids.forEach(function(rid){
+    var r = roster.filter(function(x){ return x.id === rid; })[0];
+    if(!r) return;
+    var s = newStudent();
+    s.meta.examYear = d.examYear;
+    s.meta.examSemester = d.examSemester;
+    s.meta.examKind = d.examKind;
+    s.meta.examName = examLabel(s.meta);
+    s.meta.name = r.name; s.meta.school = r.school; s.meta.grade = r.grade;
+    s.meta.teacher = r.teacher || state.settings.teacher || "";
+    s.meta.ownerEmail = teacherEmailOf(s.meta.teacher) || myEmail();
+    s.meta.studentId = studentKey(s.meta);
+    /* 명부의 가장 최근 성적을 '지난 시험 성적'으로 미리 채웁니다 */
+    if(r.scores && r.scores.length){
+      var sc = r.scores.slice().sort(cmpScore)[0];
+      if(sc && sc.score) s.meta.lastScore = String(sc.score);
+    }
+    state.students.push(s);
+    markDirty(s);
+    if(!first) first = s;
+    made++;
+  });
+  state.settings.lastExamYear = d.examYear;
+  state.settings.lastExamSemester = d.examSemester;
+  state.settings.lastExamKind = d.examKind;
+  if(first) state.activeId = first.id;
+  persist(); closeNewReport(); activeTab = "info"; renderAll();
+  toast(made + "개 리포트를 만들었습니다 · 확인 후 [저장]을 눌러주세요");
+}
+
+/* 명부 없이 빈 리포트 */
+function addStudentBlank(d){
   var s = newStudent();
+  if(d){ s.meta.examYear=d.examYear; s.meta.examSemester=d.examSemester; s.meta.examKind=d.examKind; }
+  s.meta.examName = examLabel(s.meta);
+  s.meta.ownerEmail = myEmail();
   state.students.push(s);
   state.activeId = s.id;
-  stampEditor(s);
-  persist();
-  pushStudent(s);
-  activeTab = "info";
-  renderAll();
-  toast("새 학생 리포트를 시작합니다");
+  markDirty(s);
+  persist(); activeTab = "info"; renderAll();
+  toast("빈 리포트를 만들었습니다 · 내용 입력 후 [저장]을 눌러주세요");
 }
+
 function studentLabel(s){
   var who = s.meta.name || "이름 미입력";
   var where = [s.meta.school, s.meta.grade].filter(Boolean).join(" ");
@@ -2661,7 +2845,20 @@ function renderTeacherBook(){
    리포트 관리 (전체 목록에서 수정 / 복제 / 삭제)
    ============================================================ */
 var manageChecked = {};
-var manageOpenTeachers = {};   // 담당 선생님 폴더 펼침 상태 (처음에는 모두 접힌 상태)
+var manageOpenTeachers = {};   // 묶음 펼침 상태 (처음에는 모두 접힌 상태)
+var GROUPBY_KEY = "wr_groupby_v1";
+var MANAGE_GROUPS = [
+  { key:"teacher", label:"담당 선생님", of:function(s){ return (s.meta.teacher||"").trim() || "담당 미지정"; } },
+  { key:"grade",   label:"학년",       of:function(s){ return (s.meta.grade||"").trim() || "학년 미지정"; } },
+  { key:"school",  label:"학교",       of:function(s){ return (s.meta.school||"").trim() || "학교 미지정"; } },
+  { key:"exam",    label:"시험 종류",   of:function(s){ return examLabel(s.meta) || "시험 미지정"; } }
+];
+var manageGroupBy = (function(){
+  try{ return localStorage.getItem(GROUPBY_KEY) || "teacher"; }catch(e){ return "teacher"; }
+})();
+function manageGroupDef(){
+  return MANAGE_GROUPS.filter(function(g){ return g.key === manageGroupBy; })[0] || MANAGE_GROUPS[0];
+}
 
 function openManage(){
   manageChecked = {};
@@ -2688,9 +2885,23 @@ function buildManageTable(){
     wrap.appendChild(el("div",{class:"manage-empty"},["아직 만들어진 리포트가 없습니다. '+ 새 학생 리포트'로 시작해보세요."]));
     return wrap;
   }
-  wrap.appendChild(el("div",{class:"manage-count"},[
-    "전체 " + state.students.length + "개" + (q ? (" 중 검색 결과 " + items.length + "개") : "") + " · 담당 선생님 이름을 클릭하면 담당 학생 목록이 펼쳐집니다 · 체크한 리포트는 위의 '선택 삭제'로 한 번에 지울 수 있습니다"
-  ]));
+  var head = el("div",{class:"manage-head"},[
+    el("div",{class:"manage-count", style:"margin:0"},[
+      "전체 " + state.students.length + "개" + (q ? (" 중 검색 결과 " + items.length + "개") : "")
+      + " · 묶음 이름을 클릭하면 펼쳐집니다"
+    ]),
+    el("div",{class:"group-pick"},[
+      el("span",{class:"group-pick-label"},["묶어 보기"])
+    ].concat(MANAGE_GROUPS.map(function(g){
+      return el("button",{class:"pick-btn sm" + (manageGroupBy === g.key ? " on" : ""),
+        onclick:function(){
+          manageGroupBy = g.key;
+          try{ localStorage.setItem(GROUPBY_KEY, g.key); }catch(e){}
+          manageOpenTeachers = {}; refreshManage();
+        }},[g.label]);
+    })))
+  ]);
+  wrap.appendChild(head);
   if(items.length === 0){
     wrap.appendChild(el("div",{class:"manage-empty"},["검색 결과가 없습니다."]));
     return wrap;
@@ -2714,15 +2925,17 @@ function buildManageTable(){
   var tbody = el("tbody");
 
   // 담당 선생님별로 묶어서 보여줍니다
+  var gdef = manageGroupDef();
   var byTeacher = {};
   items.forEach(function(s){
-    var t = (s.meta.teacher || "").trim() || "담당 미지정";
+    var t = gdef.of(s);
     (byTeacher[t] = byTeacher[t] || []).push(s);
   });
   Object.keys(byTeacher).forEach(function(k){ byTeacher[k].sort(cmpStudent); });
   var teacherNames = Object.keys(byTeacher).sort(function(a,b){
-    if(a === "담당 미지정") return 1;
-    if(b === "담당 미지정") return -1;
+    var au = /미지정$/.test(a), bu = /미지정$/.test(b);
+    if(au !== bu) return au ? 1 : -1;
+    if(manageGroupBy === "grade") return gradeRank(a) - gradeRank(b);
     return a.localeCompare(b, "ko");
   });
 
@@ -2746,7 +2959,8 @@ function buildManageTable(){
           refreshManage();
         }},[
         el("span",{class:"manage-group-caret"},[open ? "▾" : "▸"]),
-        el("span",{class:"manage-group-name"},["👤 " + tName]),
+        el("span",{class:"manage-group-name"},[
+          ({teacher:"👤 ", grade:"🎓 ", school:"🏫 ", exam:"📝 "}[manageGroupBy] || "") + tName ]),
         el("span",{class:"manage-group-count"},[rows.length + "개"])
       ])
     ]);
@@ -2936,16 +3150,16 @@ function buildReportHTML(s){
       + '</div>';
   }).join("");
   var mockBookPanel = '<div class="rp-panel">'
-    + '<div class="rp-panel-title"><span class="no">2</span>모의고사 교재 진행'
+    + '<div class="rp-panel-title"><span class="no">2</span>주말 모의고사 진행 회차'
     +   '<span class="sub">' + (mbTotals.total>0 ? ("전체 "+mbTotals.done+"/"+mbTotals.total+"회") : "") + '</span></div>'
     + mbRows
     + '</div>';
 
   /* ---------- ③④ 학습지 / 추가모의고사 ---------- */
   var statPanel = '<div class="rp-panel">'
-    + '<div class="rp-panel-title"><span class="no">3</span>학습지 · 추가모의고사</div>'
+    + '<div class="rp-panel-title"><span class="no">3</span>학교 제공 학습지 · 추가모의고사</div>'
     + '<div class="rp-stats">'
-    +   '<div class="rp-stat"><div class="k">학습지 달성률</div>'
+    +   '<div class="rp-stat"><div class="k">학습지</div>'
     +     '<div class="row"><span class="n' + (wsAvg==null?' empty':'') + '">' + (wsAvg==null?"":Math.round(wsAvg)+"%") + '</span>'
     +     '<span class="d">' + (wsAvg==null?"":"주차 평균") + '</span></div>'
     +     '<div class="track"><div class="fill" style="width:'+(wsAvg==null?0:Math.min(100,wsAvg))+'%"></div></div>'
@@ -3689,6 +3903,8 @@ function bootstrap(){
     if(syncBackend === "firebase" && !isAuthorized()) setSyncState("local");
     toast("이 기기에만 저장되는 상태로 사용합니다");
   });
+  $("#btnNewClose").addEventListener("click", closeNewReport);
+  $("#newVeil").addEventListener("click", function(e){ if(e.target === this) closeNewReport(); });
   $("#btnRoster").addEventListener("click", openRoster);
   $("#btnRosterClose").addEventListener("click", closeRoster);
   $("#rosterVeil").addEventListener("click", function(e){ if(e.target === this) closeRoster(); });
