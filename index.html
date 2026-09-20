@@ -366,6 +366,12 @@
   }
   .save-status{font-size:12px; color:var(--ink-faint); display:flex; align-items:center; gap:6px;}
   .dot{width:7px;height:7px;border-radius:99px;background:var(--good);}
+  .dot.warn{background:var(--warn);}
+  .save-bar.unsaved{border-color:var(--warn); background:var(--warn-soft);}
+  .save-bar.unsaved .save-status{color:var(--warn); font-weight:700;}
+  .save-warn{color:var(--bad); font-weight:700; margin-left:8px;}
+  .btn-muted{opacity:.45;}
+  .side-item-dirty{margin-left:4px; color:var(--warn); font-weight:800; flex:none;}
 
   /* ---------- preview modal ---------- */
   .modal-veil{
@@ -1302,7 +1308,50 @@ function stampEditor(s){
     s.updatedByName = currentUser.displayName || currentUser.email || "";
   }
 }
-function touch(s){ stampEditor(s); persist(); showSavedPulse(); schedulePush(s); }
+/* ── 저장 버튼 (5단계) ─────────────────────────────────────
+   입력은 이 기기에만 임시 보관하고, [저장]을 눌러야 공유 저장소에 올라갑니다. */
+var dirtyIds = {};                 // 아직 저장하지 않은 리포트
+var remoteAhead = {};              // 다른 선생님이 먼저 저장해 둔 리포트
+
+function isDirty(s){ return !!(s && dirtyIds[s.id]); }
+function markDirty(s){
+  if(!s) return;
+  dirtyIds[s.id] = true;
+  lastLocalEditAt = Date.now();
+  renderSaveBar(s);
+  renderSidebar();
+}
+function touch(s){ stampEditor(s); persist(); markDirty(s); }
+
+/* 실제 저장 : 공유 저장소로 올립니다 */
+function saveStudent(s){
+  if(!s) return;
+  if(!canEdit(s)){
+    toast(isReadOnly() ? "매니저는 내용을 고칠 수 없습니다" : "본인 담당 학생만 저장할 수 있습니다");
+    return;
+  }
+  if(remoteAhead[s.id]){
+    var who = remoteAhead[s.id];
+    if(!confirm("이 리포트는 " + who + "님이 먼저 저장했습니다.\n지금 저장하면 그 내용을 덮어씁니다. 계속할까요?")) return;
+  }
+  s.updatedAt = Date.now();
+  stampEditor(s);
+  delete dirtyIds[s.id];
+  delete remoteAhead[s.id];
+  persist();
+  pushStudent(s);
+  showSavedPulse();
+  renderSaveBar(s);
+  renderSidebar();
+  toast(syncState === "shared" ? "저장했습니다 · 모든 선생님에게 반영됩니다" : "저장했습니다");
+}
+function dirtyCount(){ return Object.keys(dirtyIds).length; }
+
+/* 저장하지 않고 창을 닫으려 할 때 경고 */
+window.addEventListener("beforeunload", function(e){
+  if(dirtyCount() === 0) return;
+  e.preventDefault(); e.returnValue = "";
+});
 
 var toastTimer;
 function toast(msg){
@@ -1480,7 +1529,8 @@ function renderSidebar(){
         el("div",{class:"side-item-line"},[
           el("span",{class:"side-item-name"},[s.meta.name || "이름 미입력"]),
           el("span",{class:"side-item-school"},[s.meta.school || "학교 미입력"]),
-          el("span",{class:"side-item-week"},[(clamp(parseInt(s.meta.week||1,10),1,4))+"주"])
+          el("span",{class:"side-item-week"},[(clamp(parseInt(s.meta.week||1,10),1,4))+"주"]),
+          isDirty(s) ? el("span",{class:"side-item-dirty", title:"저장하지 않은 변경이 있습니다"},["●"]) : el("span",{})
         ])
       ]);
       list.appendChild(li);
@@ -2250,13 +2300,37 @@ function buildCommentsPanel(s){
 
 /* ---------- Save bar ---------- */
 function buildSaveBar(s){
-  return el("div",{class:"save-bar"},[
-    el("div",{class:"save-status"},[ el("span",{class:"dot"}), (syncState==="shared" ? "공유 DB + 이 브라우저에 자동 저장" : "이 브라우저에 자동 저장") + " · 마지막 저장 " + new Date(s.updatedAt).toLocaleString("ko-KR") + (s.updatedByName ? (" · " + s.updatedByName) : "") ]),
-    el("div",{style:"display:flex; gap:8px;"},[
+  return buildSaveBar(s);
+}
+
+function buildSaveBar(s){
+  var dirty = isDirty(s);
+  var ahead = remoteAhead[s.id];
+  var bar = el("div",{class:"save-bar" + (dirty ? " unsaved" : ""), id:"saveBar"},[
+    el("div",{class:"save-status"},[
+      el("span",{class:"dot" + (dirty ? " warn" : "")}),
+      el("span",{},[
+        dirty ? "저장하지 않은 변경이 있습니다"
+              : ("마지막 저장 " + new Date(s.updatedAt).toLocaleString("ko-KR")
+                 + (s.updatedByName ? (" · " + s.updatedByName) : ""))
+      ]),
+      ahead ? el("span",{class:"save-warn"},["⚠ " + ahead + "님이 먼저 저장했습니다"]) : null
+    ].filter(Boolean)),
+    el("div",{style:"display:flex; gap:8px; align-items:center;"},[
       el("button",{class:"btn", onclick:function(){ downloadReport(s); }},["⬇ HTML 파일 저장"]),
-      el("button",{class:"btn btn-primary", onclick:function(){ openPreview(s); }},["📄 학부모 발송본 보기"])
-    ])
+      canEdit(s) ? el("button",{class:"btn btn-primary" + (dirty ? "" : " btn-muted"),
+        id:"btnSaveStudent",
+        onclick:function(){ saveStudent(s); }},[ dirty ? "💾 저장" : "저장됨" ]) : null,
+      el("button",{class:"btn", onclick:function(){ openPreview(s); }},["📄 학부모 발송본 보기"])
+    ].filter(Boolean))
   ]);
+  return bar;
+}
+/* 저장 바만 다시 그립니다 (입력 중 포커스를 잃지 않도록) */
+function renderSaveBar(s){
+  var old = document.getElementById("saveBar");
+  if(!old || !s) return;
+  old.parentNode.replaceChild(buildSaveBar(s), old);
 }
 
 /* ============================================================
@@ -3407,7 +3481,15 @@ function applySharedSnapshot(snap){
   var byId = {};
   state.students.forEach(function(s){ byId[s.id] = s; });
   var next = remote.map(function(s){
-    if(keepEditing && s.id === activeId && byId[s.id]) return byId[s.id];
+    var mine = byId[s.id];
+    /* 저장하지 않은 내 수정본이 있으면 지키고, 남이 먼저 저장했음을 표시합니다 */
+    if(mine && dirtyIds[s.id]){
+      if((s.updatedAt||0) > (mine.updatedAt||0) && s.updatedByName){
+        remoteAhead[s.id] = s.updatedByName;
+      }
+      return mine;
+    }
+    if(keepEditing && s.id === activeId && mine) return mine;
     return s;
   });
   localOnlyPending = state.students.filter(function(s){ return !remoteIds[s.id]; });
@@ -3425,12 +3507,8 @@ function applySharedSnapshot(snap){
   if(!editorHasFocus()) renderMain();
 }
 
-function schedulePush(s){
-  lastLocalEditAt = Date.now();
-  if(!sharedDb || !s || !isAuthorized()) return;
-  clearTimeout(pushTimers[s.id]);
-  pushTimers[s.id] = setTimeout(function(){ pushStudent(s); }, 900);
-}
+/* 예전 자동 올리기는 쓰지 않습니다. [저장] 버튼이 그 역할을 합니다. */
+function schedulePush(s){ lastLocalEditAt = Date.now(); }
 function pushStudent(s){
   if(!isOffline() && !canEdit(s)){
     toast(isReadOnly() ? "매니저는 내용을 고칠 수 없습니다" : "본인 담당 학생만 수정할 수 있습니다");
