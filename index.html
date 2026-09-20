@@ -447,6 +447,22 @@
   .sub-panel{background:var(--surface-2); border:1px solid var(--line); border-radius:10px; padding:12px 14px; margin:2px 0 10px;}
   .sub-panel h4{font-size:12px; font-weight:700; color:var(--accent-ink); margin-bottom:6px;}
   body.is-staff .staff-only{display:inline-flex !important;}
+  /* 매니저(열람 전용) : 입력과 실행 버튼을 잠급니다 */
+  body.is-readonly .main input:not([type=checkbox]),
+  body.is-readonly .main textarea,
+  body.is-readonly .main select{pointer-events:none; background:var(--surface-2); color:var(--ink-muted);}
+  body.is-readonly .row-del,
+  body.is-readonly .add-row-btn,
+  body.is-readonly #btnNewStudent,
+  body.is-readonly .btn-danger,
+  body.is-readonly .mini-btn.danger,
+  body.is-readonly .edit-only{display:none !important;}
+  .readonly-bar{
+    display:none; align-items:center; gap:8px; margin-bottom:14px;
+    background:var(--warn-soft); border:1px solid var(--warn); color:var(--warn);
+    border-radius:9px; padding:9px 13px; font-size:12.5px; font-weight:600;
+  }
+  body.is-readonly .readonly-bar{display:flex;}
   .staff-only{display:none !important;}
 
   /* 학년별 폴더 */
@@ -851,14 +867,22 @@
       <button class="btn btn-sm btn-ghost" id="btnCloseAccess">닫기 ✕</button>
     </div>
     <div class="access-body">
-      <div class="access-help">한 줄에 Google 이메일 주소 하나씩 입력하세요. <b>허용 사용자</b>는 학생 리포트 추가·수정·조회가 가능하고, <b>관리자</b>는 사용자 관리와 학생 리포트 삭제까지 가능합니다. 관리자 이메일은 반드시 허용 사용자 목록에도 포함되어야 합니다.</div>
+      <div class="access-help">한 줄에 Google 이메일 주소 하나씩 입력하세요.<br>
+        <b>선생님</b>은 본인이 담당하는 학생만 보고 고칠 수 있습니다. ·
+        <b>매니저</b>는 전체 학생을 볼 수 있지만 고치거나 지울 수 없습니다. ·
+        <b>총괄</b>은 전체 학생을 고치고 지울 수 있으며 사용자·명부를 관리합니다.<br>
+        매니저와 총괄 이메일도 <b>허용 사용자 목록에 함께</b> 넣어주세요.</div>
       <div class="access-grid">
         <div class="field">
           <label>허용 사용자 이메일</label>
           <textarea id="allowedEmails" placeholder="teacher1@gmail.com&#10;teacher2@gmail.com"></textarea>
         </div>
         <div class="field">
-          <label>관리자 이메일</label>
+          <label>매니저 이메일 (열람 전용 · 최대 2명 권장)</label>
+          <textarea id="managerEmails" placeholder="manager@gmail.com"></textarea>
+        </div>
+        <div class="field">
+          <label>총괄 이메일</label>
           <textarea id="adminEmails" placeholder="director@gmail.com"></textarea>
         </div>
       </div>
@@ -1498,8 +1522,7 @@ function openStudent(s){
    MAIN EDITOR RENDER
    ============================================================ */
 function renderAll(){
-  document.body.classList.toggle("is-admin", isAdmin());
-  document.body.classList.toggle("is-staff", isAuthorized());
+  applyRoleClasses();
   renderSidebar();
   renderMain();
 }
@@ -1557,8 +1580,8 @@ function buildTopbar(s){
       el("div",{class:"sub"},[(s.meta.examName||"") + " · 1~" + w + "주차 누적 보기"])
     ]),
     el("div",{class:"topbar-actions"},[
-      el("button",{class:"btn", onclick:function(){ duplicateStudent(s); }},["⎘ 다음 시험대비로 복제"]),
-      el("button",{class:"btn btn-danger", onclick:function(){ removeStudent(s); }},["🗑 삭제"]),
+      canEdit(s) ? el("button",{class:"btn", onclick:function(){ duplicateStudent(s); }},["⎘ 다음 시험대비로 복제"]) : el("span",{},[""]),
+      canDelete(s) ? el("button",{class:"btn btn-danger", onclick:function(){ removeStudent(s); }},["🗑 삭제"]) : el("span",{},[""]),
       el("button",{class:"btn btn-primary", onclick:function(){ openPreview(s); }},["📄 학부모 발송본 보기"])
     ])
   ]);
@@ -1610,6 +1633,10 @@ function buildInfoPanel(s){
     }
     return el("div",{class:"field"},[ el("label",{},[labelTxt]), input ]);
   }
+
+  var roBar = el("div",{class:"readonly-bar"},[
+    "👀 매니저 권한입니다 · 전체 학생을 볼 수 있지만 내용을 고치거나 지울 수는 없습니다"
+  ]);
 
   var card1 = el("div",{class:"card"},[
     el("h3",{},["보고서 기본정보"]),
@@ -1670,7 +1697,7 @@ function buildInfoPanel(s){
     wpRow
   ]);
 
-  return panelWrap("info", [card1, card2, card3]);
+  return panelWrap("info", [roBar, card1, card2, card3]);
 }
 
 function syncTopbar(){
@@ -2252,6 +2279,7 @@ function studentLabel(s){
   return who + (where ? (" (" + where + ")") : "");
 }
 function removeStudent(s){
+  if(!canDelete(s)){ toast("이 리포트를 지울 권한이 없습니다"); return; }
   if(!isAdmin()){ toast("학생 리포트 삭제는 관리자만 가능합니다"); return; }
   if(!confirm(studentLabel(s) + " 학생의 '" + (s.meta.examName||"내신대비") + "' 1~4주차 누적 리포트 전체를 삭제할까요?\n삭제한 리포트는 되돌릴 수 없습니다.")) return;
   state.students = state.students.filter(function(x){ return x.id !== s.id; });
@@ -2668,8 +2696,8 @@ function buildManageTable(){
       el("td",{},[ el("div",{class:"manage-actions"},[
         el("button",{class:"mini-btn", onclick:function(){ openStudent(s); }},["✏️ 수정"]),
         el("button",{class:"mini-btn", onclick:function(){ openPreviewFor(s); }},["📄 발송본"]),
-        el("button",{class:"mini-btn", onclick:function(){ duplicateStudent(s); }},["⎘ 복제"]),
-        el("button",{class:"mini-btn danger admin-only", onclick:function(){ removeStudent(s); }},["🗑 삭제"])
+        canEdit(s) ? el("button",{class:"mini-btn", onclick:function(){ duplicateStudent(s); }},["⎘ 복제"]) : el("span",{},[""]),
+        canDelete(s) ? el("button",{class:"mini-btn danger", onclick:function(){ removeStudent(s); }},["🗑 삭제"]) : el("span",{},[""])
       ]) ])
     ]);
     tbody.appendChild(tr);
@@ -3129,7 +3157,25 @@ function emailsFromTextarea(id){ return uniqEmails(($(id).value||"").split(/[\n,
 /* 공유 저장소에 연결되지 않은 상태(혼자 쓰는 기기)에서는 모든 기능을 엽니다 */
 function isOffline(){ return syncState === "local" || syncBackend === "artifact" || syncBackend === "local"; }
 function isAdmin(){ return isOffline() ? true : currentRole === "admin"; }
-function isAuthorized(){ return isOffline() ? true : (currentRole === "admin" || currentRole === "teacher"); }
+function isManager(){ return !isOffline() && currentRole === "manager"; }
+function isAuthorized(){
+  return isOffline() ? true
+    : (currentRole === "admin" || currentRole === "manager" || currentRole === "teacher");
+}
+/* 읽기만 가능한 사람(매니저)인지 */
+function isReadOnly(){ return isManager(); }
+/* 내 이메일 (소문자) */
+function myEmail(){ return ((currentUser && currentUser.email) || "").trim().toLowerCase(); }
+/* 이 리포트를 내가 고칠 수 있는가 */
+function canEdit(s){
+  if(isOffline() || isAdmin()) return true;
+  if(isReadOnly()) return false;
+  if(currentRole !== "teacher") return false;
+  var owner = ((s && s.meta && s.meta.ownerEmail) || "").trim().toLowerCase();
+  return !!owner && owner === myEmail();
+}
+function canDelete(s){ return isOffline() || isAdmin() || canEdit(s); }
+var ROLE_LABEL = { admin:"총괄", manager:"매니저", teacher:"선생님", guest:"" };
 function hasFirebaseConfig(){
   var c = window.MATHLIB_FIREBASE_CONFIG || {};
   return !!(c.apiKey && c.projectId && c.authDomain && String(c.apiKey).indexOf("여기에")===-1 && String(c.projectId).indexOf("여기에")===-1);
@@ -3137,7 +3183,6 @@ function hasFirebaseConfig(){
 function setSyncState(v){
   syncState = v;
   renderSyncBadge();
-  document.body.classList.toggle("is-admin", isAdmin());
 }
 function setAuthMessage(msg, kind){
   var box = $("#authStatus"); if(!box) return;
@@ -3155,16 +3200,16 @@ function clearSharedSubscriptions(){
 function renderUserCard(){
   var card = $("#userCard"); if(!card) return;
   var top = $("#userTop"); top.innerHTML = "";
-  if(!currentUser){ card.classList.remove("show"); document.body.classList.remove("is-admin"); return; }
+  if(!currentUser){ card.classList.remove("show"); applyRoleClasses(); return; }
   var avatar = currentUser.photoURL ? el("img",{class:"user-avatar",src:currentUser.photoURL,referrerpolicy:"no-referrer"}) : el("div",{class:"user-avatar-fallback"},[(currentUser.displayName||currentUser.email||"U").slice(0,1)]);
   top.appendChild(avatar);
   top.appendChild(el("div",{class:"user-meta"},[
     el("div",{class:"user-name"},[currentUser.displayName || "Google 사용자"]),
     el("div",{class:"user-email"},[currentUser.email || ""])
   ]));
-  top.appendChild(el("span",{class:"user-role"},[isAdmin()?"관리자":"선생님"]));
+  top.appendChild(el("span",{class:"user-role"},[ROLE_LABEL[currentRole] || "선생님"]));
   card.classList.add("show");
-  document.body.classList.toggle("is-admin", isAdmin());
+  applyRoleClasses();
 }
 
 function initSharedSync(){
@@ -3272,7 +3317,10 @@ function applyAccessConfig(data, firstLoad){
   var email = normEmail(currentUser && currentUser.email);
   var allowed = uniqEmails(accessConfig.allowedEmails||[]);
   var admins = uniqEmails(accessConfig.adminEmails||[]);
-  currentRole = admins.indexOf(email)>-1 ? "admin" : (allowed.indexOf(email)>-1 ? "teacher" : "guest");
+  var managers = uniqEmails(accessConfig.managerEmails||[]);
+  currentRole = admins.indexOf(email)>-1 ? "admin"
+              : (managers.indexOf(email)>-1 ? "manager"
+              : (allowed.indexOf(email)>-1 ? "teacher" : "guest"));
   renderUserCard();
   if(!isAuthorized()){
     clearStudentSettingsSubscriptions();
@@ -3291,7 +3339,7 @@ function initializeWorkspace(){
   if(!email){ setAuthMessage("이 계정의 이메일을 확인할 수 없습니다.","error"); return; }
   setAuthMessage("최초 관리자 공간을 만드는 중입니다…");
   sharedDb.doc("config/access").set({
-    allowedEmails:[email], adminEmails:[email], createdAt:Date.now(), createdByEmail:email
+    allowedEmails:[email], managerEmails:[], adminEmails:[email], createdAt:Date.now(), createdByEmail:email
   }).then(function(){
     toast("공유 공간을 만들었습니다"); showInitWorkspace(false); loadAccessConfig(true);
   }).catch(function(e){
@@ -3308,7 +3356,12 @@ function subscribeShared(){
   if(!sharedDb || !isAuthorized()) return;
   clearStudentSettingsSubscriptions();
   try{
-    unsubscribeStudents = sharedDb.collection("students").onSnapshot(function(snap){
+    /* 총괄·매니저는 전체를, 선생님은 본인 담당 학생만 받아옵니다 */
+    var ref = sharedDb.collection("students");
+    if(currentRole === "teacher"){
+      ref = ref.where("meta.ownerEmail", "==", myEmail());
+    }
+    unsubscribeStudents = ref.onSnapshot(function(snap){
       applySharedSnapshot(snap); setSyncState("shared");
     }, function(e){ console.error(e); setSyncState("error"); });
     unsubscribeSettings = sharedDb.doc("settings/shared").onSnapshot(function(snap){
@@ -3379,6 +3432,10 @@ function schedulePush(s){
   pushTimers[s.id] = setTimeout(function(){ pushStudent(s); }, 900);
 }
 function pushStudent(s){
+  if(!isOffline() && !canEdit(s)){
+    toast(isReadOnly() ? "매니저는 내용을 고칠 수 없습니다" : "본인 담당 학생만 수정할 수 있습니다");
+    return;
+  }
   if(!sharedDb || !s || !isAuthorized()) return Promise.resolve();
   try{
     stampEditor(s); persist();
@@ -3414,9 +3471,14 @@ function uploadLocalOnly(){
   localOnlyPending = []; renderSyncBadge(); toast("이 기기의 리포트 " + n + "개를 공유 저장소에 올렸습니다");
 }
 
+function applyRoleClasses(){
+  var b = document.body;
+  b.classList.toggle("is-admin", isAdmin());
+  b.classList.toggle("is-staff", isAuthorized());
+  b.classList.toggle("is-readonly", isReadOnly());
+}
 function renderSyncBadge(){
-  document.body.classList.toggle("is-admin", isAdmin());
-  document.body.classList.toggle("is-staff", isAuthorized());
+  applyRoleClasses();
   var box = $("#syncBadge"); if(!box) return;
   box.innerHTML = "";
   var labels = {
@@ -3441,6 +3503,7 @@ function renderSyncBadge(){
 function fillAccessManager(){
   if(!accessConfig) return;
   $("#allowedEmails").value = uniqEmails(accessConfig.allowedEmails||[]).join("\n");
+  $("#managerEmails").value = uniqEmails(accessConfig.managerEmails||[]).join("\n");
   $("#adminEmails").value = uniqEmails(accessConfig.adminEmails||[]).join("\n");
 }
 function openAccessManage(){
@@ -3451,11 +3514,13 @@ function closeAccessManage(){ $("#accessVeil").classList.remove("open"); }
 function saveAccessConfig(){
   if(!isAdmin() || !sharedDb) return;
   var allowed = emailsFromTextarea("#allowedEmails");
+  var managers = emailsFromTextarea("#managerEmails");
   var admins = emailsFromTextarea("#adminEmails");
   if(!admins.length){ toast("관리자는 최소 1명 필요합니다"); return; }
   admins.forEach(function(e){ if(allowed.indexOf(e)===-1) allowed.push(e); });
   sharedDb.doc("config/access").update({
-    allowedEmails:allowed, adminEmails:admins, updatedAt:Date.now(), updatedByEmail:(currentUser&&currentUser.email)||""
+    allowedEmails:allowed, managerEmails:managers, adminEmails:admins,
+    updatedAt:Date.now(), updatedByEmail:(currentUser&&currentUser.email)||""
   }).then(function(){ toast("공유 사용자 설정을 저장했습니다"); closeAccessManage(); }).catch(function(e){ console.error(e); toast("사용자 설정 저장에 실패했습니다"); });
 }
 
