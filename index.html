@@ -724,6 +724,173 @@
   .access-actions{display:flex;justify-content:flex-end;gap:8px;margin-top:14px;}
   .modified-by{font-size:10.5px;color:var(--ink-faint);margin-left:6px;}
 
+
+  /* ---------- 📅 시험 일정 캘린더 : 사이드바 · 리포트 한 줄 ---------- */
+  .cal-side-btn{display:flex; align-items:center; justify-content:center; gap:6px;}
+  .cal-next{margin-top:2px; font-size:11px; color:var(--ink-muted); background:var(--surface-2,#faf8f6); border:1px solid var(--line-soft);
+    border-radius:8px; padding:6px 8px; line-height:1.5; cursor:pointer;}
+  .cal-next b{color:var(--accent-ink);}
+  .cal-next:empty{display:none;}
+  .examline{display:flex; align-items:center; gap:8px; flex-wrap:wrap; background:var(--surface-2,#fbf8f5); border:1px solid var(--line-soft);
+    border-radius:10px; padding:8px 12px; font-size:13px; margin:0 0 14px;}
+  .examline .ic{font-weight:800; color:var(--accent-ink);}
+  .examline .m{background:#c94436; color:#fff; border-radius:5px; padding:1px 7px; font-weight:800; font-size:12px;}
+  .examline .dd{font-weight:800; background:var(--surface); border:1px solid var(--line); border-radius:999px; padding:1px 8px; font-size:12px;}
+  .examline .muted{color:var(--ink-faint);}
+  .examline .go{margin-left:auto; font-weight:700; color:var(--accent-ink); background:none; border:0; cursor:pointer; font-size:12px; padding:0;}
+  .rp-exam{display:flex; align-items:center; gap:7px; flex-wrap:wrap; font-size:11px; line-height:1.35; color:var(--rp-ink);
+    background:var(--rp-accent-soft); border-radius:8px; padding:6px 10px; margin-top:-3px;}
+  .rp-exam .ic{font-weight:800; color:var(--rp-accent-ink);}
+  .rp-exam .m{background:#c94436; color:#fff; border-radius:4px; padding:0 6px; font-weight:800; font-size:10.5px;}
+  @media print{ .cal-veil{display:none !important;} }
+</style>
+<style id="calCss">
+  /* =================== 📅 시험 일정 캘린더 =================== */
+  #calVeil{padding:0; align-items:stretch; overflow:hidden; z-index:60;}
+  #calVeil .cx-shell{background:#f1efec; width:100%; height:100%; display:flex; flex-direction:column; min-height:0;}
+  .cx-top{display:flex; align-items:center; justify-content:space-between; gap:10px; padding:10px 16px;
+    background:var(--surface); border-bottom:1px solid var(--line); flex:none; flex-wrap:wrap;}
+  .cx-top h3{margin:0; font-size:15px; font-weight:800;}
+  .cx-top .acts{display:flex; gap:8px; align-items:center; flex-wrap:wrap;}
+  .cx-status{font-size:12px; color:var(--ink-muted);}
+  .cx-status.warn{color:var(--warn); font-weight:700;}
+  .cx-bar{display:flex; flex-wrap:wrap; gap:8px 14px; align-items:center; padding:8px 16px;
+    background:var(--surface); border-bottom:1px solid var(--line); flex:none;}
+  .cx-grp{display:flex; gap:5px; align-items:center;}
+  .cx-lab{font-size:11px; color:var(--ink-muted); font-weight:700;}
+  .cx-tg{border:1px solid var(--line); background:#fff; border-radius:7px; padding:3px 9px; cursor:pointer; font-weight:700; font-size:11.5px; color:var(--ink-muted);}
+  .cx-tg.on{background:var(--ink); color:#fff; border-color:var(--ink);}
+  .cx-sel{border:1px solid var(--line); background:#fff; border-radius:7px; padding:3px 6px; font-size:12px; font-weight:600;}
+  .cx-tb{display:flex; gap:3px; align-items:center; padding:3px 6px; border:1px solid var(--line); border-radius:9px; background:#faf8f6; flex-wrap:wrap;}
+  .cx-tb button{border:0; background:none; padding:4px 6px; border-radius:6px; cursor:pointer; font-weight:700; font-size:12px;}
+  .cx-tb button:hover{background:var(--line)}
+  .cx-tb .sw{width:17px; height:17px; border-radius:5px; border:1px solid rgba(0,0,0,.15); padding:0}
+  .cx-tb .sep{width:1px; height:18px; background:var(--line); margin:0 3px}
+  .cx-tb select{border:0; background:transparent; font-weight:700; padding:3px; font-size:12px;}
+  .cx-body{flex:1; overflow:auto; min-height:0; position:relative;}
+  .cx-months{display:flex; gap:4px; padding:10px 16px 0; flex-wrap:wrap; justify-content:center; align-items:center;}
+  .cx-mt{border:1px solid var(--line); background:#fff; border-radius:999px; padding:4px 12px; cursor:pointer; font-weight:700; font-size:12px; color:var(--ink-muted);}
+  .cx-mt.on{background:var(--accent-btn); border-color:var(--accent-btn); color:#fff;}
+  .cx-mt.past{color:var(--ink-faint);}
+  .cx-hint{font-size:11px; color:var(--ink-faint);}
+  .cx-banner{margin:10px auto 0; max-width:960px; background:var(--warn-soft); color:var(--warn); border:1px solid var(--warn);
+    border-radius:10px; padding:9px 12px; font-size:12.5px; font-weight:600; line-height:1.5;}
+  .cx-seed{margin:10px auto 0; max-width:960px; background:#fff; border:1px dashed var(--accent); border-radius:10px; padding:10px 12px;
+    display:flex; gap:10px; align-items:center; justify-content:space-between; font-size:12.5px; flex-wrap:wrap;}
+  .cx-stage{padding:12px 18px 24px; display:flex; justify-content:center;}
+
+  /* A4 가로 한 장 */
+  .cx-sheet{width:297mm; height:210mm; overflow:hidden; background:#fff; box-shadow:0 1px 2px rgba(59,40,26,.06),0 12px 32px -14px rgba(59,40,26,.28);
+    padding:8mm 9mm 7mm; display:flex; flex-direction:column; gap:2.5mm; transform-origin:top center; flex:none;
+    font-family:'IBM Plex Sans KR','Noto Sans KR',-apple-system,'Apple SD Gothic Neo',sans-serif; color:#241f1a;}
+  .cx-head{display:flex; align-items:flex-end; justify-content:space-between; gap:10px; height:12mm; flex:none;}
+  .cx-title{font-size:18pt; font-weight:800; letter-spacing:-.02em; outline:none; line-height:1.1;}
+  .cx-title .yr{font-size:11pt; color:#6b6058; font-weight:700; margin-right:4px;}
+  .cx-sub{font-size:7.5pt; color:#6b6058; margin-top:1mm;}
+  .cx-legend{display:flex; gap:9px; align-items:center; font-size:7pt; color:#6b6058; flex-wrap:wrap; justify-content:flex-end;}
+  .cx-legend .k{display:inline-flex; gap:3px; align-items:center;}
+  .cx-dot{display:inline-grid; place-items:center; width:10px; height:10px; border-radius:2.5px; color:#fff; font-size:6pt; font-weight:800; line-height:1; flex:none;}
+  .cx-d1{background:#2e8b62}.cx-d2{background:#2f63b5}.cx-d3{background:#7b4bb0}
+  .cx-math{display:inline-grid; place-items:center; background:#c94436; color:#fff; border-radius:2.5px; width:10px; height:10px; font-size:7pt; font-weight:800; line-height:1; flex:none;}
+  .cx-cal{display:grid; grid-template-columns:repeat(5,minmax(0,1fr)) minmax(0,.55fr) minmax(0,.55fr);
+    grid-template-rows:5mm repeat(6,28.4mm); border:1px solid #e3ddd6; border-radius:6px; overflow:hidden; flex:none;}
+  .cx-dow{font-size:7.5pt; font-weight:700; color:#6b6058; text-align:center; line-height:5mm; background:#faf8f6; border-bottom:1px solid #e3ddd6;}
+  .cx-dow.sat{color:#5a7fb8}.cx-dow.sun{color:#c94436}
+  .cx-cell{border-right:1px solid #efeae4; border-bottom:1px solid #efeae4; padding:1.2mm 1.3mm; position:relative; overflow:hidden;
+    display:flex; flex-direction:column; gap:1mm; min-height:0;}
+  .cx-cell.we{background:#fcfbfa}
+  .cx-cell.out{background:#faf9f7}
+  .cx-cell.out > *{opacity:.45}
+  .cx-cell.today{box-shadow:inset 0 0 0 1.5px #d96324}
+  .cx-dn{display:flex; justify-content:space-between; align-items:center; flex:none; height:3.6mm;}
+  .cx-num{font-size:8pt; font-weight:800; color:#6b6058; cursor:pointer; border-radius:4px; padding:0 3px; margin-left:-3px;}
+  .cx-num:hover{background:#fcede3; color:#a8480f}
+  .cx-cell.sat .cx-num{color:#5a7fb8}
+  .cx-cell.sun .cx-num, .cx-cell.hol .cx-num{color:#c94436}
+  .cx-plus{visibility:hidden; border:0; background:#fcede3; color:#a8480f; cursor:pointer; font-weight:800; width:4mm; height:4mm; border-radius:4px; padding:0; line-height:4mm; font-size:9pt;}
+  .cx-cell:hover .cx-plus{visibility:visible}
+  .cx-items{display:flex; flex-wrap:wrap; gap:1px 2px; align-content:flex-start; overflow:hidden; flex:1; min-height:0;}
+  .cx-chip{display:inline-flex; align-items:center; gap:1px; border-radius:3.5px; padding:1px 3px 1px 1px; font-size:6.8pt; line-height:1.2;
+    border:1px solid transparent; max-width:100%; height:4mm;}
+  .cx-chip .dots{display:inline-flex; gap:1px; cursor:pointer;}
+  .cx-chip .dots .cx-dot, .cx-chip .dots .cx-math{width:8.5px; height:8.5px; font-size:5.3pt;}
+  .cx-chip .dots .cx-math{font-size:6.3pt;}
+  .cx-chip .t{outline:none; font-weight:600; min-width:.8em; white-space:nowrap;}
+  .cx-chip.g1{background:#e3f3eb}.cx-chip.g2{background:#e4ecf8}.cx-chip.g3{background:#efe7f8}
+  .cx-chip.mix{background:#efece8}
+  .cx-chip.tent{border:1px dashed #d0a097}
+  .cx-chip.math{border:1.3px solid #c94436; background:#fff}
+  .cx-chip.math .t{font-weight:800}
+  .cx-more{font-size:6.5pt; font-weight:800; color:#a8480f; background:#fcede3; border-radius:3px; padding:0 4px; height:4mm; line-height:4mm; cursor:pointer; border:0;}
+  .cx-jb{display:inline-flex; align-items:center; gap:2px; border-radius:3px; padding:0 4px; height:4mm; font-size:6.6pt; font-weight:800; color:#fff; cursor:pointer; border:0; white-space:nowrap;}
+  .cx-jb small{font-size:5.4pt; font-weight:700; opacity:.85}
+  .cx-memo{font-size:6.8pt; line-height:1.25; outline:none; flex:none; max-height:7mm; overflow:hidden; border-radius:3px;}
+  .cx-memo:focus{background:#fffbe6; max-height:none}
+  #calVeil [contenteditable="true"]:hover{box-shadow:0 0 0 1px #e8d6c6}
+  #calVeil [contenteditable="true"]:focus{box-shadow:0 0 0 1.5px #d96324}
+
+  /* 떠 있는 창 */
+  .cx-pop{position:fixed; z-index:70; background:#fff; border:1px solid var(--line); border-radius:12px;
+    box-shadow:0 18px 48px -18px rgba(36,31,26,.45); width:350px; max-height:80vh; overflow:auto; display:none; font-size:13px;}
+  .cx-pop.show{display:block}
+  .cx-pop .ph{position:sticky; top:0; background:#fff; display:flex; justify-content:space-between; align-items:center; padding:12px 14px 8px; border-bottom:1px solid var(--line-soft); z-index:1;}
+  .cx-pop .ph b{font-size:15px}
+  .cx-pop .x{border:0; background:none; font-size:15px; cursor:pointer; color:var(--ink-muted)}
+  .cx-pop .pb{padding:10px 14px 14px; display:grid; gap:10px}
+  .cx-sec h5{margin:0 0 6px; font-size:11px; color:var(--ink-muted); display:flex; justify-content:space-between; align-items:center;}
+  .cx-acc{border:1px solid var(--line); border-radius:9px; overflow:hidden; margin-bottom:5px;}
+  .cx-acc > .ah{display:flex; align-items:center; gap:5px; padding:7px 9px; cursor:pointer; font-weight:700; background:#faf8f6;}
+  .cx-acc > .ah .car{margin-left:auto; color:var(--ink-faint); transition:transform .15s}
+  .cx-acc.open > .ah .car{transform:rotate(90deg)}
+  .cx-acc > .ab{display:none; padding:8px 10px; font-size:12px; line-height:1.55; border-top:1px solid var(--line-soft);}
+  .cx-acc.open > .ab{display:block}
+  .cx-kv{display:grid; grid-template-columns:64px 1fr; gap:3px 8px; align-items:start;}
+  .cx-kv .k{color:var(--ink-muted); font-size:11px; padding-top:1px}
+  .cx-kv .v{outline:none; min-height:1.2em}
+  .cx-row{display:flex; gap:6px; align-items:center}
+  .cx-row > *{flex:1}
+  .cx-f{display:grid; gap:3px; font-size:11px; color:var(--ink-muted); font-weight:600;}
+  .cx-f input, .cx-f select{border:1px solid var(--line); border-radius:7px; padding:6px 7px; font-size:12.5px; color:var(--ink); background:#fff; width:100%;}
+  .cx-seg{display:flex; border:1px solid var(--line); border-radius:8px; overflow:hidden}
+  .cx-seg button{flex:1; border:0; background:#fff; padding:6px; cursor:pointer; font-weight:700; color:var(--ink-muted)}
+  .cx-seg button.on{background:var(--ink); color:#fff}
+  .cx-seg button:disabled{opacity:.4; cursor:default}
+  .cx-gr{display:flex; gap:10px; flex-wrap:wrap}
+  .cx-gr label{display:flex; gap:4px; align-items:center; font-size:12px; color:var(--ink); font-weight:600}
+  .cx-cnt{width:100%; border-collapse:collapse; font-size:12px}
+  .cx-cnt th{font-size:10.5px; color:var(--ink-muted); font-weight:700; text-align:left; padding:2px 3px}
+  .cx-cnt td{padding:2px 3px}
+  .cx-cnt input{border:1px solid var(--line); border-radius:6px; padding:4px 5px; width:100%; font-size:12px}
+  .cx-cnt td.n input{text-align:center}
+  .cx-acts{display:flex; justify-content:space-between; gap:6px; align-items:center}
+  .cx-rich{border:1px solid var(--line); border-radius:7px; padding:6px 8px; min-height:44px; outline:none; font-size:12.5px; line-height:1.5}
+  .cx-sw2{width:12px; height:12px; border-radius:3px; display:inline-block; flex:none}
+  .cx-by{font-size:10.5px; color:var(--ink-faint)}
+  .cx-red{color:#c94436}
+
+  /* 휴대폰 : 날짜별 목록 */
+  .cx-list{padding:10px 12px 30px; display:grid; gap:8px; max-width:640px; margin:0 auto;}
+  .cx-lhead{display:flex; justify-content:space-between; align-items:center; gap:8px; flex-wrap:wrap;}
+  .cx-lhead h4{margin:0; font-size:17px; font-weight:800}
+  .cx-lday{background:#fff; border:1px solid var(--line); border-radius:12px; padding:9px 11px; display:grid; grid-template-columns:52px 1fr; gap:8px;}
+  .cx-lday.today{border-color:var(--accent); box-shadow:0 0 0 1px var(--accent) inset}
+  .cx-ldate{font-weight:800; font-size:15px; line-height:1.1; cursor:pointer}
+  .cx-ldate small{display:block; font-size:11px; font-weight:700; color:var(--ink-muted)}
+  .cx-ldate.sat{color:#5a7fb8}.cx-ldate.sun,.cx-ldate.hol{color:#c94436}
+  .cx-ldate.sun small,.cx-ldate.hol small{color:#c94436}
+  .cx-litems{display:flex; flex-wrap:wrap; gap:3px 4px; align-items:center}
+  .cx-litems .cx-chip{font-size:12px; height:auto; padding:2px 6px 2px 3px}
+  .cx-litems .cx-chip .dots .cx-dot, .cx-litems .cx-chip .dots .cx-math{width:14px; height:14px; font-size:9px}
+  .cx-litems .cx-jb{font-size:12px; height:auto; padding:3px 7px}
+  .cx-litems .cx-jb small{font-size:10px}
+  .cx-lmemo{flex-basis:100%; font-size:12.5px; color:var(--ink); line-height:1.45}
+  .cx-ladd{border:0; background:#fcede3; color:#a8480f; border-radius:6px; font-weight:800; padding:1px 8px; margin-left:auto; cursor:pointer}
+  @media (max-width:700px){
+    .cx-top{padding:8px 10px}
+    .cx-bar{padding:6px 10px; gap:6px 10px}
+    .cx-pop{left:8px !important; right:8px; width:auto; top:auto !important; bottom:8px; max-height:75vh}
+  }
+  @media (max-width:700px){ #btnCalPrint{display:none;} }
 </style>
 
 <div class="app">
@@ -740,6 +907,8 @@
     <div class="side-actions">
       <button class="btn btn-primary btn-block" id="btnNewStudent">+ 새 학생 리포트</button>
       <button class="btn btn-sm btn-block" id="btnManage">🗂 리포트 관리</button>
+      <button class="btn btn-sm btn-block cal-side-btn" id="btnCal">📅 시험 일정 캘린더</button>
+      <div class="cal-next" id="calNext" title="캘린더 열기"></div>
     </div>
 
     <div class="side-search">
@@ -785,6 +954,66 @@
       </label>
     </div>
   </aside>
+
+  <!-- ===================== 📅 시험 일정 캘린더 ===================== -->
+  <div class="modal-veil cal-veil" id="calVeil">
+    <div class="cx-shell">
+      <div class="cx-top">
+        <h3>📅 시험 일정 캘린더</h3>
+        <div class="acts">
+          <span class="cx-status" id="calStatus"></span>
+          <button class="btn btn-primary btn-sm" id="btnCalSave">💾 저장</button>
+          <button class="btn btn-sm" id="btnCalPrint">🖨 이 달 A4 인쇄</button>
+          <button class="btn btn-ghost btn-sm" id="btnCalClose">닫기 ✕</button>
+        </div>
+      </div>
+      <div class="cx-bar">
+        <div class="cx-grp"><span class="cx-lab">학년</span>
+          <button class="cx-tg on" data-g="1">중1</button>
+          <button class="cx-tg on" data-g="2">중2</button>
+          <button class="cx-tg on" data-g="3">중3</button>
+        </div>
+        <div class="cx-grp"><span class="cx-lab">시험</span><select class="cx-sel" id="calExamF"></select></div>
+        <div class="cx-grp"><span class="cx-lab">보기</span>
+          <button class="cx-tg on" id="calShowJb">직보</button>
+          <button class="cx-tg on" id="calShowMemo">메모</button>
+        </div>
+        <div class="cx-tb" id="calTb" title="글자를 블록으로 잡은 뒤 누르세요">
+          <select id="calFsize" title="글자 크기">
+            <option value="">크기</option>
+            <option>6</option><option>7</option><option>8</option><option>9</option>
+            <option>10</option><option>12</option><option>14</option><option>18</option>
+          </select>
+          <span class="sep"></span>
+          <button data-cmd="bold" title="굵게"><b>B</b></button>
+          <button data-cmd="underline" title="밑줄"><u>U</u></button>
+          <span class="sep"></span>
+          <span class="cx-lab" style="font-size:10px">글자색</span>
+          <button class="sw" data-fore="#241f1a" style="background:#241f1a" title="검정"></button>
+          <button class="sw" data-fore="#c94436" style="background:#c94436" title="빨강"></button>
+          <button class="sw" data-fore="#2f63b5" style="background:#2f63b5" title="파랑"></button>
+          <button class="sw" data-fore="#2e8b62" style="background:#2e8b62" title="초록"></button>
+          <button class="sw" data-fore="#d96324" style="background:#d96324" title="주황"></button>
+          <input type="color" id="calForeAny" title="다른 색" style="width:19px;height:19px;border:0;padding:0;background:none">
+          <span class="sep"></span>
+          <span class="cx-lab" style="font-size:10px">형광펜</span>
+          <button class="sw" data-hi="#fff27a" style="background:#fff27a" title="노랑"></button>
+          <button class="sw" data-hi="#ffd0c4" style="background:#ffd0c4" title="분홍"></button>
+          <button class="sw" data-hi="#c9f0d6" style="background:#c9f0d6" title="연두"></button>
+          <button class="sw" data-hi="#cfe0ff" style="background:#cfe0ff" title="하늘"></button>
+          <button data-hi="transparent" title="형광펜 지우기" style="font-size:11px">✕</button>
+          <span class="sep"></span>
+          <button data-cmd="removeFormat" title="서식 지우기" style="font-size:11px">서식↺</button>
+        </div>
+      </div>
+      <div class="cx-body">
+        <div class="cx-months" id="calMonths"></div>
+        <div id="calNotes"></div>
+        <div id="calMain"></div>
+      </div>
+    </div>
+    <div class="cx-pop" id="calPop"></div>
+  </div>
 
   <!-- ===================== 새 리포트 만들기 ===================== -->
   <div class="modal-veil" id="newVeil">
@@ -1373,7 +1602,7 @@ function dirtyCount(){ return Object.keys(dirtyIds).length; }
 
 /* 저장하지 않고 창을 닫으려 할 때 경고 */
 window.addEventListener("beforeunload", function(e){
-  if(dirtyCount() === 0) return;
+  if(dirtyCount() === 0 && calDirtyCount() === 0) return;
   e.preventDefault(); e.returnValue = "";
 });
 
@@ -1618,6 +1847,7 @@ function renderMain(){
 
   root.appendChild(buildTopbar(s));
   root.appendChild(buildTabs());
+  var xl = calExamLineEl(s); if(xl){ xl.id = "examLine"; root.appendChild(xl); }
 
   var panels = el("div",{});
   panels.appendChild(buildInfoPanel(s));
@@ -2323,10 +2553,6 @@ function buildCommentsPanel(s){
 }
 
 /* ---------- Save bar ---------- */
-function buildSaveBar(s){
-  return buildSaveBar(s);
-}
-
 function buildSaveBar(s){
   var dirty = isDirty(s);
   var ahead = remoteAhead[s.id];
@@ -3231,6 +3457,7 @@ function buildReportHTML(s){
   /* ---------- 조립 ---------- */
   return '<div class="report">'
     + head
+    + calReportLineHtml(s)
     + infoStrip
     + '<div class="rp-grid-2">' + bookPanel + gauge + '</div>'
     + '<div class="rp-grid-3">' + mockBookPanel + statPanel + '</div>'
@@ -3639,6 +3866,7 @@ function clearStudentSettingsSubscriptions(){
   try{ if(unsubscribeStudents) unsubscribeStudents(); }catch(e){}
   try{ if(unsubscribeSettings) unsubscribeSettings(); }catch(e){}
   unsubscribeStudents = unsubscribeSettings = null;
+  calUnsubscribe();
 }
 function subscribeShared(){
   if(!sharedDb || !isAuthorized()) return;
@@ -3672,6 +3900,7 @@ function subscribeShared(){
       $("#cfgTeacher").value = state.settings.teacher;
       persist();
     }, function(e){ console.warn(e); });
+    calSubscribe();
   }catch(e){ console.error(e); setSyncState("error"); }
 }
 
@@ -3885,6 +4114,782 @@ function importBackup(file, mode){
 }
 
 /* ============================================================
+   📅 시험 일정 캘린더
+   - 모든 선생님 편집 · 매니저 보기 전용
+   - 삭제 : 만든 사람과 총괄만
+   - 저장 : [💾 저장]을 눌러야 공유 저장소(calendar 컬렉션)에 올라갑니다
+   ============================================================ */
+var CAL_KEY = "wr_calendar_v1";
+var CAL_FIRST = "2026-09";
+var CAL_SEED = {"events": [{"exam": "2026-2-중간", "school": "가재울", "grades": [1, 2, 3], "start": "2026-10-19", "end": "2026-10-21", "math": "", "tentative": true}, {"exam": "2026-2-중간", "school": "강화", "grades": [3], "start": "2026-11-04", "end": "2026-11-06", "math": "", "tentative": true}, {"exam": "2026-2-중간", "school": "경인", "grades": [2], "start": "2026-10-07", "end": "2026-10-07", "math": "", "tentative": false}, {"exam": "2026-2-중간", "school": "경인", "grades": [3], "start": "2026-11-02", "end": "2026-11-04", "math": "", "tentative": false}, {"exam": "2026-2-중간", "school": "당산서", "grades": [1, 2], "start": "2026-10-07", "end": "2026-10-08", "math": "", "tentative": false}, {"exam": "2026-2-중간", "school": "당산서", "grades": [3], "start": "2026-10-28", "end": "2026-10-30", "math": "", "tentative": false}, {"exam": "2026-2-중간", "school": "당산", "grades": [1, 2], "start": "2026-10-01", "end": "2026-10-02", "math": "", "tentative": false}, {"exam": "2026-2-중간", "school": "당산", "grades": [3], "start": "2026-10-28", "end": "2026-10-30", "math": "", "tentative": false}, {"exam": "2026-2-중간", "school": "명덕여", "grades": [1, 2], "start": "2026-10-07", "end": "2026-10-08", "math": "", "tentative": false}, {"exam": "2026-2-중간", "school": "명덕여", "grades": [3], "start": "2026-10-28", "end": "2026-10-30", "math": "", "tentative": false}, {"exam": "2026-2-중간", "school": "목운", "grades": [1, 2], "start": "2026-10-07", "end": "2026-10-08", "math": "", "tentative": false}, {"exam": "2026-2-중간", "school": "목운", "grades": [3], "start": "2026-10-28", "end": "2026-10-30", "math": "2026-10-28", "tentative": false}, {"exam": "2026-2-중간", "school": "봉영여", "grades": [1, 2], "start": "2026-10-07", "end": "2026-10-08", "math": "", "tentative": false}, {"exam": "2026-2-중간", "school": "봉영여", "grades": [3], "start": "2026-11-02", "end": "2026-11-04", "math": "", "tentative": false}, {"exam": "2026-2-중간", "school": "상암", "grades": [1, 2], "start": "2026-10-28", "end": "2026-10-29", "math": "", "tentative": true}, {"exam": "2026-2-중간", "school": "선유", "grades": [1, 2], "start": "2026-10-06", "end": "2026-10-07", "math": "", "tentative": false}, {"exam": "2026-2-중간", "school": "선유", "grades": [3], "start": "2026-10-28", "end": "2026-10-30", "math": "", "tentative": false}, {"exam": "2026-2-중간", "school": "성서", "grades": [1, 2], "start": "2026-10-26", "end": "2026-10-27", "math": "", "tentative": true}, {"exam": "2026-2-중간", "school": "성서", "grades": [3], "start": "2026-10-26", "end": "2026-10-28", "math": "", "tentative": true}, {"exam": "2026-2-중간", "school": "신목", "grades": [1, 2], "start": "2026-10-28", "end": "2026-10-29", "math": "", "tentative": true}, {"exam": "2026-2-중간", "school": "신목", "grades": [3], "start": "2026-10-28", "end": "2026-10-30", "math": "", "tentative": true}, {"exam": "2026-2-중간", "school": "신서", "grades": [1, 2], "start": "2026-10-01", "end": "2026-10-02", "math": "", "tentative": false}, {"exam": "2026-2-중간", "school": "양동", "grades": [1, 2], "start": "2026-10-06", "end": "2026-10-07", "math": "", "tentative": false}, {"exam": "2026-2-중간", "school": "양동", "grades": [3], "start": "2026-10-30", "end": "2026-11-03", "math": "", "tentative": false}, {"exam": "2026-2-중간", "school": "양정", "grades": [1, 2], "start": "2026-10-27", "end": "2026-10-28", "math": "", "tentative": true}, {"exam": "2026-2-중간", "school": "양정", "grades": [3], "start": "2026-10-27", "end": "2026-10-29", "math": "", "tentative": true}, {"exam": "2026-2-중간", "school": "염경", "grades": [2], "start": "2026-10-06", "end": "2026-10-07", "math": "2026-10-07", "tentative": false}, {"exam": "2026-2-중간", "school": "영도", "grades": [1, 2], "start": "2026-10-26", "end": "2026-10-28", "math": "", "tentative": true}, {"exam": "2026-2-중간", "school": "영도", "grades": [3], "start": "2026-10-26", "end": "2026-10-28", "math": "", "tentative": true}, {"exam": "2026-2-중간", "school": "월촌", "grades": [2], "start": "2026-10-06", "end": "2026-10-07", "math": "2026-10-07", "tentative": false}, {"exam": "2026-2-중간", "school": "월촌", "grades": [3], "start": "2026-10-27", "end": "2026-10-29", "math": "2026-10-27", "tentative": false}, {"exam": "2026-2-기말", "school": "가재울", "grades": [1, 2], "start": "2026-12-14", "end": "2026-12-16", "math": "", "tentative": true}], "schools": [{"exam": "2026-2-중간", "school": "가재울", "books": ["천재 (김동재)", "천재 (김동재)", "비상"], "ranges": ["", "", ""]}, {"exam": "2026-2-중간", "school": "강화", "books": ["", "", "비상"], "ranges": ["", "", "삼각비~원의 성질"]}, {"exam": "2026-2-중간", "school": "경인", "books": ["", "", "천재(류)"], "ranges": ["", "", ""]}, {"exam": "2026-2-중간", "school": "당산서", "books": ["미래앤", "미래앤", "신사고"], "ranges": ["", "삼각형의 성질~사각형의 성질", ""]}, {"exam": "2026-2-중간", "school": "당산", "books": ["동아(강)", "동아(강)", "동아(강)"], "ranges": ["기본도형 + 좌표평면과 그래프(1)", "삼각형의 성질~사각형의 성질", ""]}, {"exam": "2026-2-중간", "school": "명덕여", "books": ["동아(강)", "동아(강)", "교학사"], "ranges": ["", "", ""]}, {"exam": "2026-2-중간", "school": "목운", "books": ["미래앤", "미래앤", "미래앤"], "ranges": ["기본도형~평면도형", "", "삼각비~원의 성질"]}, {"exam": "2026-2-중간", "school": "봉영여", "books": ["", "비상", ""], "ranges": ["", "", ""]}, {"exam": "2026-2-중간", "school": "상암", "books": ["비상", "비상", ""], "ranges": ["기본도형~평면도형(원과 부채꼴)", "삼각형, 사각형, 닮음(~닮은도형까지만)", ""]}, {"exam": "2026-2-중간", "school": "선유", "books": ["동아(강)", "동아(강)", "비상"], "ranges": ["", "", ""]}, {"exam": "2026-2-중간", "school": "성서", "books": ["동아(강)", "동아(강)", "천재(이)"], "ranges": ["", "", ""]}, {"exam": "2026-2-중간", "school": "신목", "books": ["비상", "비상", "동아(강)"], "ranges": ["기본도형 + 좌표평면과 그래프(1)", "경우의 수와 확률, 삼각형, 사각형", "삼각비~원의 성질 + 이차함수(1)"]}, {"exam": "2026-2-중간", "school": "신서", "books": ["동아(강)", "동아(강)", "신사고"], "ranges": ["", "", ""]}, {"exam": "2026-2-중간", "school": "양동", "books": ["미래앤", "미래앤", "동아(강)"], "ranges": ["", "", ""]}, {"exam": "2026-2-중간", "school": "양정", "books": ["동아(강)", "동아(강)", "천재(류)"], "ranges": ["", "삼각형, 사각형, 닮음(~닮음 조건까지만)", "삼각비~원의 성질 + 통계"]}, {"exam": "2026-2-중간", "school": "염경", "books": ["천재 (김화경)", "천재 (김화경)", "비상"], "ranges": ["", "<span style=\"color:#c94436\">경우의 수와 확률, 삼각형(~내심까지만)</span>", ""]}, {"exam": "2026-2-중간", "school": "염창", "books": ["동아(강)", "동아(강)", "동아(강)"], "ranges": ["", "", ""]}, {"exam": "2026-2-중간", "school": "영도", "books": ["", "", "천재(류)"], "ranges": ["", "", ""]}, {"exam": "2026-2-중간", "school": "월촌", "books": ["천재 (김동재)", "천재 (김동재)", "비상"], "ranges": ["<span style=\"color:#c94436\">2학기 중간고사 미실시</span>", "경우의 수와 확률, 삼각형", "삼각비~원의 성질"]}]};
+var CAL_WD = "일월화수목금토";
+var CAL_COLORS = ["#b34a12","#0f766e","#be185d","#6d28d9","#0369a1","#4d7c0f","#9f1239","#a16207","#475569","#0e7490","#7c2d12","#1d4ed8"];
+/* 공휴일 (날짜만 빨간색) — 목록에 없는 날은 날짜 창에서 총괄이 켜고 끌 수 있습니다 */
+var CAL_HOLIDAYS = {
+  "2026-09-24":"추석 연휴","2026-09-25":"추석","2026-09-26":"추석 연휴","2026-10-03":"개천절","2026-10-05":"대체공휴일",
+  "2026-10-09":"한글날","2026-12-25":"성탄절",
+  "2027-01-01":"신정","2027-02-06":"설날 연휴","2027-02-07":"설날","2027-02-08":"설날 연휴","2027-02-09":"대체공휴일",
+  "2027-03-01":"삼일절","2027-05-01":"노동절","2027-05-03":"대체공휴일","2027-05-05":"어린이날","2027-05-13":"부처님오신날",
+  "2027-06-06":"현충일","2027-07-17":"제헌절","2027-07-19":"대체공휴일","2027-08-15":"광복절","2027-08-16":"대체공휴일",
+  "2027-09-14":"추석 연휴","2027-09-15":"추석","2027-09-16":"추석 연휴","2027-10-03":"개천절","2027-10-04":"대체공휴일",
+  "2027-10-09":"한글날","2027-10-11":"대체공휴일","2027-12-25":"성탄절","2027-12-27":"대체공휴일"
+};
+var CAL_FIXED = {"01-01":"신정","03-01":"삼일절","05-05":"어린이날","06-06":"현충일","08-15":"광복절","10-03":"개천절","10-09":"한글날","12-25":"성탄절"};
+
+var cal = {
+  items:{}, dirty:{}, month:null, showG:{1:true,2:true,3:true}, examF:"", showJb:true, showMemo:true,
+  unsub:null, loaded:false, remoteError:"", pendingRender:false, open:false
+};
+
+/* ---------- 도우미 ---------- */
+function cxEl(tag, cls, html){ var e=document.createElement(tag); if(cls) e.className=cls; if(html!=null) e.innerHTML=html; return e; }
+function cxIso(d){ return d.getFullYear()+"-"+String(d.getMonth()+1).padStart(2,"0")+"-"+String(d.getDate()).padStart(2,"0"); }
+function cxParse(s){ var p=String(s).split("-"); return new Date(+p[0], +p[1]-1, +(p[2]||1)); }
+function cxToday(){ return cxIso(new Date()); }
+function cxMd(s){ var d=cxParse(s); return (d.getMonth()+1)+"/"+d.getDate(); }
+function cxMdw(s){ var d=cxParse(s); return (d.getMonth()+1)+"/"+d.getDate()+"("+CAL_WD[d.getDay()]+")"; }
+function cxDays(a,b){ return Math.round((cxParse(b)-cxParse(a))/864e5); }
+function cxNormSchool(s){ return String(s||"").replace(/\s+/g,"").replace(/중학교$/,"").replace(/중$/,""); }
+function cxGradeNum(g){ var n=parseInt(String(g||"").replace(/\D/g,""),10); return n>=1&&n<=3 ? n : 0; }
+function cxDots(gs){ return gs.map(function(g){ return '<span class="cx-dot cx-d'+g+'">'+g+'</span>'; }).join(""); }
+function cxExamLabel(k){ var p=String(k||"").split("-"); return p.length===3 ? (p[0]+"년 "+p[1]+"학기 "+p[2]+"고사") : (k||""); }
+function cxExamOf(ds){
+  var d=cxParse(ds), m=d.getMonth()+1, y=d.getFullYear(), dd=d.getDate();
+  if(m>=9 && (m<11 || (m===11 && dd<=15))) return y+"-2-중간";
+  if(m>=11) return y+"-2-기말";
+  if(m<=2) return (y-1)+"-2-기말";
+  if(m<=5) return y+"-1-중간";
+  return y+"-1-기말";
+}
+function cxExamOptions(ds){
+  var y=cxParse(ds).getFullYear(), out=[];
+  [y-1,y].forEach(function(yy){ ["1-중간","1-기말","2-중간","2-기말"].forEach(function(k){ out.push(yy+"-"+k); }); });
+  return out;
+}
+function cxNewId(p){ return p+"_"+Date.now().toString(36)+Math.random().toString(36).slice(2,6); }
+function cxMyName(){ return (currentUser && (currentUser.displayName||currentUser.email)) || "이 기기"; }
+/* 붙여넣기·입력된 서식에서 위험한 요소만 걷어냅니다 */
+function cxClean(html){
+  var t=document.createElement("template"); t.innerHTML=String(html||"");
+  t.content.querySelectorAll("script,style,iframe,object,embed,link,meta,img").forEach(function(n){ n.remove(); });
+  t.content.querySelectorAll("*").forEach(function(n){
+    [].slice.call(n.attributes).forEach(function(a){ if(a.name!=="style" && a.name!=="color" && a.name!=="size") n.removeAttribute(a.name); });
+  });
+  return t.innerHTML;
+}
+function cxTextOf(html){ var d=document.createElement("div"); d.innerHTML=html||""; return (d.textContent||"").trim(); }
+
+/* ---------- 권한 ---------- */
+function calCanEdit(){ return isOffline() || isAdmin() || currentRole === "teacher"; }
+function calCanDelete(it){
+  if(isOffline() || isAdmin()) return true;
+  return currentRole === "teacher" && !!it && normEmail(it.createdByEmail) === myEmail();
+}
+
+/* ---------- 선생님 색 ---------- */
+function calTeachers(){
+  var names = Object.keys((state.settings && state.settings.teacherEmails) || {});
+  Object.keys(cal.items).forEach(function(k){ var it=cal.items[k]; if(it.type==="jikbo" && it.teacher && names.indexOf(it.teacher)<0) names.push(it.teacher); });
+  return names.sort(function(a,b){ return a.localeCompare(b,"ko"); });
+}
+function calTeacherColor(name){ var list=calTeachers(), i=list.indexOf(name); if(i<0) i=0; return CAL_COLORS[i % CAL_COLORS.length]; }
+function calMyTeacherName(){
+  var map=(state.settings && state.settings.teacherEmails) || {}, me=myEmail();
+  var hit=Object.keys(map).filter(function(k){ return normEmail(map[k])===me; })[0];
+  return hit || (state.settings && state.settings.teacher) || calTeachers()[0] || "";
+}
+
+/* ---------- 저장소 ---------- */
+function calLoadLocal(){
+  try{ var raw=localStorage.getItem(CAL_KEY); if(raw){ var o=JSON.parse(raw); cal.items=o.items||{}; } }catch(e){}
+}
+function calPersistLocal(){
+  try{ localStorage.setItem(CAL_KEY, JSON.stringify({items:cal.items, savedAt:Date.now()})); }catch(e){}
+}
+function calUseShared(){ return !!(sharedDb && !isOffline() && isAuthorized()); }
+function calSubscribe(){
+  calUnsubscribe();
+  if(!calUseShared()) return;
+  try{
+    cal.unsub = sharedDb.collection("calendar").onSnapshot(function(snap){
+      cal.remoteError = "";
+      var next = {};
+      snap.docs.forEach(function(d){ next[d.id] = d.data(); });
+      Object.keys(cal.dirty).forEach(function(id){ if(cal.items[id]) next[id] = cal.items[id]; });
+      cal.items = next; cal.loaded = true;
+      calPersistLocal();
+      calRefresh();
+    }, function(e){
+      console.warn(e);
+      cal.remoteError = (e && e.code === "permission-denied")
+        ? "공유 저장 규칙(Firestore 규칙)에 캘린더 부분이 아직 적용되지 않았습니다. 안내드린 규칙을 먼저 게시해주세요."
+        : "캘린더를 불러오지 못했습니다. 잠시 후 다시 열어주세요.";
+      calRefresh();
+    });
+  }catch(e){ console.warn(e); }
+}
+function calUnsubscribe(){ try{ if(cal.unsub) cal.unsub(); }catch(e){} cal.unsub=null; }
+
+/* 항목 하나를 고쳤을 때 (저장 전) */
+function calTouch(it, silent){
+  if(!it.id) return;
+  it.updatedAt = Date.now(); it.updatedByName = cxMyName(); it.updatedByEmail = myEmail();
+  if(!it.createdByEmail && !it.createdAt){ it.createdByEmail = myEmail(); it.createdByName = cxMyName(); it.createdAt = Date.now(); }
+  cal.items[it.id] = it; cal.dirty[it.id] = true;
+  calPersistLocal();
+  calRenderStatus();
+  if(!silent) calRefresh();
+}
+function calDirtyCount(){ return Object.keys(cal.dirty).length; }
+function calSave(){
+  var ids = Object.keys(cal.dirty);
+  if(!ids.length){ toast("저장할 변경이 없습니다"); return Promise.resolve(); }
+  if(!calCanEdit()){ toast("보기 전용 계정입니다"); return Promise.resolve(); }
+  if(!calUseShared()){
+    cal.dirty = {}; calPersistLocal(); calRenderStatus(); toast("저장했습니다"); return Promise.resolve();
+  }
+  var batch = sharedDb.batch();
+  ids.forEach(function(id){ if(cal.items[id]) batch.set(sharedDb.collection("calendar").doc(id), JSON.parse(JSON.stringify(cal.items[id]))); });
+  return batch.commit().then(function(){
+    ids.forEach(function(id){ delete cal.dirty[id]; });
+    calRenderStatus(); toast("저장했습니다 · 모든 선생님에게 반영됩니다");
+  }).catch(function(e){
+    console.error(e);
+    toast(e && e.code==="permission-denied" ? "저장 권한이 없습니다 (Firestore 규칙 확인)" : "저장에 실패했습니다");
+  });
+}
+function calRemove(it){
+  if(!calCanDelete(it)){ toast("삭제는 만든 선생님과 총괄만 할 수 있습니다"); return; }
+  if(!confirm("이 일정을 삭제할까요? 모든 선생님 화면에서 사라집니다.")) return;
+  delete cal.items[it.id]; delete cal.dirty[it.id]; calPersistLocal();
+  if(calUseShared()){
+    sharedDb.collection("calendar").doc(it.id).delete().then(function(){ toast("삭제했습니다"); })
+      .catch(function(e){ console.error(e); toast("삭제에 실패했습니다"); });
+  } else toast("삭제했습니다");
+  calClosePop(); calRefresh();
+}
+
+/* ---------- 조회 ---------- */
+function calList(type){ return Object.keys(cal.items).map(function(k){ return cal.items[k]; }).filter(function(it){ return it && it.type===type; }); }
+function calExamVisible(e){ return (!cal.examF || e.exam===cal.examF) && (e.grades||[]).some(function(g){ return cal.showG[g]; }); }
+function calHoliday(ds){
+  var ov = cal.items["hol_"+ds];
+  if(ov) return ov.on ? (ov.name||"공휴일") : "";
+  return CAL_HOLIDAYS[ds] || CAL_FIXED[ds.slice(5)] || "";
+}
+function calInfo(exam, school){ return cal.items["info_"+exam+"_"+school] || null; }
+/* 날짜별 학교 칩 (같은 시험·같은 학교는 한 칩) */
+function calChipsOn(ds){
+  var map={}, order=[];
+  calList("exam").filter(calExamVisible).forEach(function(e){
+    if(ds<e.start || ds>e.end) return;
+    var k=e.exam+"|"+e.school;
+    if(!map[k]){ map[k]={key:k, school:e.school, exam:e.exam, grades:[], math:[], tent:false, ev:[]}; order.push(k); }
+    var c=map[k];
+    (e.grades||[]).forEach(function(g){ if(cal.showG[g] && c.grades.indexOf(g)<0) c.grades.push(g); });
+    if(e.math===ds) (e.grades||[]).forEach(function(g){ if(cal.showG[g] && c.math.indexOf(g)<0) c.math.push(g); });
+    c.tent = c.tent || !!e.tentative; c.ev.push(e);
+  });
+  return order.map(function(k){ map[k].grades.sort(); return map[k]; })
+    .sort(function(a,b){ return (b.math.length?1:0)-(a.math.length?1:0) || a.school.localeCompare(b.school,"ko"); });
+}
+function calJikboOn(ds){
+  return calList("jikbo").filter(function(j){ return j.date===ds; })
+    .sort(function(a,b){ return String(a.time||"").localeCompare(String(b.time||"")) || String(a.teacher).localeCompare(String(b.teacher),"ko"); });
+}
+function calJikboTotal(j){ return (j.rows||[]).reduce(function(a,r){ return a+(r.c||[]).reduce(function(x,y){ return x+(+y||0); },0); },0); }
+function calMemo(ds){ var m=cal.items["memo_"+ds]; return m ? (m.html||"") : ""; }
+function calMonths(){
+  var t=new Date(), endKey=t.getFullYear()*12+t.getMonth()+5, minEnd=2027*12+1;   /* 이번 달 + 5개월, 최소 2027년 2월 */
+  var last=Math.max(endKey, minEnd), out=[], y=2026, m=8;
+  while(y*12+m <= last){ out.push(y+"-"+String(m+1).padStart(2,"0")); m++; if(m>11){ m=0; y++; } }
+  return out;
+}
+
+/* ---------- 학생 한 줄 (편집 화면 · 발송본) ---------- */
+function calFindFor(meta){
+  if(!meta) return null;
+  var g=cxGradeNum(meta.grade), sc=cxNormSchool(meta.school);
+  if(!g || !sc) return null;
+  var list=calList("exam").filter(function(e){ return cxNormSchool(e.school)===sc && (e.grades||[]).indexOf(g)>=0; });
+  if(!list.length) return null;
+  var key=examKey(meta), today=cxToday();
+  var same=list.filter(function(e){ return e.exam===key; });
+  var pool = same.length ? same : list.filter(function(e){ return e.end>=today; });
+  if(!pool.length) pool=list;
+  pool.sort(function(a,b){ return a.start<b.start?-1:1; });
+  return pool[0];
+}
+function calLineParts(meta){
+  var e=calFindFor(meta); if(!e) return null;
+  var g=cxGradeNum(meta.grade), today=cxToday();
+  var target=e.math||e.start, dd="";
+  if(e.end<today) dd="시험 종료";
+  else { var n=cxDays(today,target); dd = n>0 ? ("D-"+n) : (n===0 ? "D-day" : "시험 중"); }
+  return {
+    exam:cxExamLabel(e.exam), school:e.school+"중", grade:g,
+    period:cxMdw(e.start)+(e.end!==e.start?" ~ "+cxMdw(e.end):""),
+    math:e.math?cxMdw(e.math):"", dd:dd, month:e.start.slice(0,7), tentative:!!e.tentative
+  };
+}
+function calExamLineEl(s){
+  var p=calLineParts(s.meta);
+  var box=el("div",{class:"examline"});
+  if(!p){
+    if(!cal.loaded && calUseShared()) return null;
+    box.innerHTML='<span class="ic">📅</span><span class="muted">'+escapeHtml((s.meta.school||"")+" "+(s.meta.grade||""))+' 시험 일정이 캘린더에 아직 없습니다</span>';
+    var go0=el("button",{class:"go"},["캘린더 열기 →"]); go0.addEventListener("click",function(){ openCal(); });
+    box.appendChild(go0); return box;
+  }
+  box.innerHTML='<span class="ic">📅 '+escapeHtml(p.exam)+'</span> '+escapeHtml(p.school+" "+p.grade+"학년")
+    +' · 시험 '+escapeHtml(p.period)+(p.tentative?' <span class="muted">(미확정)</span>':'')
+    +' · '+(p.math?'<span class="m">수학 '+escapeHtml(p.math)+'</span>':'<span class="muted">수학 시험일 미정</span>')
+    +' <span class="dd">'+escapeHtml(p.dd)+'</span>';
+  var go=el("button",{class:"go"},["캘린더에서 보기 →"]); go.addEventListener("click",function(){ openCal(p.month); });
+  box.appendChild(go);
+  return box;
+}
+function calReportLineHtml(s){
+  var p=calLineParts(s.meta); if(!p) return "";
+  return '<div class="rp-exam"><span class="ic">📅 '+escapeHtml(p.exam)+'</span>'
+    +'<span>'+escapeHtml(p.school+" "+p.grade+"학년")+' · 시험 '+escapeHtml(p.period)+'</span>'
+    +(p.math?'<span class="m">수학 '+escapeHtml(p.math)+'</span>':'<span>· 수학 시험일 미정</span>')
+    +'</div>';
+}
+
+/* ---------- 사이드바 알림 ---------- */
+function calRenderSideHint(){
+  var box=$("#calNext"); if(!box) return;
+  var today=cxToday();
+  var ex=calList("exam").filter(function(e){ return e.end>=today; });
+  var html="";
+  if(ex.length){
+    var first=ex.map(function(e){ return e.start<today?today:e.start; }).sort()[0];
+    var names=[]; ex.forEach(function(e){ if(e.start<=first && e.end>=first && names.indexOf(e.school)<0) names.push(e.school); });
+    var n=cxDays(today,first);
+    html+='다가오는 시험 <b>'+(n>0?"D-"+n:"진행 중")+'</b> · '+cxMdw(first)+' '
+      +escapeHtml(names.slice(0,3).join("·"))+(names.length>3?" 외 "+(names.length-3):"");
+  }
+  var t=new Date(), mon=new Date(t); mon.setDate(t.getDate()-((t.getDay()+6)%7));
+  var sun=new Date(mon); sun.setDate(mon.getDate()+6);
+  var a=cxIso(mon), b=cxIso(sun);
+  var jn=calList("jikbo").filter(function(j){ return j.date>=a && j.date<=b; }).length;
+  if(jn) html+=(html?"<br>":"")+'이번 주 직보 <b>'+jn+'건</b>';
+  box.innerHTML=html;
+}
+
+/* ---------- 전체 새로 그리기 ---------- */
+function calRefresh(){
+  calRenderSideHint();
+  if(cal.open){
+    var a=document.activeElement;
+    if(a && a.closest && a.closest("#calVeil") && (a.isContentEditable || /INPUT|SELECT|TEXTAREA/.test(a.tagName))){ cal.pendingRender=true; }
+    else calRender();
+  }
+  var s=activeStudent(), line=$("#examLine");
+  if(line && s){ var fresh=calExamLineEl(s); if(fresh){ fresh.id="examLine"; line.replaceWith(fresh); } }
+}
+function calRenderStatus(){
+  var st=$("#calStatus"), btn=$("#btnCalSave"); if(!st) return;
+  var n=calDirtyCount();
+  st.textContent = n ? ("저장하지 않은 변경 "+n+"건") : (calUseShared() ? "모든 선생님과 함께 보는 캘린더" : "이 기기에만 저장");
+  st.classList.toggle("warn", !!n);
+  if(btn){ btn.style.display = calCanEdit() ? "" : "none"; btn.classList.toggle("btn-muted", !n); }
+}
+
+/* ---------- 열기 / 닫기 ---------- */
+function openCal(ym){
+  var months=calMonths(), tm=cxToday().slice(0,7);
+  cal.month = ym && months.indexOf(ym)>=0 ? ym : (months.indexOf(tm)>=0 ? tm : months[0]);
+  cal.open=true;
+  $("#calVeil").classList.add("open");
+  calRender();
+}
+function closeCal(){
+  if(calDirtyCount() && calCanEdit()){
+    if(confirm("저장하지 않은 캘린더 변경이 "+calDirtyCount()+"건 있습니다. 지금 저장할까요?\n(취소를 누르면 저장하지 않고 닫습니다. 내용은 이 기기에 남아 있어 다음에 저장할 수 있습니다)")) calSave();
+  }
+  cal.open=false; calClosePop();
+  $("#calVeil").classList.remove("open");
+}
+function calIsPhone(){ return window.matchMedia && window.matchMedia("(max-width: 700px)").matches; }
+
+function calRender(){
+  cal.pendingRender=false;
+  calRenderStatus();
+  var ro=!calCanEdit();
+  $("#calTb").style.display = ro ? "none" : "";
+  /* 월 탭 */
+  var mt=$("#calMonths"); mt.innerHTML="";
+  var tm=cxToday().slice(0,7);
+  calMonths().forEach(function(ym,i){
+    var p=ym.split("-");
+    var b=cxEl("button","cx-mt"+(ym===cal.month?" on":"")+(ym<tm?" past":""), (i===0||p[1]==="01"?p[0]+"년 ":"")+(+p[1])+"월");
+    b.addEventListener("click",function(){ cal.month=ym; calRender(); });
+    mt.appendChild(b);
+  });
+  mt.appendChild(cxEl("span","cx-hint"," · 지난 달은 계속 남고, 매달 1일에 다음 달이 하나씩 늘어납니다"));
+  /* 시험 종류 필터 */
+  var sel=$("#calExamF"), keys={};
+  calList("exam").forEach(function(e){ keys[e.exam]=1; });
+  var cur=cal.examF;
+  sel.innerHTML='<option value="">전체</option>'+Object.keys(keys).sort().map(function(k){ return '<option value="'+escapeHtml(k)+'"'+(k===cur?" selected":"")+'>'+escapeHtml(cxExamLabel(k))+'</option>'; }).join("");
+  /* 알림 · 처음 넣기 */
+  var notes=$("#calNotes"); notes.innerHTML="";
+  if(cal.remoteError) notes.appendChild(cxEl("div","cx-banner",escapeHtml(cal.remoteError)));
+  if(!calList("exam").length && (isAdmin()||isOffline()) && (cal.loaded || !calUseShared())){
+    var sd=cxEl("div","cx-seed",'<span>엑셀(중등부 내신대비 준비계획)에서 정리한 <b>2026년 2학기 중간고사</b> 학교별 일정 '+CAL_SEED.events.length+'건을 넣을 수 있습니다.</span>');
+    var sb=cxEl("button","btn btn-primary btn-sm","일정 넣기"); sb.addEventListener("click",calSeed); sd.appendChild(sb);
+    notes.appendChild(sd);
+  }
+  var box=$("#calMain"); box.innerHTML="";
+  if(calIsPhone()) box.appendChild(calBuildList()); else box.appendChild(calBuildSheet());
+  if(!calIsPhone()) requestAnimationFrame(function(){ calFitCells(); calFitSheet(); });
+}
+
+/* ---------- A4 가로 달력 ---------- */
+function calBuildSheet(){
+  var ro=!calCanEdit();
+  var p=cal.month.split("-"), y=+p[0], m=+p[1];
+  var stage=cxEl("div","cx-stage"), sh=cxEl("div","cx-sheet"); sh.id="calSheet"; stage.appendChild(sh);
+  var tItem=cal.items["title_"+cal.month];
+  var head=cxEl("div","cx-head");
+  var left=cxEl("div");
+  var tt=cxEl("div","cx-title",'<span class="yr">'+y+'년</span>');
+  var te=cxEl("span",null, tItem ? tItem.html : (m+"월 학교별 시험 일정"));
+  if(!ro){ te.contentEditable="true"; te.addEventListener("input",function(){
+    var it=cal.items["title_"+cal.month] || {id:"title_"+cal.month, type:"title", month:cal.month};
+    it.html=cxClean(te.innerHTML); calTouch(it,true); }); }
+  tt.appendChild(te); left.appendChild(tt);
+  var exs={}; calList("exam").forEach(function(e){ if(e.start.slice(0,7)<=cal.month && e.end.slice(0,7)>=cal.month) exs[e.exam]=1; });
+  left.appendChild(cxEl("div","cx-sub","수학도서관 중등부 · "+(Object.keys(exs).sort().map(cxExamLabel).join(" · ") || "이 달에 등록된 시험 없음")));
+  head.appendChild(left);
+  head.appendChild(cxEl("div","cx-legend",
+    '<span class="k">'+cxDots([1])+'중1</span><span class="k">'+cxDots([2])+'중2</span><span class="k">'+cxDots([3])+'중3</span>'
+    +'<span class="k"><span class="cx-math">∑</span>수학 시험일</span>'
+    +'<span class="k"><span class="cx-chip mix tent" style="height:auto;padding:0 4px"><span class="t">학교</span></span>미확정</span>'
+    +'<span class="k"><span class="cx-jb" style="background:#5b5047">선생님</span>직보</span>'));
+  sh.appendChild(head);
+  var grid=cxEl("div","cx-cal");
+  ["월","화","수","목","금","토","일"].forEach(function(d,i){ grid.appendChild(cxEl("div","cx-dow"+(i===5?" sat":i===6?" sun":""),d)); });
+  var first=new Date(y,m-1,1), start=new Date(first); start.setDate(1-((first.getDay()+6)%7));
+  for(var i=0;i<42;i++){ var d=new Date(start); d.setDate(start.getDate()+i); grid.appendChild(calCell(cxIso(d), d, d.getMonth()===m-1)); }
+  sh.appendChild(grid);
+  return stage;
+}
+function calCell(ds, d, inMonth){
+  var ro=!calCanEdit(), wd=(d.getDay()+6)%7, hol=calHoliday(ds);
+  var c=cxEl("div","cx-cell"+(wd>4?" we":"")+(wd===5?" sat":"")+(wd===6?" sun":"")+(hol?" hol":"")+(inMonth?"":" out")+(ds===cxToday()?" today":""));
+  c.setAttribute("data-ds",ds);
+  var dn=cxEl("div","cx-dn");
+  var num=cxEl("span","cx-num",(d.getDate()===1?(d.getMonth()+1)+"/":"")+d.getDate());
+  if(hol) num.title=hol;
+  num.addEventListener("click",function(ev){ ev.stopPropagation(); calOpenDay(ds,c); });
+  dn.appendChild(num);
+  if(!ro){ var plus=cxEl("button","cx-plus","＋"); plus.title="이 날짜에 추가"; plus.addEventListener("click",function(ev){ ev.stopPropagation(); calOpenAdd(ds,c,"exam"); }); dn.appendChild(plus); }
+  c.appendChild(dn);
+  var items=cxEl("div","cx-items");
+  calChipsOn(ds).forEach(function(ch){ items.appendChild(calChip(ch,ds,c)); });
+  if(cal.showJb) calJikboOn(ds).forEach(function(j){ items.appendChild(calJbBox(j)); });
+  c.appendChild(items);
+  if(cal.showMemo){
+    var mm=cxEl("div","cx-memo",calMemo(ds));
+    if(!ro){ mm.contentEditable="true"; mm.addEventListener("input",function(){ calSetMemo(ds, mm.innerHTML, true); }); }
+    c.appendChild(mm);
+  }
+  return c;
+}
+function calChip(ch, ds, anchor){
+  var ro=!calCanEdit();
+  var c=cxEl("span","cx-chip "+(ch.grades.length===1?"g"+ch.grades[0]:"mix")+(ch.tent?" tent":"")+(ch.math.length?" math":""));
+  var dd=cxEl("span","dots",(ch.math.length?'<span class="cx-math">∑</span>':'')+cxDots(ch.grades));
+  dd.title="자세히 보기";
+  dd.addEventListener("click",function(ev){ ev.stopPropagation(); calOpenDay(ds,anchor,ch.key); });
+  c.appendChild(dd);
+  var t=cxEl("span","t",ch.ev[0].label||escapeHtml(ch.school));
+  if(!ro){ t.contentEditable="true"; t.addEventListener("input",function(){ var h=cxClean(t.innerHTML); ch.ev.forEach(function(e){ e.label=h; calTouch(e,true); }); }); }
+  else t.addEventListener("click",function(ev){ ev.stopPropagation(); calOpenDay(ds,anchor,ch.key); });
+  c.appendChild(t);
+  return c;
+}
+function calJbBox(j){
+  var tot=calJikboTotal(j);
+  var b=cxEl("button","cx-jb",escapeHtml(j.teacher||"직보")+(tot?" <small>"+tot+"명</small>":""));
+  b.style.background=calTeacherColor(j.teacher);
+  b.addEventListener("click",function(ev){ ev.stopPropagation(); calOpenJikbo(j,b); });
+  return b;
+}
+/* 칸 크기는 그대로, 넘치면 "+N 더보기" */
+function calFitCells(){
+  $all("#calSheet .cx-cell").forEach(function(c){
+    var items=c.querySelector(".cx-items"); if(!items) return;
+    var kids=[].slice.call(items.children), hidden=0, more=null;
+    while(items.scrollHeight>items.clientHeight+1 && kids.length){
+      kids.pop().style.display="none"; hidden++;
+      if(!more){ more=cxEl("button","cx-more"); more.addEventListener("click",function(ev){ ev.stopPropagation(); calOpenDay(c.getAttribute("data-ds"),c); }); items.appendChild(more); }
+      more.textContent="+"+hidden+" 더보기";
+    }
+  });
+}
+function calFitSheet(){
+  var sh=$("#calSheet"); if(!sh) return;
+  var stage=sh.parentNode, avail=$("#calMain").clientWidth-36, w=sh.offsetWidth;
+  var k=Math.min(1, avail/w);
+  sh.style.transform="scale("+k+")";
+  stage.style.height=(sh.offsetHeight*k+36)+"px";
+}
+
+/* ---------- 휴대폰 : 날짜별 목록 ---------- */
+function calBuildList(){
+  var ro=!calCanEdit();
+  var wrap=cxEl("div","cx-list");
+  var p=cal.month.split("-"), y=+p[0], m=+p[1];
+  var lh=cxEl("div","cx-lhead",'<h4>'+y+'년 '+m+'월</h4>');
+  if(!ro){
+    var pick=document.createElement("input"); pick.type="date"; pick.className="cx-sel"; pick.value=cal.month+"-01";
+    var addb=cxEl("button","btn btn-sm btn-primary","＋ 날짜 골라 추가");
+    addb.addEventListener("click",function(){ if(pick.value) calOpenAdd(pick.value, addb, "exam"); });
+    var g=cxEl("div","cx-grp"); g.appendChild(pick); g.appendChild(addb); lh.appendChild(g);
+  }
+  wrap.appendChild(lh);
+  var last=new Date(y,m,0).getDate(), today=cxToday(), shown=0;
+  for(var dd=1; dd<=last; dd++){
+    var d=new Date(y,m-1,dd), ds=cxIso(d);
+    var chips=calChipsOn(ds), jbs=cal.showJb?calJikboOn(ds):[], memo=cal.showMemo?calMemo(ds):"";
+    if(!chips.length && !jbs.length && !cxTextOf(memo) && ds!==today) continue;
+    shown++;
+    var hol=calHoliday(ds), wd=d.getDay();
+    var row=cxEl("div","cx-lday"+(ds===today?" today":""));
+    var dl=cxEl("div","cx-ldate"+(wd===6?" sat":"")+(wd===0?" sun":"")+(hol?" hol":""), dd+'<small>'+CAL_WD[wd]+(hol?" · "+escapeHtml(hol):"")+'</small>');
+    (function(ds,row){ dl.addEventListener("click",function(){ calOpenDay(ds,row); }); })(ds,row);
+    row.appendChild(dl);
+    var its=cxEl("div","cx-litems");
+    chips.forEach(function(ch){ its.appendChild(calChip(ch,ds,row)); });
+    jbs.forEach(function(j){ its.appendChild(calJbBox(j)); });
+    if(!ro){ var ad=cxEl("button","cx-ladd","＋"); (function(ds,row){ ad.addEventListener("click",function(){ calOpenAdd(ds,row,"exam"); }); })(ds,row); its.appendChild(ad); }
+    if(cxTextOf(memo)) its.appendChild(cxEl("div","cx-lmemo",memo));
+    if(!chips.length && !jbs.length && !cxTextOf(memo)) its.appendChild(cxEl("span","cx-hint","오늘 · 등록된 일정 없음"));
+    row.appendChild(its);
+    wrap.appendChild(row);
+  }
+  if(!shown) wrap.appendChild(cxEl("div","cx-hint","이 달에는 등록된 일정이 없습니다."));
+  wrap.appendChild(cxEl("div","cx-hint","휴대폰에서는 일정이 있는 날만 목록으로 보여드립니다. 날짜를 누르면 자세히 볼 수 있어요."));
+  return wrap;
+}
+
+/* ---------- 떠 있는 창 ---------- */
+function calPop(){ return $("#calPop"); }
+function calClosePop(){ var p=calPop(); if(!p) return; p.classList.remove("show"); p.innerHTML=""; if(cal.pendingRender && cal.open) calRender(); }
+function calPlace(anchor){
+  var pop=calPop(); pop.classList.add("show");
+  if(calIsPhone()){ pop.style.left=""; pop.style.top=""; return; }
+  var r=anchor.getBoundingClientRect(), W=350, H=pop.offsetHeight;
+  var x=r.right+8; if(x+W>window.innerWidth-8) x=r.left-W-8; if(x<8) x=8;
+  var y=r.top-4; if(y+H>window.innerHeight-8) y=window.innerHeight-8-H; if(y<8) y=8;
+  pop.style.left=x+"px"; pop.style.top=y+"px";
+}
+function calPopHead(title){
+  var h=cxEl("div","ph","<b>"+title+"</b>");
+  var x=cxEl("button","x","✕"); x.addEventListener("click",calClosePop); h.appendChild(x); return h;
+}
+function calDayTitle(ds){ var d=cxParse(ds); return (d.getMonth()+1)+"월 "+d.getDate()+"일 ("+CAL_WD[d.getDay()]+")"; }
+function calSetMemo(ds, html, silent){
+  var it=cal.items["memo_"+ds] || {id:"memo_"+ds, type:"memo", date:ds};
+  it.html=cxClean(html); calTouch(it, silent);
+}
+function calEditable(elm, html, onSave){
+  elm.innerHTML=html||"";
+  if(calCanEdit()){ elm.contentEditable="true"; elm.addEventListener("input",function(){ onSave(cxClean(elm.innerHTML)); }); }
+  return elm;
+}
+
+/* 날짜 창 : 학교별로 접었다 펴기 */
+function calOpenDay(ds, anchor, openKey){
+  var ro=!calCanEdit(), pop=calPop(); pop.innerHTML="";
+  var hol=calHoliday(ds);
+  pop.appendChild(calPopHead(calDayTitle(ds)+(hol?' <span class="cx-red" style="font-size:12px">'+escapeHtml(hol)+'</span>':'')));
+  var pb=cxEl("div","pb");
+  var chs=calChipsOn(ds);
+  var sec=cxEl("div","cx-sec"); sec.appendChild(cxEl("h5",null,"<span>시험 · "+chs.length+"개 학교</span>"));
+  if(!chs.length) sec.appendChild(cxEl("div","cx-hint","이 날짜에 시험이 있는 학교가 없습니다."));
+  chs.forEach(function(ch){
+    var a=cxEl("div","cx-acc"+(ch.key===openKey||chs.length<=2?" open":""));
+    var ah=cxEl("div","ah",(ch.math.length?'<span class="cx-math">∑</span>':'')+cxDots(ch.grades)+" "+escapeHtml(ch.school)+"중"
+      +(ch.tent?' <span class="cx-red" style="font-size:11px">미확정</span>':'')+'<span class="car">▸</span>');
+    ah.addEventListener("click",function(){ a.classList.toggle("open"); });
+    a.appendChild(ah);
+    var ab=cxEl("div","ab");
+    var infoId="info_"+ch.exam+"_"+ch.school;
+    var inf=cal.items[infoId] || {id:infoId, type:"info", exam:ch.exam, school:ch.school, books:["","",""], ranges:["","",""]};
+    ab.appendChild(cxEl("div","cx-by",escapeHtml(cxExamLabel(ch.exam))));
+    ch.grades.forEach(function(g){
+      var e=ch.ev.filter(function(x){ return (x.grades||[]).indexOf(g)>=0; })[0];
+      var kv=cxEl("div","cx-kv"); kv.style.margin="6px 0";
+      kv.appendChild(cxEl("div","k",cxDots([g])+" 중"+g)); kv.appendChild(cxEl("div"));
+      kv.appendChild(cxEl("div","k","시험 기간")); kv.appendChild(cxEl("div","v",escapeHtml(cxMdw(e.start)+(e.end!==e.start?" ~ "+cxMdw(e.end):""))));
+      kv.appendChild(cxEl("div","k","수학 시험")); kv.appendChild(cxEl("div","v",e.math?'<b class="cx-red">∑ '+escapeHtml(cxMdw(e.math))+'</b>':'<span class="cx-hint">미정</span>'));
+      kv.appendChild(cxEl("div","k","교과서"));
+      kv.appendChild(calEditable(cxEl("div","v"), (inf.books||[])[g-1], function(h){ inf.books=inf.books||["","",""]; inf.books[g-1]=h; calTouch(inf,true); }));
+      kv.appendChild(cxEl("div","k","시험 범위"));
+      kv.appendChild(calEditable(cxEl("div","v"), (inf.ranges||[])[g-1], function(h){ inf.ranges=inf.ranges||["","",""]; inf.ranges[g-1]=h; calTouch(inf,true); }));
+      ab.appendChild(kv);
+    });
+    var acts=cxEl("div","cx-acts");
+    acts.appendChild(cxEl("span","cx-by","등록: "+escapeHtml(ch.ev[0].createdByName||"")));
+    if(!ro){ var ed=cxEl("button","btn btn-sm","✎ 일정 수정"); ed.addEventListener("click",function(){ calOpenAdd(ds,anchor,"exam",ch.ev[0]); }); acts.appendChild(ed); }
+    ab.appendChild(acts);
+    a.appendChild(ab); sec.appendChild(a);
+  });
+  pb.appendChild(sec);
+
+  var js=calJikboOn(ds);
+  var s2=cxEl("div","cx-sec"); s2.appendChild(cxEl("h5",null,"<span>직보 · "+js.length+"건</span>"));
+  if(!js.length) s2.appendChild(cxEl("div","cx-hint","등록된 직보가 없습니다."));
+  js.forEach(function(j){ s2.appendChild(calJikboAcc(j,false,anchor)); });
+  pb.appendChild(s2);
+
+  var s3=cxEl("div","cx-sec"); s3.appendChild(cxEl("h5",null,"<span>메모</span>"));
+  var r=calEditable(cxEl("div","cx-rich"), calMemo(ds), function(h){ calSetMemo(ds,h,true);
+    var cm=document.querySelector('#calSheet .cx-cell[data-ds="'+ds+'"] .cx-memo'); if(cm) cm.innerHTML=h; });
+  if(ro && !cxTextOf(calMemo(ds))) r.innerHTML='<span class="cx-hint">메모 없음</span>';
+  s3.appendChild(r); pb.appendChild(s3);
+
+  if(isAdmin() || isOffline()){
+    var hl=cxEl("label","cx-gr");
+    hl.innerHTML='<label><input type="checkbox"'+(hol?" checked":"")+'> 공휴일로 표시 (날짜만 빨간색)</label>';
+    hl.querySelector("input").addEventListener("change",function(){
+      var on=this.checked, name=on?(prompt("공휴일 이름 (비워도 됩니다)", hol||"공휴일")||"공휴일"):"";
+      calTouch({id:"hol_"+ds, type:"hol", date:ds, on:on, name:name});
+      calOpenDay(ds, anchor);
+    });
+    pb.appendChild(hl);
+  }
+  if(!ro){ var add=cxEl("button","btn btn-primary btn-sm","＋ 이 날짜에 추가"); add.addEventListener("click",function(){ calOpenAdd(ds,anchor,"exam"); }); pb.appendChild(add); }
+  pop.appendChild(pb); calPlace(anchor);
+}
+
+/* 직보 세부 정보 */
+function calJikboAcc(j, open, anchor){
+  var ro=!calCanEdit(), tot=calJikboTotal(j);
+  var a=cxEl("div","cx-acc"+(open?" open":""));
+  var ah=cxEl("div","ah",'<span class="cx-sw2" style="background:'+calTeacherColor(j.teacher)+'"></span>'+escapeHtml(j.teacher||"")
+    +' <span style="color:var(--ink-muted);font-weight:600;font-size:12px">'+escapeHtml(j.time||"")+'</span><b style="margin-left:6px">'+tot+'명</b><span class="car">▸</span>');
+  ah.addEventListener("click",function(){ a.classList.toggle("open"); });
+  a.appendChild(ah);
+  var ab=cxEl("div","ab");
+  var tb='<table class="cx-cnt"><tr><th>학교</th><th>중1</th><th>중2</th><th>중3</th><th>계</th></tr>';
+  (j.rows||[]).forEach(function(r){ var s=(r.c||[]).reduce(function(x,y){ return x+(+y||0); },0);
+    tb+='<tr><td><b>'+escapeHtml(r.school)+'중</b></td>'+[0,1,2].map(function(i){ var n=(r.c||[])[i]; return '<td>'+(n?n+'명':'·')+'</td>'; }).join("")+'<td><b>'+s+'명</b></td></tr>'; });
+  ab.innerHTML=tb+'</table>';
+  var kv=cxEl("div","cx-kv"); kv.style.marginTop="8px";
+  [["시간","time",false],["강의실","room",false],["진행 내용","content",true],["메모","note",true]].forEach(function(p){
+    kv.appendChild(cxEl("div","k",p[0]));
+    var v=cxEl("div","v");
+    if(p[2]) calEditable(v, j[p[1]]||"", function(h){ j[p[1]]=h; calTouch(j,true); });
+    else { v.textContent=j[p[1]]||""; }
+    kv.appendChild(v);
+  });
+  ab.appendChild(kv);
+  var acts=cxEl("div","cx-acts"); acts.style.marginTop="8px";
+  acts.appendChild(cxEl("span","cx-by","등록: "+escapeHtml(j.createdByName||"")));
+  var g=cxEl("span","cx-grp");
+  if(calCanDelete(j)){ var del=cxEl("button","btn btn-sm","삭제"); del.style.color="var(--bad)"; del.addEventListener("click",function(){ calRemove(j); }); g.appendChild(del); }
+  if(!ro){ var ed=cxEl("button","btn btn-sm","✎ 수정"); ed.addEventListener("click",function(){ calOpenAdd(j.date, anchor||calPop(), "jikbo", j); }); g.appendChild(ed); }
+  acts.appendChild(g);
+  ab.appendChild(acts);
+  a.appendChild(ab);
+  return a;
+}
+function calOpenJikbo(j, anchor){
+  var pop=calPop(); pop.innerHTML="";
+  pop.appendChild(calPopHead("직보 · "+escapeHtml(cxMdw(j.date))));
+  var pb=cxEl("div","pb"); pb.appendChild(calJikboAcc(j,true,anchor)); pop.appendChild(pb); calPlace(anchor);
+}
+
+/* 날짜 안에서 추가 · 수정 */
+function calSchoolOptions(){
+  var set={};
+  CAL_SEED.schools.forEach(function(s){ set[s.school]=1; });
+  calList("exam").forEach(function(e){ set[e.school]=1; });
+  return Object.keys(set).sort(function(a,b){ return a.localeCompare(b,"ko"); }).map(function(s){ return '<option value="'+escapeHtml(s)+'">'; }).join("");
+}
+function calOpenAdd(ds, anchor, kind, editing){
+  if(!calCanEdit()) return;
+  var pop=calPop(); pop.innerHTML="";
+  pop.appendChild(calPopHead((editing?"수정 · ":"추가 · ")+escapeHtml(cxMdw(ds))));
+  var pb=cxEl("div","pb");
+  var seg=cxEl("div","cx-seg");
+  [["exam","시험 일정"],["jikbo","직보"],["memo","메모"]].forEach(function(k){
+    var b=cxEl("button",k[0]===kind?"on":"",k[1]);
+    if(editing && k[0]!==kind) b.disabled=true;
+    else b.addEventListener("click",function(){ calOpenAdd(ds,anchor,k[0]); });
+    seg.appendChild(b);
+  });
+  pb.appendChild(seg);
+  var acts=cxEl("div","cx-acts"), left=cxEl("span"), ok=cxEl("button","btn btn-primary btn-sm","확인");
+  if(editing && calCanDelete(editing)){ var del=cxEl("button","btn btn-sm","삭제"); del.style.color="var(--bad)"; del.addEventListener("click",function(){ calRemove(editing); }); left.appendChild(del); }
+  else if(editing) left.appendChild(cxEl("span","cx-by","삭제는 만든 선생님·총괄만"));
+  acts.appendChild(left); acts.appendChild(ok);
+
+  if(kind==="exam"){
+    var e=editing||{};
+    pb.insertAdjacentHTML("beforeend",
+      '<label class="cx-f">학교<input id="cxSchool" list="cxSchoolList" value="'+escapeHtml(e.school||"")+'" placeholder="예: 목운"></label>'
+      +'<datalist id="cxSchoolList">'+calSchoolOptions()+'</datalist>'
+      +'<div class="cx-f">학년<div class="cx-gr">'+[1,2,3].map(function(g){ return '<label><input type="checkbox" class="cxG" value="'+g+'"'+((e.grades||[]).indexOf(g)>=0?" checked":"")+'>중'+g+'</label>'; }).join("")+'</div></div>'
+      +'<div class="cx-row"><label class="cx-f">시험 시작<input type="date" id="cxStart" value="'+(e.start||ds)+'"></label><label class="cx-f">시험 끝<input type="date" id="cxEnd" value="'+(e.end||ds)+'"></label></div>'
+      +'<label class="cx-f">수학 시험일 (모르면 비워두기)<input type="date" id="cxMath" value="'+(e.math||"")+'"></label>'
+      +'<label class="cx-f">시험 종류<select id="cxExam">'+cxExamOptions(e.start||ds).map(function(k){ return '<option value="'+k+'"'+((e.exam||cxExamOf(ds))===k?" selected":"")+'>'+cxExamLabel(k)+'</option>'; }).join("")+'</select></label>'
+      +'<div class="cx-gr"><label><input type="checkbox" id="cxTent"'+(e.tentative?" checked":"")+'>아직 확정되지 않은 일정</label></div>');
+    ok.addEventListener("click",function(){
+      var gs=$all(".cxG:checked",pb).map(function(i){ return +i.value; });
+      var sc=cxNormSchool($("#cxSchool").value), st=$("#cxStart").value, en=$("#cxEnd").value||st;
+      if(!sc){ $("#cxSchool").focus(); toast("학교를 넣어주세요"); return; }
+      if(!gs.length){ toast("학년을 골라주세요"); return; }
+      if(!st){ toast("시험 시작일을 넣어주세요"); return; }
+      var it=editing || {id:cxNewId("exam"), type:"exam"};
+      if(!editing || cxTextOf(it.label)===it.school) it.label=escapeHtml(sc);
+      it.school=sc; it.grades=gs.sort(); it.start=st; it.end=en<st?st:en; it.math=$("#cxMath").value||""; it.exam=$("#cxExam").value; it.tentative=$("#cxTent").checked;
+      calTouch(it); calClosePop(); toast("넣었습니다 · [💾 저장]을 눌러야 모두에게 반영됩니다");
+    });
+  }
+  if(kind==="jikbo"){
+    var j=editing||{teacher:calMyTeacherName(), time:"", room:"", rows:[{school:"",c:[0,0,0]}], content:"", note:""};
+    var teachers=calTeachers(); if(j.teacher && teachers.indexOf(j.teacher)<0) teachers.push(j.teacher);
+    pb.insertAdjacentHTML("beforeend",
+      '<div class="cx-row"><label class="cx-f">담당 선생님<input id="cxT" list="cxTList" value="'+escapeHtml(j.teacher||"")+'" placeholder="예: 홍재화T"></label>'
+      +'<datalist id="cxTList">'+teachers.map(function(t){ return '<option value="'+escapeHtml(t)+'">'; }).join("")+'</datalist>'
+      +'<label class="cx-f">시간<input id="cxTime" value="'+escapeHtml(j.time||"")+'" placeholder="예: 4:20~7:10"></label></div>'
+      +'<div class="cx-f">학교별 인원<table class="cx-cnt" id="cxRows"><tr><th style="width:40%">학교</th><th>중1</th><th>중2</th><th>중3</th><th></th></tr></table>'
+      +'<button class="btn btn-sm" id="cxAddRow" style="justify-self:start">＋ 학교 추가</button></div>'
+      +'<datalist id="cxSchoolList2">'+calSchoolOptions()+'</datalist>'
+      +'<label class="cx-f">강의실<input id="cxRoom" value="'+escapeHtml(j.room||"")+'" placeholder="예: 1관 3강"></label>'
+      +'<div class="cx-hint">진행 내용·메모는 저장한 뒤 직보 박스를 눌러 적을 수 있습니다.</div>');
+    var tbl=pb.querySelector("#cxRows");
+    var addRow=function(r){
+      var tr=document.createElement("tr");
+      tr.innerHTML='<td><input list="cxSchoolList2" value="'+escapeHtml(r.school||"")+'" placeholder="학교"></td>'
+        +[0,1,2].map(function(i){ var n=(r.c||[])[i]; return '<td class="n"><input type="number" min="0" inputmode="numeric" value="'+(n||"")+'"></td>'; }).join("")
+        +'<td><button class="x" title="빼기" style="border:0;background:none;cursor:pointer">✕</button></td>';
+      tr.querySelector(".x").addEventListener("click",function(){ tr.remove(); });
+      tbl.appendChild(tr);
+    };
+    (j.rows&&j.rows.length?j.rows:[{school:"",c:[0,0,0]}]).forEach(addRow);
+    pb.querySelector("#cxAddRow").addEventListener("click",function(){ addRow({school:"",c:[0,0,0]}); });
+    ok.addEventListener("click",function(){
+      var rows=$all("tr",tbl).slice(1).map(function(tr){ var ins=tr.querySelectorAll("input");
+        return {school:cxNormSchool(ins[0].value), c:[+ins[1].value||0,+ins[2].value||0,+ins[3].value||0]}; }).filter(function(r){ return r.school; });
+      if(!rows.length){ toast("학교를 하나 이상 넣어주세요"); return; }
+      var tn=$("#cxT").value.replace(/\s+/g,""); if(!tn){ toast("담당 선생님을 넣어주세요"); return; }
+      var it=editing || {id:cxNewId("jikbo"), type:"jikbo", date:ds, content:"", note:""};
+      it.teacher=tn; it.time=$("#cxTime").value.trim(); it.room=$("#cxRoom").value.trim(); it.rows=rows;
+      calTouch(it); calClosePop(); toast("직보를 넣었습니다 · [💾 저장]을 눌러야 모두에게 반영됩니다");
+    });
+  }
+  if(kind==="memo"){
+    var r=cxEl("div","cx-rich",calMemo(ds)); r.contentEditable="true";
+    pb.appendChild(r);
+    ok.addEventListener("click",function(){ calSetMemo(ds, r.innerHTML); calClosePop(); });
+    setTimeout(function(){ r.focus(); },0);
+  }
+  pb.appendChild(acts);
+  pop.appendChild(pb); calPlace(anchor);
+}
+
+/* ---------- 엑셀 일정 처음 넣기 ---------- */
+function calSeed(){
+  if(calList("exam").length){ toast("이미 일정이 있습니다"); return; }
+  var n=0;
+  CAL_SEED.events.forEach(function(e){
+    var it={id:cxNewId("exam"), type:"exam", exam:e.exam, school:e.school, grades:e.grades, start:e.start, end:e.end,
+      math:e.math||"", tentative:!!e.tentative, label:escapeHtml(e.school)};
+    calTouch(it,true); n++;
+  });
+  CAL_SEED.schools.forEach(function(s){
+    var id="info_"+s.exam+"_"+s.school;
+    calTouch({id:id, type:"info", exam:s.exam, school:s.school, books:s.books, ranges:s.ranges}, true);
+  });
+  calSave().then(function(){ calRender(); toast("2026년 2학기 중간고사 일정 "+n+"건을 넣었습니다"); });
+  calRender();
+}
+
+/* ---------- 서식 도구 : 블록 잡은 부분만 ---------- */
+var calRange=null;
+function calExec(cmd,val){
+  if(!calRange) { toast("바꿀 글자를 먼저 블록으로 잡아주세요"); return; }
+  var s=window.getSelection(); s.removeAllRanges(); s.addRange(calRange);
+  document.execCommand("styleWithCSS",false,true); document.execCommand(cmd,false,val); calFireInput();
+}
+function calFireInput(){
+  var s=window.getSelection(); if(!s.rangeCount) return;
+  var n=s.anchorNode; n=n&&(n.nodeType===1?n:n.parentNode);
+  var ce=n&&n.closest&&n.closest('[contenteditable="true"]'); if(ce) ce.dispatchEvent(new Event("input"));
+}
+function calPrint(){
+  var sh=$("#calSheet"); if(!sh){ toast("PC·아이패드 화면에서 인쇄할 수 있습니다"); return; }
+  var clone=sh.cloneNode(true);
+  clone.style.transform="none";
+  $all("[contenteditable]",clone).forEach(function(n){ n.removeAttribute("contenteditable"); });
+  $all(".cx-plus",clone).forEach(function(n){ n.remove(); });
+  var css=($("#calCss")||{}).textContent||"";
+  var doc='<!doctype html><html lang="ko"><head><meta charset="utf-8"><title>'+escapeHtml(cal.month)+' 시험 일정</title>'
+    +'<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans+KR:wght@400;600;700&display=swap">'
+    +'<style>'+css+'\n@page{size:A4 landscape;margin:0}\n*{box-sizing:border-box}\nhtml,body{margin:0;background:#fff;height:209mm;overflow:hidden}\n.cx-sheet{box-shadow:none;height:208mm;margin:0;break-after:avoid;page-break-after:avoid}\n'
+    +'*{-webkit-print-color-adjust:exact;print-color-adjust:exact}</style></head><body>'+clone.outerHTML+'</body></html>';
+  var f=document.createElement("iframe");
+  f.style.cssText="position:fixed;right:0;bottom:0;width:0;height:0;border:0";
+  document.body.appendChild(f);
+  var w=f.contentWindow; w.document.open(); w.document.write(doc); w.document.close();
+  setTimeout(function(){ try{ w.focus(); w.print(); }catch(e){ toast("인쇄 창을 열지 못했습니다"); } setTimeout(function(){ f.remove(); }, 1500); }, 600);
+}
+
+/* ---------- 연결 ---------- */
+function calInit(){
+  calLoadLocal();
+  cal.loaded = (syncBackend !== "firebase");
+  $("#btnCal").addEventListener("click",function(){ openCal(); });
+  $("#calNext").addEventListener("click",function(){ openCal(); });
+  $("#btnCalClose").addEventListener("click",closeCal);
+  $("#btnCalSave").addEventListener("click",function(){ calSave(); });
+  $("#btnCalPrint").addEventListener("click",calPrint);
+  $all("#calVeil [data-g]").forEach(function(b){ b.addEventListener("click",function(){ var g=+b.getAttribute("data-g"); cal.showG[g]=!cal.showG[g]; b.classList.toggle("on",cal.showG[g]); calRender(); }); });
+  $("#calExamF").addEventListener("change",function(){ cal.examF=this.value; calRender(); });
+  $("#calShowJb").addEventListener("click",function(){ cal.showJb=!cal.showJb; this.classList.toggle("on",cal.showJb); calRender(); });
+  $("#calShowMemo").addEventListener("click",function(){ cal.showMemo=!cal.showMemo; this.classList.toggle("on",cal.showMemo); calRender(); });
+  document.addEventListener("selectionchange",function(){
+    var s=window.getSelection(); if(!s.rangeCount || s.isCollapsed) return;
+    var n=s.anchorNode; n=n&&(n.nodeType===1?n:n.parentNode);
+    if(n && n.closest && n.closest('#calVeil [contenteditable="true"]')) calRange=s.getRangeAt(0).cloneRange();
+  });
+  var tb=$("#calTb");
+  tb.addEventListener("mousedown",function(ev){ if(ev.target.tagName==="BUTTON") ev.preventDefault(); });
+  tb.addEventListener("click",function(ev){ var b=ev.target.closest("button"); if(!b) return;
+    if(b.getAttribute("data-cmd")) calExec(b.getAttribute("data-cmd"));
+    if(b.getAttribute("data-fore")) calExec("foreColor",b.getAttribute("data-fore"));
+    if(b.getAttribute("data-hi")) calExec("hiliteColor",b.getAttribute("data-hi")); });
+  $("#calForeAny").addEventListener("input",function(){ calExec("foreColor",this.value); });
+  $("#calFsize").addEventListener("change",function(){
+    var pt=this.value; this.value=""; if(!pt) return;
+    if(!calRange){ toast("바꿀 글자를 먼저 블록으로 잡아주세요"); return; }
+    var s=window.getSelection(); s.removeAllRanges(); s.addRange(calRange);
+    document.execCommand("styleWithCSS",false,false); document.execCommand("fontSize",false,"7");
+    $all('#calVeil font[size="7"]').forEach(function(f){ var sp=document.createElement("span"); sp.style.fontSize=pt+"pt"; sp.innerHTML=f.innerHTML; f.replaceWith(sp); });
+    calFireInput();
+  });
+  document.addEventListener("mousedown",function(e){
+    var pop=calPop(); if(!pop || !pop.classList.contains("show")) return;
+    if(pop.contains(e.target) || e.target.closest("#calTb")) return;
+    calClosePop();
+  });
+  $("#calVeil").addEventListener("focusout",function(){ setTimeout(function(){ if(cal.pendingRender && cal.open && !calPop().classList.contains("show")){
+    var a=document.activeElement; if(!(a && a.closest && a.closest("#calVeil") && (a.isContentEditable||/INPUT|SELECT/.test(a.tagName)))) calRender(); } }, 50); });
+  var lastPhone=calIsPhone();
+  window.addEventListener("resize",function(){ if(!cal.open) return; var ph=calIsPhone(); if(ph!==lastPhone){ lastPhone=ph; calRender(); } else if(!ph) calFitSheet(); });
+  document.addEventListener("keydown",function(e){ if(e.key==="Escape" && cal.open){ if(calPop().classList.contains("show")) calClosePop(); else closeCal(); } });
+  calRenderSideHint();
+}
+
+/* ============================================================
    WIRING
    ============================================================ */
 function bootstrap(){
@@ -3951,6 +4956,7 @@ function bootstrap(){
 
   document.addEventListener("keydown", function(e){ if(e.key==="Escape"){ closePreview(); closeManage(); closeAccessManage(); } });
 
+  calInit();
   renderAll();
 }
 
