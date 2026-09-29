@@ -966,6 +966,31 @@
     body.ax-narrow{padding-top:0 !important;}
     .ax-wkhide{display:table-cell !important;}
   }
+
+  /* ===== v4 · 새 리포트에서 학생 바로 추가 ===== */
+  .ax-nf-row{display:flex; gap:8px; align-items:center; margin-bottom:10px;}
+  .ax-nf-btn{border-style:dashed; color:var(--accent-ink); border-color:var(--accent-soft-2); background:var(--accent-soft); font-weight:700;}
+  .ax-nf-btn.on{border-style:solid;}
+  .ax-nf{border:1px solid var(--accent-soft-2); background:var(--accent-soft); border-radius:10px; padding:12px; margin-bottom:12px;}
+  .ax-nf-ttl{font-size:12.5px; font-weight:800; color:var(--accent-ink); margin-bottom:9px;}
+  .ax-nf-grid{display:grid; grid-template-columns:86px 1.2fr 1.2fr 1.2fr auto; gap:8px; align-items:end;}
+  @media (max-width:760px){ .ax-nf-grid{grid-template-columns:1fr 1fr;} }
+  .ax-nf-f label{display:block; font-size:10.5px; font-weight:700; color:var(--ink-muted); margin-bottom:3px;}
+  .ax-nf-f input, .ax-nf-f select{width:100%; border:1px solid var(--line); background:var(--surface); color:var(--ink);
+    border-radius:7px; padding:8px 9px; font-size:13px; outline:none;}
+  .ax-nf-f input:focus, .ax-nf-f select:focus{border-color:var(--accent);}
+  .ax-nf-f .btn{width:100%;}
+  .ax-nf-ok{display:flex; align-items:center; gap:8px; background:var(--good-soft); border:1px solid #bfe0cd;
+    color:var(--good); border-radius:8px; padding:8px 11px; font-size:12px; font-weight:700; margin-top:9px;}
+  .ax-nf-warn{display:flex; align-items:center; gap:8px; flex-wrap:wrap; background:var(--warn-soft); border:1px solid #ecd9a6;
+    color:#7a5309; border-radius:8px; padding:8px 11px; font-size:12px; font-weight:700; margin-top:9px;}
+  tr.ax-nf-new td{background:color-mix(in srgb, var(--good-soft) 60%, transparent);}
+  .ax-nf-badge{display:inline-block; font-size:10.5px; font-weight:800; padding:2px 7px; border-radius:99px;
+    background:var(--good-soft); color:var(--good);}
+  .ax-nf-school{display:flex; gap:5px;}
+  .ax-nf-school input{flex:1;}
+  .ax-nf-swap{border:1px solid var(--line); background:var(--surface); border-radius:7px; padding:0 9px;
+    font-size:11.5px; font-weight:700; color:var(--ink-muted); cursor:pointer; white-space:nowrap;}
 </style>
 <style id="calCss">
   /* =================== 📅 시험 일정 캘린더 =================== */
@@ -7727,6 +7752,301 @@ function axRenderSide(){
     if(cands.length) tools.appendChild(el("button",{class:"ax-link warn", onclick:axOpenConvert},["🔧 교재 칸 변환 " + cands.length]));
     box.appendChild(tools);
   }
+}
+
+/* ============================================================
+   v4 · 새 리포트를 만들면서 학생도 바로 추가하기
+   ------------------------------------------------------------
+   ② 학생 고르기 화면에 [＋ 새 학생 추가] 를 붙입니다.
+   추가한 학생은 학생 명부에도 그대로 저장됩니다. (기존 명부는 건드리지 않습니다)
+   ============================================================ */
+
+var AX_GRADES = ["중1","중2","중3"];
+
+/* 원장님 + 선생님 모두 추가할 수 있습니다 (매니저는 보기 전용) */
+function axCanAddRoster(){ return isOffline() || (isAuthorized() && !isReadOnly()); }
+
+/* 명부(설정 문서)를 바로 올리고 성공/실패를 알려줍니다 */
+function axPushSettings(){
+  if(!sharedDb || !isAuthorized()) return Promise.resolve("local");
+  try{
+    return sharedDb.doc("settings/shared").set({
+      academy: state.settings.academy || "",
+      teacher: state.settings.teacher || "",
+      teacherEmails: state.settings.teacherEmails || {},
+      roster: state.settings.roster || [],
+      updatedAt: Date.now(),
+      updatedByEmail: myEmail()
+    }).then(function(){ return "ok"; });
+  }catch(e){ return Promise.reject(e); }
+}
+
+function axTeacherNames(){
+  var out = [], seen = {};
+  function add(n){ n = (n||"").trim(); if(n && !seen[n]){ seen[n] = 1; out.push(n); } }
+  add(state.settings.teacher);
+  Object.keys((state.settings && state.settings.teacherEmails) || {}).forEach(add);
+  rosterList().forEach(function(r){ add(r.teacher); });
+  return out;
+}
+function axSchoolNames(){
+  var out = [], seen = {};
+  rosterList().forEach(function(r){
+    var s = (r.school||"").trim();
+    if(s && !seen[s]){ seen[s] = 1; out.push(s); }
+  });
+  return out.sort(function(a,b){ return a.localeCompare(b,"ko"); });
+}
+function axMyTeacherName(){
+  var me = myEmail(), map = (state.settings && state.settings.teacherEmails) || {};
+  var hit = "";
+  Object.keys(map).forEach(function(n){ if((map[n]||"").trim().toLowerCase() === me) hit = n; });
+  return hit || state.settings.teacher || "";
+}
+
+/* 입력 상자 상태 */
+function axNfInit(d){
+  if(!d.nf) d.nf = {grade:"중2", name:"", school:"", teacher: axMyTeacherName()};
+  if(!d.newIds) d.newIds = {};
+  return d.nf;
+}
+
+function axAddRosterNow(d, force){
+  var nf = axNfInit(d);
+  var name = (nf.name||"").trim();
+  if(!name){ d.nfMsg = {type:"warn", tx:"학생 이름을 입력해 주세요"}; renderNewReport(); return; }
+  var dup = rosterFind(name, (nf.school||"").trim(), nf.grade);
+  if(dup && !force){ d.nfDup = dup; d.nfMsg = null; renderNewReport(); return; }
+  var r = newRosterEntry();
+  r.name = name;
+  r.school = (nf.school||"").trim();
+  r.grade = nf.grade || "중2";
+  r.teacher = (nf.teacher||"").trim() || state.settings.teacher || "";
+  ensureRoster().push(r);
+  persist();
+  axPushSettings().catch(function(e){
+    console.error(e);
+    d.nfMsg = {type:"warn", tx:"⚠ " + r.name + " 학생을 이 화면에는 넣었지만 학생 명부 저장에 실패했습니다 (권한). 원장님께 알려주세요."};
+    renderNewReport();
+  });
+  d.picked[r.id] = true;
+  d.newIds[r.id] = true;
+  d.nfDup = null;
+  d.nfMsg = {type:"ok", tx:"✓ " + r.name + " (" + r.grade + (r.school ? " · " + r.school : "") + ") 을(를) 명부에 추가하고 아래에서 체크해 두었습니다"};
+  nf.name = ""; nf.school = r.school;      /* 학년·학교·담당은 남겨 연속 입력이 편하게 */
+  d.q = "";
+  renderNewReport();
+  setTimeout(function(){ var i = $("#axNfName"); if(i) i.focus(); }, 30);
+}
+
+function axPickExisting(d, r){
+  d.picked[r.id] = true; d.nfDup = null;
+  d.nfMsg = {type:"ok", tx:"✓ 명부에 있던 " + r.name + " 학생을 체크했습니다"};
+  var nf = axNfInit(d); nf.name = "";
+  renderNewReport();
+}
+
+/* ＋ 새 학생 추가 입력 상자 */
+function axAddBox(d){
+  var nf = axNfInit(d);
+  function fld(lab, node){ return el("div",{class:"field ax-nf-f"},[ el("label",{},[lab]), node ]); }
+  var gradeSel = el("select",{onchange:function(e){ nf.grade = e.target.value; }},
+    AX_GRADES.map(function(g){ return el("option",{value:g, selected: g===nf.grade ? "selected" : null},[g]); }));
+  var nameInp = el("input",{type:"text", id:"axNfName", value:nf.name, placeholder:"예: 김서준",
+    oninput:function(e){ nf.name = e.target.value; },
+    onkeydown:function(e){ if(e.key === "Enter"){ e.preventDefault(); axAddRosterNow(d, false); } }});
+  var schools = axSchoolNames();
+  if(!schools.length) nf.schoolFree = true;
+  var schoolNode;
+  if(nf.schoolFree){
+    schoolNode = el("div",{class:"ax-nf-school"},[
+      el("input",{type:"text", value:nf.school, placeholder:"예: 월촌중",
+        oninput:function(e){ nf.school = e.target.value; },
+        onkeydown:function(e){ if(e.key === "Enter"){ e.preventDefault(); axAddRosterNow(d, false); } }}),
+      schools.length ? el("button",{class:"ax-nf-swap", type:"button", title:"목록에서 고르기",
+        onclick:function(){ nf.schoolFree = false; renderNewReport(); }},["목록"]) : null
+    ].filter(Boolean));
+  }else{
+    var cur = nf.school || "";
+    if(cur && schools.indexOf(cur) === -1) schools = [cur].concat(schools);
+    schoolNode = el("select",{onchange:function(e){
+        if(e.target.value === "__new__"){ nf.schoolFree = true; nf.school = ""; renderNewReport();
+          setTimeout(function(){ var i = $(".ax-nf-school input"); if(i) i.focus(); }, 30); return; }
+        nf.school = e.target.value;
+      }},
+      [ el("option",{value:""},["(선택)"]) ]
+        .concat(schools.map(function(s){ return el("option",{value:s, selected: s===cur ? "selected" : null},[s]); }))
+        .concat([ el("option",{value:"__new__"},["＋ 직접 입력…"]) ]));
+  }
+  var schoolInp = schoolNode;
+  var dl = null;
+  var tNames = axTeacherNames();
+  var tcur = nf.teacher || "";
+  if(tcur && tNames.indexOf(tcur) === -1) tNames = [tcur].concat(tNames);
+  var teachSel = el("select",{onchange:function(e){ nf.teacher = e.target.value; }},
+    [el("option",{value:""},["(지정 안 함)"])].concat(tNames.map(function(t){
+      return el("option",{value:t, selected: t===tcur ? "selected" : null},[t]);
+    })));
+
+  var box = el("div",{class:"ax-nf"},[
+    el("div",{class:"ax-nf-ttl"},["＋ 새 학생 추가 · 학생 명부에도 함께 저장됩니다"]),
+    el("div",{class:"ax-nf-grid"},[
+      fld("학년", gradeSel),
+      fld("이름 *", nameInp),
+      fld("학교", schoolInp),
+      fld("담당 선생님", teachSel),
+      el("div",{class:"ax-nf-f"},[ el("label",{},[" "]),
+        el("button",{class:"btn btn-primary", onclick:function(){ axAddRosterNow(d, false); }},["추가"]) ])
+    ]),
+    dl
+  ]);
+
+  if(d.nfDup){
+    var dup = d.nfDup;
+    box.appendChild(el("div",{class:"ax-nf-warn"},[
+      el("span",{},["⚠ 명부에 " + dup.name + " (" + dup.grade + (dup.school ? " · " + dup.school : "") + ") 이(가) 이미 있습니다"]),
+      el("button",{class:"btn btn-sm", onclick:function(){ axPickExisting(d, dup); }},["기존 학생 고르기"]),
+      el("button",{class:"btn btn-sm", onclick:function(){ axAddRosterNow(d, true); }},["그래도 추가"])
+    ]));
+  }else if(d.nfMsg){
+    box.appendChild(el("div",{class: d.nfMsg.type === "ok" ? "ax-nf-ok" : "ax-nf-warn"},[ d.nfMsg.tx ]));
+  }
+  return box;
+}
+
+/* ---------- 새 리포트 만들기 (①시험 → ②학생) ---------- */
+function renderNewReport(){
+  if(!isNewOpen() || !newDraft) return;
+  var body = $("#newBody"); body.innerHTML = "";
+  var d = newDraft;
+  axNfInit(d);
+  var gsNew = axGroups({examYear:d.examYear, examSemester:d.examSemester, examKind:d.examKind, examTag:d.tag || ""});
+  if(!d.group || !gsNew.some(function(g){ return String(g.id) === String(d.group); })) d.group = gsNew.length ? gsNew[0].id : "";
+  var label = d.examYear + "년 " + d.examSemester + "학기 " + d.examKind + "고사대비" + (d.tag ? " (" + d.tag + ")" : "");
+
+  if(d.step === 1){
+    body.appendChild(el("div",{class:"manage-count"},["① 어떤 시험을 대비하는 리포트인가요?"]));
+    var pick = function(labelTxt, opts, cur, set){
+      var wrap = el("div",{class:"field"},[ el("label",{},[labelTxt]) ]);
+      var row = el("div",{class:"pick-row"});
+      opts.forEach(function(o){
+        row.appendChild(el("button",{class:"pick-btn" + (String(o)===String(cur) ? " on" : ""),
+          onclick:function(){ set(o); renderNewReport(); }},[String(o)]));
+      });
+      wrap.appendChild(row); return wrap;
+    };
+    var yrs=[], now=new Date().getFullYear();
+    for(var y=now+1; y>=now-2; y--) yrs.push(y);
+    var metaLike = {examYear:d.examYear, examSemester:d.examSemester, examKind:d.examKind, examTag:d.tag || ""};
+    body.appendChild(el("div",{class:"sub-panel"},[
+      pick("연도", yrs, d.examYear, function(v){ d.examYear=parseInt(v,10); }),
+      pick("학기", [1,2], d.examSemester, function(v){ d.examSemester=parseInt(v,10); }),
+      pick("중간 / 기말", EXAM_KINDS, d.examKind, function(v){ d.examKind=v; d.tag=""; d.group=""; }),
+      axTagField({examYear:d.examYear, examSemester:d.examSemester, examKind:d.examKind, examTag:d.tag || ""}, null),
+      el("div",{class:"field"},[
+        el("label",{},[axGroups(metaLike).length > 1 ? "대비 그룹" : "주차 날짜"]),
+        axGroupPicker(metaLike, d.group, function(gid){ d.group = gid; renderNewReport(); })
+      ])
+    ]));
+    var gsel = axGroups(metaLike).filter(function(g){ return String(g.id) === String(d.group); })[0];
+    body.appendChild(el("div",{class:"exam-name-view", style:"text-align:center;font-size:15px;padding:12px"},[label + (gsel && axGroups(metaLike).length > 1 ? " · " + (gsel.name || "") : "")]));
+    body.appendChild(el("div",{class:"access-actions"},[
+      el("button",{class:"btn btn-primary", onclick:function(){ d.step=2; renderNewReport(); }},["다음 · 학생 고르기 →"])
+    ]));
+    return;
+  }
+
+  var existing = {};
+  state.students.forEach(function(s){
+    if(axExamKey(s.meta) === axExamKey({examYear:d.examYear, examSemester:d.examSemester, examKind:d.examKind, examTag:d.tag || ""})){
+      existing[studentKey(s.meta)] = true;
+    }
+  });
+  var all = rosterList();
+  var rows = all.filter(function(r){
+    if(r.active === false) return false;
+    if(!d.q) return true;
+    return (r.name + " " + r.school + " " + r.teacher + " " + r.grade).toLowerCase().indexOf(d.q.toLowerCase()) > -1;
+  });
+
+  body.appendChild(el("div",{class:"manage-count"},[
+    "② " + label + " · 리포트를 만들 학생을 고르세요 (여러 명 선택 가능)"
+  ]));
+
+  /* 검색 + [＋ 새 학생 추가] */
+  var tools = el("div",{class:"ax-nf-row"});
+  tools.appendChild(el("div",{class:"side-search", style:"flex:1; margin:0"},[
+    el("span",{},["🔍"]),
+    el("input",{type:"text", value:d.q||"", placeholder:"이름·학교·담당 검색",
+      oninput:function(e){ d.q=e.target.value; renderNewReport(); }})
+  ]));
+  if(axCanAddRoster()){
+    tools.appendChild(el("button",{class:"btn ax-nf-btn" + (d.addOpen ? " on" : ""),
+      onclick:function(){ d.addOpen = !d.addOpen; d.nfMsg = null; d.nfDup = null; renderNewReport();
+        if(d.addOpen) setTimeout(function(){ var i=$("#axNfName"); if(i) i.focus(); }, 30); }},
+      [ d.addOpen ? "− 닫기" : "＋ 새 학생 추가" ]));
+  }
+  body.appendChild(tools);
+
+  if(d.addOpen && axCanAddRoster()) body.appendChild(axAddBox(d));
+
+  if(all.length === 0){
+    body.appendChild(el("div",{class:"manage-empty"},[
+      axCanAddRoster()
+        ? "학생 명부가 비어 있습니다. 위의 [＋ 새 학생 추가]로 바로 넣거나, '🎓 학생 명부 → 리포트에서 가져오기'를 쓰세요."
+        : "학생 명부가 비어 있습니다. 원장님께 학생 등록을 요청해 주세요."
+    ]));
+    body.appendChild(el("div",{class:"access-actions"},[
+      el("button",{class:"btn", onclick:function(){ d.step=1; renderNewReport(); }},["← 이전"]),
+      el("button",{class:"btn btn-primary", onclick:function(){ closeNewReport(); addStudentBlank(d); }},["명부 없이 빈 리포트 만들기"])
+    ]));
+    return;
+  }
+
+  var table = el("table",{class:"roster-table", style:"min-width:560px"});
+  table.appendChild(el("thead",{},[ el("tr",{},[
+    el("th",{style:"width:40px"},[""]), el("th",{style:"width:60px"},["학년"]),
+    el("th",{},["이름"]), el("th",{},["학교"]), el("th",{},["담당"]), el("th",{},["상태"])
+  ])]));
+  var tb = el("tbody"), lastG = null;
+
+  function rowFor(r, isNew){
+    var key = [r.name, r.school, r.grade].join("|");
+    var made = !!existing[key];
+    return el("tr",{class: isNew ? "ax-nf-new" : null},[
+      el("td",{},[ made ? el("span",{},["✔"]) : el("input",{type:"checkbox",
+        checked: d.picked[r.id] ? "checked" : null,
+        onchange:function(e){ if(e.target.checked) d.picked[r.id]=true; else delete d.picked[r.id]; }}) ]),
+      el("td",{},[r.grade]), el("td",{},[ el("span",{class:"manage-name"},[r.name||"이름 없음"]) ]),
+      el("td",{},[r.school||""]), el("td",{},[r.teacher||""]),
+      el("td",{class:"manage-sub"},[ made ? "이미 있음" : (isNew ? el("span",{class:"ax-nf-badge"},["새로 추가됨"]) : "") ])
+    ]);
+  }
+
+  /* 방금 추가한 학생을 맨 위에 모아 보여줍니다 */
+  var freshIds = Object.keys(d.newIds || {});
+  var fresh = all.filter(function(r){ return d.newIds[r.id]; });
+  if(fresh.length){
+    tb.appendChild(el("tr",{class:"rost-group"},[ el("td",{colspan:"6"},["방금 추가한 학생 " + fresh.length + "명"]) ]));
+    fresh.forEach(function(r){ tb.appendChild(rowFor(r, true)); });
+  }
+  rows.forEach(function(r){
+    if(d.newIds[r.id]) return;
+    if(r.grade !== lastG){
+      lastG = r.grade;
+      tb.appendChild(el("tr",{class:"rost-group"},[ el("td",{colspan:"6"},[r.grade]) ]));
+    }
+    tb.appendChild(rowFor(r, false));
+  });
+  table.appendChild(tb);
+  body.appendChild(el("div",{class:"table-wrap"},[table]));
+
+  var nPick = Object.keys(d.picked).length;
+  body.appendChild(el("div",{class:"access-actions"},[
+    el("button",{class:"btn", onclick:function(){ d.step=1; renderNewReport(); }},["← 이전"]),
+    el("button",{class:"btn btn-primary", onclick:function(){ createFromRoster(d); }},
+      ["리포트 만들기" + (nPick ? " (" + nPick + "명)" : "")])
+  ]));
 }
 
 /* ============================================================
