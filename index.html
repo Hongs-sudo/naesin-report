@@ -877,6 +877,95 @@
   .ax-tag-none{font-size:12px; color:var(--ink-faint); padding:8px 2px;}
   .ax-bulk-sel{border:1px solid var(--line); border-radius:8px; padding:7px 10px; font-size:12.5px; background:var(--surface); color:var(--ink); min-width:200px;}
   #axVeil{z-index:120;}
+  /* ===== v4 · 자동저장 상태 · 안내 · 삭제 기록 · 아이패드/폰 ===== */
+  .ax-chip{display:inline-flex; align-items:center; gap:4px; font-size:11.5px; font-weight:800;
+    padding:4px 10px; border-radius:99px; white-space:nowrap; border:0; cursor:pointer; line-height:1.2;}
+  .ax-chip-ok{background:var(--good-soft); color:var(--good);}
+  .ax-chip-ing{background:#e6effa; color:#2b5d9b;}
+  .ax-chip-un{background:var(--warn-soft); color:#8a5a0b;}
+  .ax-chip-err{background:var(--bad-soft); color:var(--bad);}
+  @media (prefers-color-scheme: dark){
+    :root:not([data-theme="light"]) .ax-chip-ing{background:#1d2b3d; color:#8fb5e8;}
+  }
+
+  .ax-banner{display:flex; align-items:center; gap:10px; flex-wrap:wrap;
+    background:var(--warn-soft); border:1px solid #ecd9a6; color:#7a5309;
+    border-radius:10px; padding:10px 13px; font-size:13px; font-weight:700; margin-bottom:14px;}
+
+  .ax-why{border:1px dashed var(--line); border-radius:12px; padding:16px; background:var(--surface-2);
+    text-align:left; max-width:560px; width:100%; margin-top:6px;}
+  .ax-why h4{font-size:14.5px; margin:0 0 4px; color:var(--ink);}
+  .ax-why p{margin:0 0 12px; font-size:12.5px; color:var(--ink-faint);}
+  .ax-why-list{list-style:none; margin:0; padding:0; display:grid; gap:8px;}
+  .ax-why-list li{display:flex; align-items:center; gap:9px; background:var(--surface);
+    border:1px solid var(--line-soft); border-radius:9px; padding:8px 11px; font-size:12.5px;}
+  .ax-why-ic{width:18px; text-align:center; flex:none;}
+  .ax-why-tx{flex:1; min-width:0;}
+
+  table.ax-trash{width:100%; border-collapse:collapse; font-size:12.5px; margin-top:10px;}
+  table.ax-trash th, table.ax-trash td{border:1px solid var(--line-soft); padding:6px 9px; text-align:center;}
+  table.ax-trash th{background:var(--surface-2); font-size:11.5px; color:var(--ink-muted);}
+  table.ax-trash td.l{text-align:left;}
+
+  /* ---------- 아이패드 · 핸드폰 ---------- */
+  .ax-wkhide{display:none !important;}
+  #axScrim{position:fixed; inset:0; background:rgba(36,31,26,.42); z-index:205;
+    opacity:0; pointer-events:none; transition:opacity .2s;}
+  body.ax-drawer-open #axScrim{opacity:1; pointer-events:auto;}
+  #axMTop{position:fixed; top:0; left:0; right:0; height:46px; z-index:212; display:flex; align-items:center;
+    gap:8px; padding:0 10px; background:var(--surface); border-bottom:1px solid var(--line);}
+  .ax-mtitle{font-weight:800; font-size:14px; overflow:hidden; text-overflow:ellipsis; white-space:nowrap;}
+  .ax-mstat{font-size:11px; font-weight:800; padding:3px 8px; border-radius:99px; white-space:nowrap;}
+  #axMBot{position:fixed; left:0; right:0; bottom:0; z-index:206; display:flex; align-items:center; gap:6px;
+    padding:7px 10px calc(7px + env(safe-area-inset-bottom)); background:var(--surface); border-top:1px solid var(--line);}
+  .ax-mb{border:1px solid var(--line); background:var(--surface); color:var(--ink); border-radius:9px;
+    padding:9px 12px; font-size:13px; font-weight:700; min-height:40px; cursor:pointer; white-space:nowrap;}
+  .ax-mb.pri{background:var(--accent-btn); border-color:var(--accent-btn); color:var(--accent-btn-text);}
+  .ax-mwk{font-size:12.5px; font-weight:800; color:var(--accent-ink); min-width:34px; text-align:center;}
+
+  @media (max-width:1024px){
+    .app{grid-template-columns:minmax(0,1fr) !important;}
+    .app > *{min-width:0;}
+    .main{min-width:0; overflow-x:hidden;}
+    .sidebar{position:fixed !important; top:0; left:0; bottom:0; width:min(320px,86vw);
+      height:100vh !important; max-height:100vh; overflow-y:auto; z-index:210;
+      transform:translateX(-102%); transition:transform .22s ease;
+      border-right:1px solid var(--line) !important; border-bottom:none !important;
+      box-shadow:6px 0 26px -10px rgba(0,0,0,.35);}
+    body.ax-drawer-open .sidebar{transform:none;}
+    body.ax-narrow{padding-top:46px;}
+    .main{padding:14px 14px 92px !important; max-width:none !important;}
+    .topbar{margin-bottom:12px;}
+    .topbar h2{font-size:17px;}
+    .btn{min-height:40px;}
+    .btn-sm{min-height:34px;}
+    .week-select-btn{padding:9px 13px; font-size:13px;}
+    .field input[type="text"], .field input[type="number"], .field input[type="date"],
+    .field select, .field textarea{padding:11px 10px; font-size:15px;}
+    #mainArea .card{overflow-x:auto;}
+    #mainArea input.num-input{min-height:36px; font-size:15px;}
+  }
+  @media (max-width:640px){
+    .main{padding:12px 10px 92px !important;}
+    .topbar-actions{width:100%;}
+    .topbar-actions .btn{flex:1;}
+    .top-title-line{width:100%;}
+    .week-selector{width:100%; justify-content:space-between; overflow-x:auto;}
+    .week-select-btn{flex:1 1 0; min-width:0; padding:8px 4px; font-size:11.5px;}
+    .ax-wk-rng{font-size:8.5px;}
+    .topbar h2, .topbar-actions{display:none;}
+    #mainArea table{width:100%;}
+    #mainArea table td, #mainArea table th{white-space:normal; word-break:break-word;}
+    #mainArea table td:first-child, #mainArea table th:first-child{
+      position:sticky; left:0; background:var(--surface); z-index:1;}
+    #mainArea table th:first-child{background:var(--surface-2);}
+    .tabs{position:sticky; top:46px; background:var(--bg); z-index:60;}
+  }
+  @media print{
+    #axMTop, #axMBot, #axScrim, #axBanner, .ax-chip, #axWkOnly{display:none !important;}
+    body.ax-narrow{padding-top:0 !important;}
+    .ax-wkhide{display:table-cell !important;}
+  }
 </style>
 <style id="calCss">
   /* =================== 📅 시험 일정 캘린더 =================== */
@@ -7640,6 +7729,617 @@ function axRenderSide(){
   }
 }
 
+/* ============================================================
+   v4 · 자동 저장 · 저장 상태 표시 · 안내 · 삭제 기록(휴지통)
+   ------------------------------------------------------------
+   · 기존 [💾 저장] 버튼은 그대로 둡니다. (즉시 저장)
+   · 리포트를 만들면 바로 1회 저장, 이후 입력이 멈추면 3초 뒤 자동 저장.
+   · 저장은 "지금 그 학생 문서 1개"만 올립니다. 다른 자료는 건드리지 않습니다.
+   ============================================================ */
+
+var AX_AUTO_MS = 3000;          // 입력이 멈춘 뒤 자동 저장까지
+var AX_NEW_MS  = 400;           // 새로 만든 리포트는 거의 바로
+var AX_TRASH_DAYS = 90;         // 삭제 기록 보관 기간
+
+var axSaveT     = {};           // id -> timer
+var axSaveState = {};           // id -> pending|ing|ok|err|off|conflict
+var axSavedAt   = {};           // id -> ms
+var axEverSaved = {};           // id -> true  (한 번이라도 서버에 올라간 리포트)
+
+function axNow(){ return Date.now(); }
+function axHM(ms){ var d = new Date(ms); return axPad(d.getHours()) + ":" + axPad(d.getMinutes()); }
+
+/* 자동 저장이 가능한 상태인가 */
+var axTestAuto = false;   /* 점검용 */
+function axCanAuto(s){
+  if(!s) return false;
+  if(axTestAuto) return !!canEdit(s);
+  if(isReadOnly()) return false;
+  if(!canEdit(s)) return false;
+  if(!sharedDb || !isAuthorized()) return false;
+  return true;
+}
+
+function axScheduleSave(s, delay){
+  if(!s) return;
+  if(!axCanAuto(s)){ axSaveState[s.id] = "off"; axChipRefresh(); return; }
+  if(remoteAhead[s.id]){ axSaveState[s.id] = "conflict"; axChipRefresh(); return; }
+  clearTimeout(axSaveT[s.id]);
+  axSaveState[s.id] = "pending";
+  axChipRefresh();
+  axSaveT[s.id] = setTimeout(function(){ axDoSave(s); }, delay == null ? AX_AUTO_MS : delay);
+}
+
+/* 실제 자동 저장 : 그 학생 문서 1개만 set */
+function axDoSave(s){
+  if(!s) return Promise.resolve();
+  if(!axCanAuto(s) || remoteAhead[s.id]) return Promise.resolve();
+  if(!dirtyIds[s.id] && axEverSaved[s.id]){ axSaveState[s.id] = "ok"; axChipRefresh(); return Promise.resolve(); }
+  axSaveState[s.id] = "ing"; axChipRefresh();
+  s.updatedAt = axNow(); stampEditor(s);
+  delete dirtyIds[s.id];
+  try{ persist(); }catch(e){}
+  var p;
+  try{ p = sharedDb.doc("students/" + s.id).set(cleanStudent(s)); }
+  catch(e){ p = Promise.reject(e); }
+  return p.then(function(){
+    axEverSaved[s.id] = true; axSavedAt[s.id] = axNow(); axSaveState[s.id] = "ok";
+    axChipRefresh(); try{ renderSidebar(); }catch(e){}
+  }).catch(function(e){
+    console.error(e);
+    dirtyIds[s.id] = true; axSaveState[s.id] = "err";
+    axChipRefresh(); try{ renderSidebar(); }catch(e){}
+  });
+}
+
+/* 입력이 있을 때마다 호출됩니다 (기존 markDirty 를 대신합니다) */
+function markDirty(s){
+  if(!s) return;
+  dirtyIds[s.id] = true;
+  lastLocalEditAt = axNow();
+  axScheduleSave(s, axEverSaved[s.id] ? AX_AUTO_MS : AX_NEW_MS);
+  renderSaveBar(s);
+  renderSidebar();
+}
+
+/* 저장되지 않은 리포트 모두 저장 */
+function axSaveAllDirty(){
+  var ids = Object.keys(dirtyIds);
+  var n = 0;
+  ids.forEach(function(id){
+    var s = state.students.filter(function(x){ return x.id === id; })[0];
+    if(s && axCanAuto(s) && !remoteAhead[id]){ clearTimeout(axSaveT[id]); axDoSave(s); n++; }
+  });
+  toast(n ? (n + "개 리포트를 저장합니다") : "저장할 수 있는 리포트가 없습니다");
+}
+
+/* 창을 닫기 직전 마지막 저장 시도 */
+window.addEventListener("pagehide", function(){
+  Object.keys(dirtyIds).forEach(function(id){
+    var s = state.students.filter(function(x){ return x.id === id; })[0];
+    if(s && axCanAuto(s) && !remoteAhead[id]){ try{ axDoSave(s); }catch(e){} }
+  });
+});
+document.addEventListener("visibilitychange", function(){
+  if(document.visibilityState === "hidden"){
+    Object.keys(dirtyIds).forEach(function(id){
+      var s = state.students.filter(function(x){ return x.id === id; })[0];
+      if(s && axCanAuto(s) && !remoteAhead[id]){ clearTimeout(axSaveT[id]); try{ axDoSave(s); }catch(e){} }
+    });
+  }
+});
+
+/* ------------------------------------------------------------
+   저장 상태 칩 (학생 이름 옆)
+   ------------------------------------------------------------ */
+function axChipInfo(s){
+  if(!s) return null;
+  var st = axSaveState[s.id];
+  if(!axTestAuto){
+    if(isReadOnly()) return null;
+    if(isOffline()) return {cls:"un", tx:"💾 이 기기에만 저장"};
+    if(!canEdit(s)) return null;
+    if(!sharedDb || !isAuthorized()) return {cls:"err", tx:"⚠ 서버 미연결 · 저장되지 않음"};
+  }
+  if(st === "conflict") return {cls:"un", tx:"⚠ 다른 선생님이 먼저 저장함"};
+  if(st === "err")      return {cls:"err", tx:"⚠ 저장 실패 — 다시 시도"};
+  if(st === "ing")      return {cls:"ing", tx:"⟳ 저장 중…"};
+  if(dirtyIds[s.id])    return {cls:"un", tx:"● 곧 자동저장"};
+  var at = axSavedAt[s.id] || s.updatedAt;
+  return {cls:"ok", tx:"✓ 저장됨 " + (at ? axHM(at) : "")};
+}
+
+function axChipRefresh(){
+  var s = activeStudent();
+  var host = document.querySelector(".top-title-line");
+  var old = document.getElementById("axChip");
+  var info = s ? axChipInfo(s) : null;
+  if(!host || !info){ if(old && old.parentNode) old.parentNode.removeChild(old); axBannerRefresh(); return; }
+  var sig = info.cls + "|" + info.tx;
+  if(old && old.getAttribute("data-sig") === sig){ axBannerRefresh(); return; }
+  var chip = el("button",{class:"ax-chip ax-chip-" + info.cls, id:"axChip", type:"button",
+    title:"눌러서 지금 바로 저장", "data-sig":sig,
+    onclick:function(){ var a = activeStudent(); if(a){ clearTimeout(axSaveT[a.id]); axDoSave(a); } }},[info.tx]);
+  if(old && old.parentNode) old.parentNode.replaceChild(chip, old);
+  else host.appendChild(chip);
+  axBannerRefresh();
+}
+
+/* ------------------------------------------------------------
+   미저장 경고 배너 (저장이 실패했을 때만)
+   ------------------------------------------------------------ */
+function axFailedList(){
+  return Object.keys(dirtyIds).filter(function(id){
+    if(isOffline()) return false;
+    return axSaveState[id] === "err" || axSaveState[id] === "conflict";
+  }).map(function(id){
+    return state.students.filter(function(x){ return x.id === id; })[0];
+  }).filter(Boolean);
+}
+function axBannerRefresh(){
+  var bad = axFailedList();
+  var old = document.getElementById("axBanner");
+  if(!bad.length){ if(old && old.parentNode) old.parentNode.removeChild(old); return; }
+  var names = bad.map(function(s){ return s.meta.name || "이름없음"; }).slice(0,5).join(", ");
+  var sig = bad.length + "|" + names;
+  if(old && old.getAttribute("data-sig") === sig) return;
+  var bar = el("div",{class:"ax-banner", id:"axBanner", "data-sig":sig},[
+    el("span",{},["⚠ 아직 저장되지 않은 학생 " + bad.length + "명이 있습니다 (" + names + (bad.length>5?" 외":"") + ")"]),
+    el("span",{style:"flex:1"}),
+    el("button",{class:"btn btn-sm btn-primary", onclick:axSaveAllDirty},["모두 저장"])
+  ]);
+  var main = document.getElementById("mainArea");
+  if(!main) return;
+  if(old && old.parentNode) old.parentNode.replaceChild(bar, old);
+  else main.insertBefore(bar, main.firstChild);
+}
+
+/* ------------------------------------------------------------
+   학생이 안 보일 때 이유 안내
+   ------------------------------------------------------------ */
+var axTrashMine = null;          // 내 학생 중 최근 삭제된 것 (건수 안내용)
+
+function axVisibleCount(){
+  try{
+    var q = (($("#searchInput")||{}).value || "").trim().toLowerCase();
+    return filterStudents(q).length;
+  }catch(e){ return state.students.length; }
+}
+function axFoldedCount(){
+  try{
+    var raw = localStorage.getItem("wr_folders_v1");
+    if(!raw) return 0;
+    var o = JSON.parse(raw), n = 0;
+    Object.keys(o).forEach(function(k){ if(o[k] === false || o[k] === "closed") n++; });
+    return n;
+  }catch(e){ return 0; }
+}
+function axWhyRow(icon, html, btnLabel, onclick){
+  return el("li",{},[
+    el("span",{class:"ax-why-ic"},[icon]),
+    el("span",{class:"ax-why-tx", html:html}),
+    btnLabel ? el("button",{class:"btn btn-sm", onclick:onclick},[btnLabel]) : null
+  ].filter(Boolean));
+}
+function axWhyBuild(){
+  var q = (($("#searchInput")||{}).value || "").trim();
+  var folded = axFoldedCount();
+  var rows = [];
+  rows.push(axWhyRow("👤", "로그인 계정 <b>" + escapeHtml(myEmail() || "(로그인 안 됨)") + "</b> — 평소 쓰던 계정이 맞나요?",
+    "계정 바꾸기", function(){ try{ signOutShared(); }catch(e){ toast("우측 상단에서 로그아웃 후 다시 로그인해주세요"); } }));
+  if(q) rows.push(axWhyRow("🔍", "검색어 <b>\"" + escapeHtml(q) + "\"</b> 이(가) 입력되어 있습니다",
+    "검색 지우기", function(){ $("#searchInput").value = ""; renderAll(); }));
+  if(folded) rows.push(axWhyRow("📁", "접혀 있는 학년 폴더 <b>" + folded + "개</b>",
+    "모두 펼치기", function(){ try{ localStorage.removeItem("wr_folders_v1"); }catch(e){} renderAll(); }));
+  var conn = (!sharedDb || !isAuthorized())
+    ? "서버 연결 <b style='color:var(--bad)'>끊김</b> · 지금 입력한 내용은 저장되지 않습니다"
+    : "서버 연결 <b>정상</b> · 내 리포트 <b>" + state.students.length + "</b>개 조회됨";
+  rows.push(axWhyRow("🌐", conn, null, null));
+  if(axTrashMine && axTrashMine.length)
+    rows.push(axWhyRow("🗑", "최근 " + AX_TRASH_DAYS + "일 안에 삭제된 리포트 <b>" + axTrashMine.length + "건</b>이 있습니다",
+      "삭제 기록 보기", axOpenTrash));
+  return el("div",{class:"ax-why", id:"axWhy"},[
+    el("h4",{},["표시할 리포트가 없습니다"]),
+    el("p",{},["아래 항목을 확인해 주세요. 대부분 계정·검색어 때문입니다."]),
+    el("ul",{class:"ax-why-list"}, rows)
+  ]);
+}
+function axWhyRefresh(){
+  var host = document.querySelector("#mainArea .empty-state");
+  var old = document.getElementById("axWhy");
+  var show = !!host && axVisibleCount() === 0;
+  if(!show){ if(old && old.parentNode) old.parentNode.removeChild(old); return; }
+  if(old && old.parentNode === host) return;
+  if(old && old.parentNode) old.parentNode.removeChild(old);
+  host.appendChild(axWhyBuild());
+}
+
+/* ------------------------------------------------------------
+   삭제 기록 (휴지통) · 90일
+   ------------------------------------------------------------ */
+function axFilledWeeks(s){
+  var n = 0;
+  for(var w = 0; w < 4; w++){
+    var any = false;
+    (s.books||[]).forEach(function(r){ if(r.pct && r.pct[w] != null && r.pct[w] !== "") any = true; });
+    (s.wrongAll||[]).forEach(function(r){ if(r.pct && r.pct[w] != null && r.pct[w] !== "") any = true; });
+    (s.mockBooks||[]).forEach(function(r){ if(r.w && num(r.w[w])) any = true; });
+    (s.extraExams||[]).forEach(function(r){ if(r.done && num(r.done[w])) any = true; });
+    if(any) n++;
+  }
+  return n;
+}
+function axTrashWrite(s){
+  if(!sharedDb || !isAuthorized() || !s) return Promise.resolve();
+  var tid = "t" + axNow() + Math.random().toString(36).slice(2,6);
+  var rec = {
+    id: tid,
+    studentId: s.id,
+    name: s.meta.name || "",
+    grade: s.meta.grade || "",
+    school: s.meta.school || "",
+    examName: s.meta.examName || "",
+    group: String(s.meta.group || ""),
+    ownerEmail: s.meta.ownerEmail || "",
+    weeks: axFilledWeeks(s),
+    deletedAt: axNow(),
+    deletedByEmail: myEmail() || "",
+    deletedByName: (currentUser && (currentUser.displayName || currentUser.email)) || "",
+    data: cleanStudent(s)
+  };
+  try{ return sharedDb.doc("trash/" + tid).set(rec).catch(function(e){ console.warn("삭제 기록 저장 실패", e); }); }
+  catch(e){ return Promise.resolve(); }
+}
+
+/* 기존 삭제 동작을 그대로 두되, 지우기 전에 기록을 남깁니다 */
+function removeStudent(s){
+  if(!canDelete(s)){ toast("이 리포트를 지울 권한이 없습니다"); return; }
+  if(!isAdmin()){ toast("학생 리포트 삭제는 원장님(총괄)만 가능합니다"); return; }
+  if(!confirm(studentLabel(s) + " 학생의 '" + (s.meta.examName||"내신대비") + "' 1~4주차 누적 리포트 전체를 삭제할까요?\n\n삭제 기록은 " + AX_TRASH_DAYS + "일간 보관되며 [🗑 삭제 기록]에서 복원할 수 있습니다.")) return;
+  axTrashWrite(s);
+  clearTimeout(axSaveT[s.id]); delete dirtyIds[s.id];
+  state.students = state.students.filter(function(x){ return x.id !== s.id; });
+  if(state.activeId === s.id) state.activeId = state.students[0] ? state.students[0].id : null;
+  deleteStudentShared(s.id);
+  persist(); renderAll(); refreshManage();
+  toast(studentLabel(s) + " 리포트를 삭제했습니다 · 삭제 기록에 보관됩니다");
+}
+function bulkDeleteChecked(){
+  if(!isAdmin()){ toast("학생 리포트 삭제는 원장님(총괄)만 가능합니다"); return; }
+  var ids = Object.keys(manageChecked).filter(function(id){ return manageChecked[id]; });
+  if(!ids.length){ toast("삭제할 리포트를 먼저 체크해주세요"); return; }
+  if(!confirm("체크한 리포트 " + ids.length + "개를 삭제할까요?\n\n삭제 기록은 " + AX_TRASH_DAYS + "일간 보관되며 복원할 수 있습니다.")) return;
+  ids.forEach(function(id){
+    var s = state.students.filter(function(x){ return x.id === id; })[0];
+    if(s) axTrashWrite(s);
+    clearTimeout(axSaveT[id]); delete dirtyIds[id];
+  });
+  state.students = state.students.filter(function(s){ return ids.indexOf(s.id) === -1; });
+  if(ids.indexOf(state.activeId) > -1) state.activeId = state.students[0] ? state.students[0].id : null;
+  ids.forEach(deleteStudentShared);
+  manageChecked = {};
+  persist(); renderAll(); refreshManage();
+  toast(ids.length + "개 리포트를 삭제했습니다 · 삭제 기록에 보관됩니다");
+}
+
+/* 삭제 기록 불러오기 */
+function axTrashFetch(){
+  if(!sharedDb || !isAuthorized()) return Promise.resolve([]);
+  try{
+    var col = sharedDb.collection("trash");
+    var q = isAdmin() ? col.orderBy("deletedAt","desc").limit(300)
+                      : col.where("ownerEmail","==", myEmail()).limit(300);
+    return q.get().then(function(snap){
+      var out = [];
+      snap.forEach(function(d){ var v = d.data(); if(v) out.push(v); });
+      out.sort(function(a,b){ return (b.deletedAt||0) - (a.deletedAt||0); });
+      return out;
+    }).catch(function(e){ console.warn("삭제 기록을 읽지 못했습니다", e); return []; });
+  }catch(e){ return Promise.resolve([]); }
+}
+function axTrashPoll(){
+  axTrashFetch().then(function(list){
+    var cut = axNow() - AX_TRASH_DAYS*86400000;
+    axTrashMine = list.filter(function(r){
+      return (r.deletedAt||0) > cut && !r.restoredAt &&
+             (isAdmin() ? true : (r.ownerEmail || "") === myEmail());
+    });
+  });
+}
+
+function axTrashRestore(rec, redraw){
+  if(!rec || !rec.data){ toast("복원할 내용이 없습니다"); return; }
+  var s = rec.data;
+  if(state.students.some(function(x){ return x.id === s.id; })){ toast("이미 목록에 있는 리포트입니다"); return; }
+  if(!confirm((rec.name||"") + " 학생의 '" + (rec.examName||"") + "' 리포트를 되살릴까요?")) return;
+  try{ axMigrate(s); }catch(e){}
+  state.students.push(s);
+  state.activeId = s.id;
+  try{ sharedDb.doc("students/" + s.id).set(cleanStudent(s)); }catch(e){}
+  try{ sharedDb.doc("trash/" + rec.id).set({restoredAt: axNow(), restoredBy: myEmail()}, {merge:true}); }catch(e){}
+  rec.restoredAt = axNow();
+  axEverSaved[s.id] = true; axSavedAt[s.id] = axNow(); axSaveState[s.id] = "ok";
+  persist(); renderAll(); refreshManage();
+  toast((rec.name||"") + " 리포트를 복원했습니다");
+  if(redraw) redraw();
+}
+
+function axTrashCleanup(list, redraw){
+  if(!isAdmin()) return;
+  var cut = axNow() - AX_TRASH_DAYS*86400000;
+  var old = list.filter(function(r){ return (r.deletedAt||0) <= cut; });
+  if(!old.length){ toast(AX_TRASH_DAYS + "일이 지난 기록이 없습니다"); return; }
+  if(!confirm(AX_TRASH_DAYS + "일이 지난 삭제 기록 " + old.length + "건을 완전히 지울까요?\n(현재 리포트에는 영향이 없습니다)")) return;
+  old.forEach(function(r){ try{ sharedDb.doc("trash/" + r.id).delete(); }catch(e){} });
+  toast(old.length + "건을 정리했습니다");
+  if(redraw) setTimeout(redraw, 600);
+}
+
+function axOpenTrash(){
+  axOpenPanel("🗑 삭제 기록 (최근 " + AX_TRASH_DAYS + "일)", function(body){
+    body.appendChild(el("div",{class:"hint"},[
+      "삭제한 리포트는 내용 그대로 " + AX_TRASH_DAYS + "일간 보관됩니다. [복원]을 누르면 삭제 전 내용 그대로 되살아납니다. " +
+      (isAdmin() ? "(원장님은 모든 선생님의 기록을 봅니다)" : "(선생님은 본인 담당 학생의 기록만 보이며, 복원은 원장님께 요청해 주세요)")
+    ]));
+    var box = el("div",{},["불러오는 중…"]);
+    body.appendChild(box);
+    function draw(){
+      box.innerHTML = "";
+      box.appendChild(el("div",{},["불러오는 중…"]));
+      axTrashFetch().then(function(list){
+        box.innerHTML = "";
+        var cut = axNow() - AX_TRASH_DAYS*86400000;
+        var live = list.filter(function(r){ return (r.deletedAt||0) > cut; });
+        if(!live.length){ box.appendChild(el("div",{class:"ax-why"},[el("p",{},["삭제 기록이 없습니다."])])); return; }
+        var tb = el("table",{class:"ax-trash"});
+        tb.appendChild(el("tr",{},[ "삭제 시각","삭제한 사람","학생","시험 · 그룹","내용","" ].map(function(h){ return el("th",{},[h]); })));
+        live.forEach(function(r){
+          var d = new Date(r.deletedAt||0);
+          var when = (d.getMonth()+1) + "/" + d.getDate() + " " + axPad(d.getHours()) + ":" + axPad(d.getMinutes());
+          tb.appendChild(el("tr",{},[
+            el("td",{class:"num"},[when]),
+            el("td",{},[r.deletedByName || r.deletedByEmail || ""]),
+            el("td",{class:"l"},[(r.name||"") + (r.grade ? " (" + r.grade + ")" : "")]),
+            el("td",{},[(r.examName||"") + (r.group ? " · " + r.group : "")]),
+            el("td",{},[r.restoredAt ? "복원됨" : ((r.weeks||0) + "주 입력됨")]),
+            el("td",{}, r.restoredAt ? [""] : (isAdmin()
+              ? [ el("button",{class:"btn btn-sm", onclick:function(){ axTrashRestore(r, draw); }},["복원"]) ]
+              : [ el("span",{style:"font-size:11.5px;color:var(--ink-faint)"},["원장님께 복원 요청"]) ]))
+          ]));
+        });
+        box.appendChild(tb);
+        if(isAdmin()){
+          box.appendChild(el("div",{style:"margin-top:12px; text-align:right"},[
+            el("button",{class:"btn btn-sm", onclick:function(){ axTrashCleanup(list, draw); }},["오래된 기록 정리"])
+          ]));
+        }
+      });
+    }
+    draw();
+  });
+}
+
+/* 총괄 도구 줄에 [🗑 삭제 기록] 추가 */
+function axRenderSide(){
+  var box = $("#axSide"); if(!box) return;
+  box.innerHTML = "";
+  if(!isAuthorized() && !isOffline()) return;
+  function t(x){ if(!x || !x.updatedAt) return "연결 전"; var d = new Date(x.updatedAt); return (d.getMonth()+1) + "/" + d.getDate() + " " + axPad(d.getHours()) + ":" + axPad(d.getMinutes()); }
+  var denied = Object.keys(ax.err).length > 0;
+  box.appendChild(el("div",{class:"ax-side-line", title: denied ? "Firestore 규칙에 autodata 읽기 권한이 아직 없습니다" : "1시간마다 자동으로 갱신됩니다"},[
+    "🔄 자동 반영 · 시트 " + (denied ? "규칙 필요" : t(ax.mock)) + (isAdmin() || ax.daily ? " · 데일리 " + (denied ? "-" : t(ax.daily)) : "")
+  ]));
+  var tools = el("div",{class:"ax-side-tools"});
+  if(isAdmin()){
+    tools.appendChild(el("button",{class:"ax-link", onclick:axOpenScoreUpload},["📊 점수종합 올리기"]));
+    tools.appendChild(el("button",{class:"ax-link", onclick:axOpenExamSetup},["⚙ 시험·그룹 설정"]));
+  }
+  if(isAuthorized()) tools.appendChild(el("button",{class:"ax-link", onclick:axOpenTrash},["🗑 삭제 기록"]));
+  if(isAdmin()){
+    var cands = axConvertCandidates();
+    if(cands.length) tools.appendChild(el("button",{class:"ax-link warn", onclick:axOpenConvert},["🔧 교재 칸 변환 " + cands.length]));
+  }
+  if(tools.childNodes.length) box.appendChild(tools);
+}
+
+/* ------------------------------------------------------------
+   화면 위에 항상 최신 상태를 유지합니다 (다시 그려도 사라지지 않도록)
+   ------------------------------------------------------------ */
+function axPaint(){
+  try{ axChipRefresh(); }catch(e){}
+  try{ axWhyRefresh(); }catch(e){}
+  try{ axMobilePaint(); }catch(e){}
+}
+function axSaveInit(){
+  /* 서버에서 내려온 리포트는 '이미 저장된 것'으로 표시 */
+  (state.students||[]).forEach(function(s){ if(!dirtyIds[s.id]) axEverSaved[s.id] = true; });
+  setInterval(axPaint, 600);
+  setTimeout(axPaint, 200);
+  setTimeout(axTrashPoll, 4000);
+  setInterval(axTrashPoll, 300000);
+}
+
+/* ============================================================
+   v4 · 아이패드 / 핸드폰 화면 구성
+   ------------------------------------------------------------
+   · 가로 1024px 이상 : 지금 PC 화면 그대로 (아무것도 바꾸지 않습니다)
+   · 1024px 미만      : 왼쪽 학생 목록을 ☰ 서랍으로 숨기고 리포트를 전체 폭으로
+   · 640px 이하(폰)   : 위 + 아래 고정 막대 + "이번 주만 보기"
+   · 인쇄(발송본) 모양은 전혀 바뀌지 않습니다.
+   ============================================================ */
+
+var AX_NARROW = 1024, AX_PHONE = 640;
+var axDrawerOn = false;
+var axWeekOnly = true;      // 폰에서 이번 주 칸만 보기
+try{ if(localStorage.getItem("ax_weekonly") === "0") axWeekOnly = false; }catch(e){}
+
+function axW(){ return window.innerWidth || document.documentElement.clientWidth || 1200; }
+function axIsNarrow(){ return axW() <= AX_NARROW; }
+function axIsPhone(){ return axW() <= AX_PHONE; }
+
+function axDrawer(open){
+  axDrawerOn = !!open;
+  document.body.classList.toggle("ax-drawer-open", axDrawerOn);
+}
+
+function axMobileShell(){
+  var narrow = axIsNarrow(), phone = axIsPhone();
+  document.body.classList.toggle("ax-narrow", narrow);
+  document.body.classList.toggle("ax-phone", phone);
+  if(!narrow){ axDrawer(false); }
+
+  /* 스크림 (서랍 뒤 어두운 막) */
+  var scrim = document.getElementById("axScrim");
+  if(narrow && !scrim){
+    scrim = el("div",{id:"axScrim", onclick:function(){ axDrawer(false); }});
+    document.body.appendChild(scrim);
+  }else if(!narrow && scrim){ scrim.parentNode.removeChild(scrim); }
+
+  /* 위쪽 고정 막대 */
+  var top = document.getElementById("axMTop");
+  if(narrow && !top){
+    top = el("div",{id:"axMTop"},[
+      el("button",{class:"ax-mb", onclick:function(){ axDrawer(!axDrawerOn); }},["☰"]),
+      el("span",{class:"ax-mtitle", id:"axMName"},["학생 선택"]),
+      el("span",{style:"flex:1"}),
+      el("span",{class:"ax-mstat", id:"axMStat"},[""])
+    ]);
+    document.body.insertBefore(top, document.body.firstChild);
+  }else if(!narrow && top){ top.parentNode.removeChild(top); }
+
+  /* 아래쪽 고정 막대 */
+  var bot = document.getElementById("axMBot");
+  var s = activeStudent();
+  if(narrow && s && !bot){
+    bot = el("div",{id:"axMBot"},[
+      el("button",{class:"ax-mb", id:"axMPrev", onclick:function(){ axWeekStep(-1); }},["←"]),
+      el("span",{class:"ax-mwk", id:"axMWk"},["1주"]),
+      el("button",{class:"ax-mb", id:"axMNext", onclick:function(){ axWeekStep(1); }},["→"]),
+      el("span",{style:"flex:1"}),
+      el("button",{class:"ax-mb", onclick:function(){ var a = activeStudent(); if(a) openPreview(a); }},["📄 리포트"]),
+      el("button",{class:"ax-mb pri", onclick:function(){ var a = activeStudent(); if(a){ clearTimeout(axSaveT[a.id]); saveStudent(a); } }},["💾 저장"])
+    ]);
+    document.body.appendChild(bot);
+  }else if((!narrow || !s) && bot){ bot.parentNode.removeChild(bot); }
+
+  /* 위/아래 막대 내용 갱신 */
+  if(narrow){
+    var nm = document.getElementById("axMName");
+    var stt = document.getElementById("axMStat");
+    var label = s ? ((s.meta.name || "이름 미입력") + (s.meta.grade ? " · " + s.meta.grade : "")) : "학생 선택";
+    if(nm && nm.textContent !== label) nm.textContent = label;
+    var info = s ? axChipInfo(s) : null;
+    var tx = info ? info.tx : "";
+    if(stt && stt.textContent !== tx){
+      stt.textContent = tx;
+      stt.className = "ax-mstat" + (info ? " ax-chip-" + info.cls : "");
+    }
+    var wk = document.getElementById("axMWk");
+    if(wk && s){ var w = getSelectedWeek(s); if(wk.textContent !== (w + "주")) wk.textContent = w + "주"; }
+  }
+}
+
+function axWeekStep(d){
+  var s = activeStudent(); if(!s) return;
+  var w = getSelectedWeek(s) + d;
+  if(w < 1 || w > 4) return;
+  setSelectedWeek(s, w);
+}
+
+/* 학생을 고르면 서랍을 닫습니다 */
+document.addEventListener("click", function(e){
+  if(!axIsNarrow() || !axDrawerOn) return;
+  var t = e.target;
+  while(t && t !== document.body){
+    if(t.classList && t.classList.contains("side-item")){ setTimeout(function(){ axDrawer(false); }, 60); return; }
+    t = t.parentNode;
+  }
+}, true);
+
+/* ------------------------------------------------------------
+   폰 : 이번 주 칸만 보기
+   표의 머리글에서 "1주 2주 3주 4주" 열을 찾아 선택한 주차만 남깁니다.
+   (셀 합치기가 있는 표는 건드리지 않습니다)
+   ------------------------------------------------------------ */
+function axWeekColsClear(){
+  $all(".ax-wkhide").forEach(function(c){ c.classList.remove("ax-wkhide"); });
+  $all("table[data-axwk]").forEach(function(t){ t.removeAttribute("data-axwk"); });
+}
+function axWeekCols(){
+  var s = activeStudent();
+  if(!axIsPhone() || !axWeekOnly || !s){ axWeekColsClear(); return; }
+  var cur = getSelectedWeek(s);
+  $all("#mainArea table").forEach(function(tb){
+    if(tb.getAttribute("data-axwk") === String(cur)) return;
+    var rows = Array.prototype.slice.call(tb.rows);
+    if(!rows.length) return;
+    function spans(r){
+      var bad = false;
+      Array.prototype.slice.call(r.cells).forEach(function(c){ if(c.colSpan > 1 || c.rowSpan > 1) bad = true; });
+      return bad;
+    }
+    /* 주차 머리글 줄 찾기 : "1주 %" 같은 칸이 3개 이상, 셀 합치기 없음 */
+    var head = null, map = null;
+    rows.some(function(r){
+      if(spans(r)) return false;
+      var m2 = {}, hits = 0;
+      Array.prototype.slice.call(r.cells).forEach(function(c, i){
+        var t = (c.textContent || "");
+        if(/누적/.test(t)) return;
+        var m = t.match(/(^|\D)([1-4])\s*주/);
+        if(m){ m2[i] = parseInt(m[2],10); hits++; }
+      });
+      if(hits >= 3){ head = r; map = m2; return true; }
+      return false;
+    });
+    if(!head){ tb.setAttribute("data-axwk","skip"); return; }
+    var n = head.cells.length;
+    rows.forEach(function(r){
+      if(r.cells.length !== n || spans(r)) return;
+      Array.prototype.slice.call(r.cells).forEach(function(c, i){
+        if(map[i] && map[i] !== cur) c.classList.add("ax-wkhide");
+        else c.classList.remove("ax-wkhide");
+      });
+    });
+    tb.setAttribute("data-axwk", String(cur));
+  });
+}
+
+/* 폰에서 숫자 칸은 숫자 키패드가 바로 뜨도록 */
+function axNumPad(){
+  if(!axIsNarrow()) return;
+  $all("#mainArea input[type=number]:not([inputmode])").forEach(function(i){
+    i.setAttribute("inputmode","numeric");
+  });
+}
+
+/* "이번 주만" 토글 (폰에서 주차 버튼 옆) */
+function axWeekOnlyBtn(){
+  var host = document.querySelector(".top-title-line");
+  var old = document.getElementById("axWkOnly");
+  if(!axIsPhone() || !host || !activeStudent()){ if(old && old.parentNode) old.parentNode.removeChild(old); return; }
+  var want = axWeekOnly ? "on" : "off";
+  if(old && old.getAttribute("data-on") === want) return;
+  var b = el("button",{class:"ax-chip ax-chip-" + (axWeekOnly ? "ok" : "un"), id:"axWkOnly", type:"button", "data-on":want,
+    title:"표를 이번 주 칸만 보이게 합니다",
+    onclick:function(){
+      axWeekOnly = !axWeekOnly;
+      try{ localStorage.setItem("ax_weekonly", axWeekOnly ? "1" : "0"); }catch(e){}
+      axWeekColsClear(); axWeekCols(); axWeekOnlyBtn();
+    }},[ axWeekOnly ? "📱 이번 주만" : "📱 전체 주차" ]);
+  if(old && old.parentNode) old.parentNode.replaceChild(b, old);
+  else host.appendChild(b);
+}
+
+function axMobilePaint(){
+  axMobileShell();
+  axWeekCols();
+  axNumPad();
+  axWeekOnlyBtn();
+}
+window.addEventListener("resize", function(){ try{ axWeekColsClear(); axMobilePaint(); }catch(e){} });
+window.addEventListener("orientationchange", function(){ setTimeout(function(){ try{ axWeekColsClear(); axMobilePaint(); }catch(e){} }, 300); });
+
 function axInit(){
   var b = $("#btnAxImport");
   if(b) b.addEventListener("click", function(){ $("#axTitle").textContent = "📥 엑셀로 채우기"; openAxImport(); });
@@ -7656,6 +8356,7 @@ function axInit(){
   }
   if(!axUseShared()) axLoadLocal();
   axRenderSide();
+  axSaveInit();
 }
 function axSyncButtons(){
   var b = $("#btnAxImport");
@@ -7663,7 +8364,14 @@ function axSyncButtons(){
   axRenderSide();
 }
 /* 점검용 (주소 뒤에 ?axdebug 가 있을 때만) */
-try{ if(/axdebug/.test(location.search)) window.__ax = {ax:ax, state:function(){ return state; }, axWeeks:axWeeks, axWeekOfDate:axWeekOfDate, axGuessWeek:axGuessWeek, axWeeklyAch:axWeeklyAch, axBookView:axBookView, axMockView:axMockView, imp:function(){ return axImp; }, axParseScoreGrid:axParseScoreGrid, axReadXlsx:axReadXlsx}; }catch(e){}
+try{ if(/axdebug/.test(location.search)) window.__ax = {ax:ax, state:function(){ return state; }, axWeeks:axWeeks, axWeekOfDate:axWeekOfDate, axGuessWeek:axGuessWeek, axWeeklyAch:axWeeklyAch, axBookView:axBookView, axMockView:axMockView, imp:function(){ return axImp; }, axParseScoreGrid:axParseScoreGrid, axReadXlsx:axReadXlsx,
+  sv:{ state:function(){ return axSaveState; }, ever:function(){ return axEverSaved; }, chip:axChipInfo,
+       filled:axFilledWeeks, dirty:function(){ return dirtyIds; },
+       addBlank:function(){ addStudentBlank(null); }, render:function(){ renderAll(); },
+       fake:function(rec){ axTestAuto = true; sharedDb = { doc:function(p){ return { set:function(v,o){ rec.push([p,v,o]); return Promise.resolve(); },
+         delete:function(){ rec.push([p,"DEL"]); return Promise.resolve(); } }; },
+         collection:function(){ return { orderBy:function(){ return this; }, where:function(){ return this; }, limit:function(){ return this; },
+           get:function(){ return Promise.resolve({forEach:function(){}}); } }; } }; } }}; }catch(e){}
 
 /* ============================================================
    WIRING
