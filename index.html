@@ -991,6 +991,24 @@
   .ax-nf-school input{flex:1;}
   .ax-nf-swap{border:1px solid var(--line); background:var(--surface); border-radius:7px; padding:0 9px;
     font-size:11.5px; font-weight:700; color:var(--ink-muted); cursor:pointer; white-space:nowrap;}
+
+  /* ===== v4 · 발송본 A4 한 장 맞추기 ===== */
+  .report.rp-fitted{padding:0 !important; display:block !important;}
+  .rp-page{width:794px; height:1123px; padding:26px 30px 20px; display:flex; flex-direction:column; gap:11px;
+    transform-origin:top left; overflow:hidden; flex:none;}
+  .report.rp-fitted .rp-note{-webkit-line-clamp:var(--rp-clamp,9);}
+  .report.rp-fitted .rp-msg-panel .rp-note{-webkit-line-clamp:var(--rp-clamp2,14);}
+  /* 발송본 미리보기에서 [인쇄/PDF] → 발송본 한 장만 인쇄 */
+  @media print{
+    body.ax-previewing > *:not(#previewVeil){display:none !important;}
+    body.ax-previewing{padding:0 !important; margin:0 !important;}
+    body.ax-previewing #previewVeil{display:block !important; position:static !important; padding:0 !important; background:none !important;}
+    body.ax-previewing #previewVeil .modal{padding:0 !important; margin:0 !important; max-width:none !important; width:auto !important; max-height:none !important; overflow:visible !important;}
+    body.ax-previewing .report-stage{padding:0 !important; display:block !important; min-height:0 !important;}
+    body.ax-previewing .report-scaler{transform:none !important; width:auto !important; height:auto !important;}
+    body.ax-previewing .report-shadow{box-shadow:none !important; border-radius:0 !important;}
+    body.ax-previewing .report{break-inside:avoid; page-break-inside:avoid;}
+  }
 </style>
 <style id="calCss">
   /* =================== 📅 시험 일정 캘린더 =================== */
@@ -8659,6 +8677,110 @@ function axMobilePaint(){
 }
 window.addEventListener("resize", function(){ try{ axWeekColsClear(); axMobilePaint(); }catch(e){} });
 window.addEventListener("orientationchange", function(){ setTimeout(function(){ try{ axWeekColsClear(); axMobilePaint(); }catch(e){} }, 300); });
+
+/* ============================================================
+   v4 · 발송본(A4) 한 장에 항상 맞추기
+   ------------------------------------------------------------
+   내용이 길어도 잘리지 않도록, A4 한 장을 넘칠 때만 글자·칸을
+   조금씩 줄여서 딱 한 장에 채웁니다. (넘치지 않으면 그대로)
+   ============================================================ */
+
+/* 이 함수는 발송본 HTML 파일 안에도 그대로 심어집니다 (혼자서도 동작) */
+function axFitReport(rep){
+  if(!rep) return;
+  var W = 794, H = 1123, MIN = 0.70;
+  /* 그래도 넘칠 때 ⑤·⑥ 코멘트 줄 수를 단계적으로 줄입니다 (⑤줄, ⑥줄) */
+  var CLAMPS = [[9,14],[7,11],[5,8],[4,6],[3,4]];
+  var page = rep.querySelector(".rp-page");
+  if(!page){
+    page = document.createElement("div");
+    page.className = "rp-page";
+    while(rep.firstChild) page.appendChild(rep.firstChild);
+    rep.appendChild(page);
+    rep.classList.add("rp-fitted");
+  }
+  function clamp(c){
+    rep.style.setProperty("--rp-clamp", c[0]);
+    rep.style.setProperty("--rp-clamp2", c[1]);
+  }
+  function set(k){
+    page.style.width  = (W/k) + "px";
+    page.style.height = (H/k) + "px";
+    page.style.transform = "scale(" + k + ")";
+  }
+  /* 눌려서 잘리는 것까지 잡기 위해, 높이를 풀어놓고 '원래 필요한 높이'를 잽니다 */
+  function fits(k){
+    page.style.transform = "scale(" + k + ")";
+    page.style.width  = (W/k) + "px";
+    page.style.height = "auto";
+    var nat = page.scrollHeight;
+    page.style.height = (H/k) + "px";
+    return nat <= (H/k) + 1;
+  }
+  function search(){
+    if(fits(1)) return 1;
+    if(!fits(MIN)) return null;
+    var lo = MIN, hi = 1, k = MIN;
+    for(var i=0; i<12; i++){
+      var mid = (lo + hi) / 2;
+      if(fits(mid)){ k = mid; lo = mid; } else { hi = mid; }
+    }
+    return k;
+  }
+  var k = null;
+  for(var c=0; c<CLAMPS.length && k === null; c++){
+    clamp(CLAMPS[c]);
+    k = search();
+  }
+  if(k === null) k = MIN;
+  if(k < 1) k = Math.max(MIN, k * 0.99);   /* 글자 줄바꿈 오차용 여유 1% */
+  set(k);
+  rep.setAttribute("data-fit", Math.round(k*100));
+  return k;
+}
+
+/* 미리보기 모달 */
+function openPreview(s){
+  $("#reportMount").innerHTML = buildReportHTML(s);
+  $("#previewVeil").classList.add("open");
+  document.body.classList.add("ax-previewing");
+  fitReportScale();
+  try{ axFitReport($("#reportMount .report")); }catch(e){ console.warn(e); }
+}
+
+function closePreview(){
+  $("#previewVeil").classList.remove("open");
+  document.body.classList.remove("ax-previewing");
+}
+
+/* 인쇄 직전에도 한 번 더 맞춥니다 */
+window.addEventListener("beforeprint", function(){
+  try{ $all(".report").forEach(function(r){ axFitReport(r); }); }catch(e){}
+});
+
+/* 내려받는 발송본 HTML 파일에도 같은 기능을 심습니다 */
+function reportStandaloneDoc(s){
+  var titleStr = (s.meta.name||"학생") + " 학생 내신대비 주간보고서 (" + getSelectedWeek(s) + "주차)";
+  var body = buildReportHTML(s);
+  var css = $("style").textContent;
+  return '<!doctype html>\n<html lang="ko"><head><meta charset="utf-8">'
+    + '<meta name="viewport" content="width=device-width, initial-scale=1">'
+    + '<title>' + escapeHtml(titleStr) + '</title>'
+    + '<style>' + css
+    + '\nbody{background:#f5f2ee; margin:0;}'
+    + '\n.report-stage{min-height:100vh; align-items:flex-start;}'
+    + '\n@media (max-width:840px){ .report-stage{padding:8px;} }'
+    + '</style>'
+    + '</head><body>'
+    + '<div class="report-stage"><div class="report-scaler" id="scaler"><div class="report-shadow">' + body + '</div></div></div>'
+    + '<script>' + axFitReport.toString() + '\n'
+    + '(function(){try{axFitReport(document.querySelector(".report"));}catch(e){}\n'
+    + 'window.addEventListener("beforeprint",function(){try{axFitReport(document.querySelector(".report"));}catch(e){}});\n'
+    + 'function fit(){var st=document.querySelector(".report-stage"),sc=document.getElementById("scaler");'
+    + 'if(!st||!sc)return;var avail=st.clientWidth-32;var k=Math.min(1,avail/794);sc.style.transform="scale("+k+")";'
+    + 'sc.style.height=(1123*k)+"px";sc.style.width="794px";}fit();window.addEventListener("resize",fit);})();<\/script>'
+    + '</body></html>';
+}
 
 function axInit(){
   var b = $("#btnAxImport");
