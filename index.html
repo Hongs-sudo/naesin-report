@@ -15,7 +15,7 @@
 </head>
 <body>
 <title>내신대비 주간보고서</title>
-<style>
+<style id="appCss">
   @import url('https://fonts.googleapis.com/css2?family=IBM+Plex+Sans+KR:wght@400;500;600;700&family=IBM+Plex+Mono:wght@500;600&display=swap');
 
   /* 수학도서관 브랜드 컬러 #D96324 기준 팔레트 */
@@ -3754,7 +3754,7 @@ function buildReportHTML(s){
 function reportStandaloneDoc(s){
   var titleStr = (s.meta.name||"학생") + " 학생 내신대비 주간보고서 (" + getSelectedWeek(s) + "주차)";
   var body = buildReportHTML(s);
-  var css = $("style").textContent;
+  var css = axAppCss();
   // 전체 스타일시트를 함께 담아 어떤 환경에서도 그대로 열리는 단일 파일로 만듭니다
   return '<!doctype html>\n<html lang="ko"><head><meta charset="utf-8">'
     + '<meta name="viewport" content="width=device-width, initial-scale=1">'
@@ -3799,7 +3799,7 @@ function reportToPngBlob(scale){
 
   var W = 794, H = 1123;
   // @import 줄은 SVG 안에서 쓸 수 없으므로 제거하고, XML에서 문제가 되는 문자를 이스케이프합니다
-  var cssText = $("style").textContent
+  var cssText = axAppCss()
     .replace(/@import[^\n]*\n?/g, "")
     .replace(/&/g, "&amp;")
     .replace(/</g, "&lt;");
@@ -8739,6 +8739,19 @@ function axFitReport(rep){
   return k;
 }
 
+/* 학원 보고서 디자인(CSS)을 정확히 찾아옵니다.
+   크롬 확장 프로그램이 페이지 맨 앞에 자기 디자인을 끼워 넣어도 영향을 받지 않습니다. */
+function axAppCss(){
+  var el = document.getElementById("appCss");
+  if(el && /\.rp-head/.test(el.textContent)) return el.textContent;
+  var best = "";
+  Array.prototype.forEach.call(document.querySelectorAll("style"), function(st){
+    var t = st.textContent || "";
+    if(/\.rp-head/.test(t) && t.length > best.length) best = t;
+  });
+  return best || ((document.querySelector("style")||{}).textContent || "");
+}
+
 /* 미리보기 모달 */
 function openPreview(s){
   $("#reportMount").innerHTML = buildReportHTML(s);
@@ -8762,7 +8775,7 @@ window.addEventListener("beforeprint", function(){
 function reportStandaloneDoc(s){
   var titleStr = (s.meta.name||"학생") + " 학생 내신대비 주간보고서 (" + getSelectedWeek(s) + "주차)";
   var body = buildReportHTML(s);
-  var css = $("style").textContent;
+  var css = axAppCss();
   return '<!doctype html>\n<html lang="ko"><head><meta charset="utf-8">'
     + '<meta name="viewport" content="width=device-width, initial-scale=1">'
     + '<title>' + escapeHtml(titleStr) + '</title>'
