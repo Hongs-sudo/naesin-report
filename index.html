@@ -1017,6 +1017,13 @@
   .ax-cap{font-size:11.5px; font-weight:800; color:var(--ink-faint); margin:16px 0 4px;}
   table.ax-trash select{border:1px solid var(--line); border-radius:6px; padding:4px 6px; font-size:12px; background:var(--surface); color:var(--ink); max-width:230px;}
   @media (prefers-color-scheme: dark){ :root:not([data-theme="light"]) textarea.ax-draft{background:#1b2230;} :root:not([data-theme="light"]) textarea.ax-draft::placeholder{color:#8fb5e8;} }
+
+  /* ===== v6 · 매니저겸 선생님 · 선생님 명부 추가 ===== */
+  body.is-readonly.is-mgrteacher #btnNewStudent{display:flex !important;}
+  .ax-tb-add{display:flex; gap:8px; align-items:center; flex-wrap:wrap; background:var(--accent-soft); border:1px dashed var(--accent-soft-2);
+    border-radius:10px; padding:10px 12px; margin:6px 0 10px;}
+  .ax-tb-add b{font-size:12.5px; color:var(--accent-ink);}
+  .ax-tb-add .item-input{border:1px solid var(--line); background:var(--surface); border-radius:7px; padding:7px 9px;}
 </style>
 <style id="calCss">
   /* =================== 📅 시험 일정 캘린더 =================== */
@@ -6043,6 +6050,7 @@ function createFromRoster(d){
     s.meta.name = r.name; s.meta.school = r.school; s.meta.grade = r.grade;
     s.meta.teacher = r.teacher || state.settings.teacher || "";
     s.meta.ownerEmail = teacherEmailOf(s.meta.teacher) || myEmail();
+    axFixNewOwner(s);
     s.meta.studentId = studentKey(s.meta);
     if(r.scores && r.scores.length){
       var sc = r.scores.slice().sort(cmpScore)[0];
@@ -6065,6 +6073,7 @@ function addStudentBlank(d){
   if(d){ s.meta.examYear=d.examYear; s.meta.examSemester=d.examSemester; s.meta.examKind=d.examKind; s.meta.examTag=d.tag||""; if(d.group) s.meta.group = d.group; }
   s.meta.examName = examLabel(s.meta);
   s.meta.ownerEmail = myEmail();
+  axFixNewOwner(s);
   state.students.push(s);
   state.activeId = s.id;
   markDirty(s);
@@ -8129,6 +8138,7 @@ function axDoSave(s){
   if(!dirtyIds[s.id] && axEverSaved[s.id]){ axSaveState[s.id] = "ok"; axChipRefresh(); return Promise.resolve(); }
   axSaveState[s.id] = "ing"; axChipRefresh();
   s.updatedAt = axNow(); stampEditor(s);
+  try{ axSyncOwnerOnSave(s); }catch(e){}
   delete dirtyIds[s.id];
   try{ persist(); }catch(e){}
   var p;
@@ -8501,6 +8511,7 @@ function axPaint(){
   try{ axChipRefresh(); }catch(e){}
   try{ axWhyRefresh(); }catch(e){}
   try{ axMobilePaint(); }catch(e){}
+  try{ axApplyRoles(); }catch(e){}
 }
 function axSaveInit(){
   /* 서버에서 내려온 리포트는 '이미 저장된 것'으로 표시 */
@@ -9151,6 +9162,187 @@ function axRenderSide(){
     if(cands.length) tools.appendChild(el("button",{class:"ax-link warn", onclick:axOpenConvert},["🔧 교재 칸 변환 " + cands.length]));
   }
   if(tools.childNodes.length) box.appendChild(tools);
+}
+
+/* ============================================================
+   v6 · 권한 정리
+   · 선생님 명부에 이름이 있는 매니저 = '매니저 + 담당 선생님'
+     (전체 보기 + 본인 담당 리포트는 고치기·만들기·지우기)
+   · 선생님 · 매니저겸선생님 : 본인 담당 리포트 삭제 가능 (삭제 기록 90일)
+   · 새 리포트는 만든 선생님 본인 것으로 저장 (명부에 없어도 저장 가능)
+   · 원장님이 담당 강사를 바꾸면, 명부의 이메일로 리포트 주인도 따라 바뀜
+   ============================================================ */
+function axOwnerOf(s){ return String((s && s.meta && s.meta.ownerEmail) || "").trim().toLowerCase(); }
+function axOwns(s){ return !!s && !!myEmail() && axOwnerOf(s) === myEmail(); }
+function axBookNameOf(email){
+  var map = (state.settings && state.settings.teacherEmails) || {}, hit = "";
+  email = String(email || "").trim().toLowerCase();
+  Object.keys(map).forEach(function(n){ if(String(map[n] || "").trim().toLowerCase() === email) hit = n; });
+  return hit;
+}
+/* 매니저이면서 선생님 명부에 이름이 있는 사람 */
+function axIsMgrTeacher(){
+  return !isOffline() && currentRole === "manager" && !!axBookNameOf(myEmail());
+}
+/* 리포트를 만들 수 있는 '선생님 역할' */
+function axActsAsTeacher(){ return currentRole === "teacher" || axIsMgrTeacher(); }
+function axActiveStudent(){
+  var id = state && state.activeId;
+  return (state.students || []).filter(function(x){ return x.id === id; })[0] || null;
+}
+/* 지금 보고 있는 리포트가 '보기 전용'인가 */
+function isReadOnly(){
+  if(!isManager()) return false;
+  if(!axIsMgrTeacher()) return true;
+  var s = axActiveStudent();
+  return !!s && !axOwns(s);
+}
+function canEdit(s){
+  if(isOffline() || isAdmin()) return true;
+  if(axActsAsTeacher()) return axOwns(s);
+  return false;
+}
+function canDelete(s){ return isOffline() || isAdmin() || (axActsAsTeacher() && axOwns(s)); }
+function axCanAddRoster(){ return isOffline() || isAdmin() || axActsAsTeacher(); }
+function axMyTeacherName(){
+  var hit = axBookNameOf(myEmail());
+  if(hit) return hit;
+  return (isAdmin() || isOffline()) ? (state.settings.teacher || "") : "";
+}
+/* 새로 만든 리포트 : 선생님이 만들면 언제나 본인 것 */
+function axFixNewOwner(s){
+  if(!s || isAdmin() || isOffline()) return s;
+  if(!axActsAsTeacher()) return s;
+  s.meta.ownerEmail = myEmail();
+  /* 명부에 내 이름이 있으면 그 이름, 없으면 비워 둡니다 (원장님이 명부에 넣으면 채워짐) */
+  var mine = axBookNameOf(myEmail());
+  if(String(teacherEmailOf(s.meta.teacher) || "").toLowerCase() !== myEmail()) s.meta.teacher = mine || "";
+  return s;
+}
+/* 원장님이 담당 강사를 바꿔 저장하면 리포트 주인도 명부 이메일로 맞춥니다 */
+function axSyncOwnerOnSave(s){
+  if(!s || !isAdmin() || isOffline()) return;
+  var em = String(teacherEmailOf(s.meta.teacher) || "").trim().toLowerCase();
+  if(em && em !== axOwnerOf(s)) s.meta.ownerEmail = em;
+}
+
+/* 삭제 : 원장님 = 모든 리포트 · 선생님 = 본인 담당만 */
+function removeStudent(s){
+  if(!canDelete(s)){ toast(isAdmin() ? "이 리포트를 지울 수 없습니다" : "본인 담당 학생 리포트만 지울 수 있습니다"); return; }
+  if(!confirm(studentLabel(s) + " 학생의 '" + (s.meta.examName||"내신대비") + "' 1~4주차 누적 리포트 전체를 삭제할까요?\n\n삭제 기록은 " + AX_TRASH_DAYS + "일간 보관되며 원장님이 [🗑 삭제 기록]에서 복원할 수 있습니다.")) return;
+  axTrashWrite(s);
+  clearTimeout(axSaveT[s.id]); delete dirtyIds[s.id];
+  state.students = state.students.filter(function(x){ return x.id !== s.id; });
+  if(state.activeId === s.id) state.activeId = state.students[0] ? state.students[0].id : null;
+  deleteStudentShared(s.id);
+  persist(); renderAll(); refreshManage();
+  toast(studentLabel(s) + " 리포트를 삭제했습니다 · 삭제 기록에 보관됩니다");
+}
+function deleteStudentShared(id){
+  if(!sharedDb) return Promise.resolve();
+  var s = (state.students || []).filter(function(x){ return x.id === id; })[0];
+  if(!isAdmin() && !axActsAsTeacher()) return Promise.resolve();
+  clearTimeout(pushTimers[id]);
+  try{ return sharedDb.doc("students/" + id).delete().catch(function(e){ console.error(e); toast("공유 DB 삭제에 실패했습니다 (권한)"); }); }
+  catch(e){ return Promise.reject(e); }
+}
+
+/* 화면 역할 표시 : 보고 있는 리포트에 따라 보기 전용 여부가 바뀝니다 */
+function axApplyRoles(){
+  var b = document.body; if(!b) return;
+  b.classList.toggle("is-readonly", isReadOnly());
+  b.classList.toggle("is-mgrteacher", axIsMgrTeacher());
+}
+
+/* ============================================================
+   👥 선생님 명부 : [＋ 새 선생님] 추가 · 리포트 0개면 빼기
+   ============================================================ */
+var axTbMsg = null, axTbNew = {};
+function renderTeacherBook(){
+  var body = $("#teacherBody");
+  if(!body) return;
+  body.innerHTML = "";
+  var map = state.settings.teacherEmails || (state.settings.teacherEmails = {});
+  var names = {};
+  state.students.forEach(function(s){
+    var t = (s.meta.teacher||"").trim();
+    if(t) names[t] = (names[t]||0) + 1;
+  });
+  Object.keys(map).forEach(function(t){ if(!(t in names)) names[t] = 0; });
+  var list = Object.keys(names).sort(function(a,b){ return a.localeCompare(b,"ko"); });
+
+  body.appendChild(el("div",{class:"manage-count"},[
+    "담당 강사 " + list.length + "명 · 이메일을 넣어두면 그 선생님이 로그인했을 때 본인 담당 학생 리포트가 보입니다"
+  ]));
+
+  /* ＋ 새 선생님 */
+  var nm = el("input",{type:"text", class:"item-input", placeholder:"이름 (예: 임소리T)", style:"max-width:170px"});
+  var em = el("input",{type:"text", class:"item-input", placeholder:"구글 이메일", style:"max-width:260px"});
+  function add(){
+    var n = (nm.value || "").trim(), e = (em.value || "").trim().toLowerCase();
+    if(!n){ axTbMsg = {t:"warn", x:"선생님 이름을 입력해 주세요"}; renderTeacherBook(); return; }
+    if(n in names){ axTbMsg = {t:"warn", x:n + " 은(는) 이미 명부에 있습니다 · 아래 칸에서 이메일만 고쳐 주세요"}; renderTeacherBook(); return; }
+    if(e && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(e)){ axTbMsg = {t:"warn", x:"이메일 형식을 확인해 주세요"}; renderTeacherBook(); return; }
+    var dup = e ? Object.keys(map).filter(function(k){ return String(map[k]||"").toLowerCase() === e; })[0] : "";
+    if(dup){ axTbMsg = {t:"warn", x:"이 이메일은 이미 " + dup + " 에 연결되어 있습니다"}; renderTeacherBook(); return; }
+    map[n] = e;
+    axTbNew[n] = true;
+    axTbMsg = {t:"ok", x:"✓ " + n + " 을(를) 추가했습니다 · 아래 [저장]을 눌러야 모든 선생님 화면에 반영됩니다"};
+    renderTeacherBook();
+  }
+  em.addEventListener("keydown", function(ev){ if(ev.key === "Enter") add(); });
+  body.appendChild(el("div",{class:"ax-tb-add"},[
+    el("b",{},["＋ 새 선생님"]), nm, em,
+    el("button",{class:"btn btn-primary btn-sm", type:"button", onclick:add},["추가"])
+  ]));
+  if(axTbMsg){ body.appendChild(el("div",{class:axTbMsg.t === "ok" ? "ax-nf-ok" : "ax-nf-warn"},[axTbMsg.x])); }
+
+  var table = el("table",{class:"manage-table", style:"min-width:560px"});
+  table.appendChild(el("thead",{},[ el("tr",{},[
+    el("th",{},["담당 강사"]), el("th",{style:"width:80px"},["리포트"]),
+    el("th",{},["로그인 이메일 (구글 계정)"]), el("th",{style:"width:70px"},[""])
+  ])]));
+  var tb = el("tbody");
+  list.forEach(function(t){
+    tb.appendChild(el("tr",{class:axTbNew[t] ? "ax-nf-new" : ""},[
+      el("td",{},[ el("span",{class:"manage-name"},[t]), axTbNew[t] ? el("span",{class:"ax-nf-badge", style:"margin-left:6px"},["방금 추가"]) : null ]),
+      el("td",{class:"manage-sub"},[ names[t] + "개" ]),
+      el("td",{},[ el("input",{
+        type:"text", class:"item-input", value: map[t] || "",
+        placeholder:"teacher@gmail.com",
+        oninput:function(e){
+          var v = e.target.value.trim().toLowerCase();
+          if(v) map[t] = v; else map[t] = "";
+        }
+      }) ]),
+      el("td",{},[ names[t] === 0 ? el("button",{class:"mini-btn danger", type:"button", onclick:function(){
+        if(!confirm(t + " 을(를) 선생님 명부에서 뺄까요? (리포트 0개)")) return;
+        delete map[t]; delete axTbNew[t];
+        axTbMsg = {t:"ok", x:t + " 을(를) 뺐습니다 · [저장]을 눌러 반영하세요"};
+        renderTeacherBook();
+      }},["✕ 빼기"]) : null ])
+    ]));
+  });
+  table.appendChild(tb);
+  body.appendChild(el("div",{class:"table-wrap"},[table]));
+
+  body.appendChild(el("div",{class:"access-actions"},[
+    el("button",{class:"btn btn-sm", onclick:function(){
+      var n = 0;
+      state.students.forEach(function(s){
+        var e = teacherEmailOf(s.meta.teacher);
+        if(e && s.meta.ownerEmail !== e){ s.meta.ownerEmail = e; s.updatedAt = Date.now(); pushStudent(s); n++; }
+      });
+      persist(); schedulePushSettings(); renderAll();
+      toast(n ? (n + "개 리포트에 담당자를 지정했습니다 · 선생님 화면에 바로 보입니다") : "새로 지정할 리포트가 없습니다");
+    }},["담당자 일괄 지정"]),
+    el("button",{class:"btn btn-primary btn-sm", onclick:function(){
+      Object.keys(map).forEach(function(k){ if(map[k] === "" && !names[k]) delete map[k]; });
+      persist(); schedulePushSettings();
+      axTbMsg = null; axTbNew = {};
+      toast("선생님 명부를 저장했습니다"); closeTeacherBook();
+    }},["저장"])
+  ]));
 }
 
 function axInit(){
