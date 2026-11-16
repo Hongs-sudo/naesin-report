@@ -5581,7 +5581,7 @@ function axMockSlots(s){
       if(p[1] == null) return;
       var k = w + "-" + p[0], prev = out[k];
       if(prev && prev.date > r.d) return;
-      out[k] = {score:p[1], date:r.d, round:r.r, grade:r.g, paper:p[0]};
+      out[k] = {score:Math.round(p[1] * 10) / 10, date:r.d, round:r.r, grade:r.g, paper:p[0]};
     });
   });
   return out;
