@@ -1091,6 +1091,28 @@
     .ax-sw-arw{width:40px; height:48px;}
   }
   @media print{ .ax-sw-pop{display:none !important;} }
+  /* ===== v9 · 시험별 보기 ===== */
+  #axEvHolder{padding:0 2px 6px;}
+  .ax-ev{position:relative;}
+  .ax-ev-btn{position:relative; width:100%; text-align:left; display:flex; flex-direction:column; gap:1px; padding:7px 30px 7px 12px;
+    border:1.5px solid var(--accent); border-radius:10px; background:var(--accent-soft); cursor:pointer; font:inherit; color:var(--ink);}
+  .ax-ev-btn small{font-size:10.5px; font-weight:700; color:var(--accent-ink);}
+  .ax-ev-btn b{font-size:14px; font-weight:800;}
+  .ax-ev-btn i{position:absolute; right:12px; top:50%; transform:translateY(-50%); font-style:normal; font-size:11px; color:var(--accent-ink);}
+  .ax-ev-pop{position:absolute; left:0; right:0; top:calc(100% + 4px); z-index:50; background:var(--surface); border:1px solid var(--line);
+    border-radius:12px; box-shadow:0 16px 30px -12px rgba(0,0,0,.35); overflow:hidden;}
+  .ax-ev-op{display:flex; align-items:center; gap:6px; width:100%; padding:9px 12px; border:0; border-bottom:1px solid var(--line-soft);
+    background:none; font:inherit; font-size:13px; font-weight:700; color:var(--ink); cursor:pointer; text-align:left;}
+  .ax-ev-op .nm{flex:1; min-width:0; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; font-size:12.5px;}
+  .ax-ev-op .ct{font-size:11.5px; color:var(--ink-faint); font-weight:600;}
+  .ax-ev-op .tg{font-size:10px; color:#fff; background:var(--accent); border-radius:99px; padding:1px 7px;}
+  .ax-ev-op:hover{background:var(--surface-2);}
+  .ax-ev-op.on{background:var(--accent-soft); color:var(--accent-ink);}
+  .ax-ev-gh{list-style:none; margin:8px 0 2px; padding:5px 10px; font-size:11px; font-weight:800; color:var(--ink-faint); background:var(--surface-2); border-radius:6px;}
+  .side-item.ax-ev-dim{opacity:.55;}
+  .ax-ev-past{list-style:none; display:flex; justify-content:space-between; margin-top:8px; padding:9px 6px 2px; border-top:1px dashed var(--line);
+    font-size:12.5px; font-weight:700; color:var(--ink-muted); cursor:pointer;}
+  .ax-ev-past:hover{color:var(--accent-ink);}
 </style>
 <style id="calCss">
   /* =================== 📅 시험 일정 캘린더 =================== */
@@ -5272,7 +5294,7 @@ var AX_EXAM_DEFAULTS = [
   {year:2026, sem:2, kind:"기말", tag:"중1·2 12월", groups:[
     {id:"g1", name:"1그룹", note:"1차 시작 11/14", schools:"월촌, 염경, 당산, 상암, 양동",
       weeks:[["2026-11-09","2026-11-15"],["2026-11-16","2026-11-22"],["2026-11-23","2026-11-29"],["2026-11-30","2026-12-06"]]},
-    {id:"g2", name:"2그룹", note:"2차 시작 11/21", schools:"목운, 당산서, 봉영, 염창, 선유, 명덕",
+    {id:"g2", name:"2그룹", note:"2차 시작 11/21", schools:"목운, 당산서, 봉영, 봉영여, 염창, 선유, 명덕, 명덕여, 양화",
       weeks:[["2026-11-16","2026-11-22"],["2026-11-23","2026-11-29"],["2026-11-30","2026-12-06"],["2026-12-07","2026-12-13"]]},
     {id:"g3", name:"3그룹", note:"3차 시작 11/28", schools:"신목, 양정, 영도",
       weeks:[["2026-11-23","2026-11-29"],["2026-11-30","2026-12-06"],["2026-12-07","2026-12-13"],["2026-12-14","2026-12-20"]]}]}
@@ -10023,6 +10045,202 @@ function axDailyBookRows(st){
   });
   rows.push({group:"오답", name:"전체오답 (A~C 교재)", pct:[null,null,null,null]});
   return rows;
+}
+
+/* ============================================================
+   v9 · 왼쪽 학생 목록 : 시험별로 보기
+   · 학년 폴더 위 [보고 있는 시험 ▾] · 앱을 열면 항상 '지금 진행 중' 시험
+   · 고른 시험의 리포트만 학년 폴더에 · 검색하면 다른 시험 리포트는 아래에 흐리게
+   · 위쪽 '담당 선생님/학생' 바로 바꾸기도 같은 시험 기준
+   · 리포트 데이터는 바꾸지 않습니다 (보이는 목록만)
+   ============================================================ */
+var AX_EV_ALL = "__all__";
+var axEvKey = null;          /* null = 지금 진행 중인 시험 */
+var axEvOpen = false;
+function axEvOf(s){
+  var m = (s && s.meta) || {};
+  return (m.examYear || "?") + "-" + (m.examSemester || "?") + "-" + (m.examKind || "중간");
+}
+function axEvNow(){ try{ return cxExamOf(cxToday()); }catch(e){ return ""; } }
+function axEvCur(){ return axEvKey || axEvNow(); }
+function axEvLabel(k){
+  if(k === AX_EV_ALL) return "전체 시험";
+  var p = String(k).split("-");
+  return p.length === 3 ? (p[0] + " " + p[1] + "학기 " + p[2] + "고사대비") : k;
+}
+function axEvRank(k){
+  var p = String(k).split("-");
+  return (+p[0] || 0) * 10 + (+p[1] || 0) * 2 + (p[2] === "기말" ? 1 : 0);
+}
+function axEvIn(s, k){ k = k || axEvCur(); return k === AX_EV_ALL || axEvOf(s) === k; }
+function axEvOptions(){
+  var cnt = {}, now = axEvNow();
+  (state.students || []).forEach(function(s){ var k = axEvOf(s); cnt[k] = (cnt[k] || 0) + 1; });
+  if(now && !cnt[now]) cnt[now] = 0;
+  var keys = Object.keys(cnt).sort(function(a,b){ return axEvRank(b) - axEvRank(a); });
+  return keys.map(function(k){ return {key:k, n:cnt[k], now:k === now}; })
+    .concat([{key:AX_EV_ALL, n:(state.students || []).length, now:false}]);
+}
+function axEvPick(k){
+  axEvKey = (k === axEvNow()) ? null : k;
+  axEvOpen = false;
+  renderSidebar();
+  try{ if(activeStudent()) renderMain(); }catch(e){}
+}
+function axEvBox(){
+  var cur = axEvCur(), now = axEvNow();
+  var box = el("div",{class:"ax-ev"});
+  box.appendChild(el("button",{type:"button", class:"ax-ev-btn" + (axEvOpen ? " open" : ""),
+    onclick:function(e){ e.stopPropagation(); axEvOpen = !axEvOpen; renderSidebar(); }},[
+    el("small",{},["보고 있는 시험" + (cur === now ? " · 지금 진행 중" : "")]),
+    el("b",{},[axEvLabel(cur)]),
+    el("i",{},[axEvOpen ? "▴" : "▾"])
+  ]));
+  if(axEvOpen){
+    var pop = el("div",{class:"ax-ev-pop"});
+    axEvOptions().forEach(function(o){
+      pop.appendChild(el("button",{type:"button", class:"ax-ev-op" + (o.key === cur ? " on" : ""),
+        onclick:function(e){ e.stopPropagation(); axEvPick(o.key); }},[
+        el("span",{class:"nm"},[o.key === AX_EV_ALL ? "전체 시험 보기" : axEvLabel(o.key)]),
+        el("span",{class:"ct"},[o.n + (o.key === AX_EV_ALL ? "개" : "명")]),
+        o.now ? el("span",{class:"tg"},["진행 중"]) : null
+      ]));
+    });
+    box.appendChild(pop);
+  }
+  return box;
+}
+document.addEventListener("mousedown", function(e){
+  if(!axEvOpen) return;
+  var t = e.target;
+  while(t && t !== document.body){ if(t.classList && t.classList.contains("ax-ev")) return; t = t.parentNode; }
+  axEvOpen = false; renderSidebar();
+}, true);
+
+function axEvItem(s, dim){
+  var tg = axTag(s.meta);
+  return el("li",{
+    class:"side-item in-folder" + (s.id === state.activeId ? " active" : "") + (dim ? " ax-ev-dim" : ""),
+    title:(s.meta.name||"이름 미입력") + " · " + (s.meta.school||"학교 미입력") + " · " + axExamTitle(s.meta),
+    onclick: function(){ openStudent(s); }
+  },[
+    el("div",{class:"side-item-line"},[
+      el("span",{class:"side-item-name"},[s.meta.name || "이름 미입력"]),
+      el("span",{class:"side-item-school"},[(s.meta.school || "학교 미입력") + (dim ? " · " + axEvLabel(axEvOf(s)).replace(/^\d{4} /, "").replace(/고사대비$/, "") : "")]),
+      tg && !dim ? el("span",{class:"ax-tag-chip", title:axExamTitle(s.meta)},[tg]) : null,
+      el("span",{class:"side-item-week"},[(clamp(parseInt(s.meta.week||1,10),1,4))+"주"]),
+      isDirty(s) ? el("span",{class:"side-item-dirty", title:"저장하지 않은 변경이 있습니다"},["●"]) : el("span",{})
+    ])
+  ]);
+}
+function renderSidebar(){
+  var cfg = state.settings;
+  $("#cfgAcademy").value = cfg.academy || "";
+  $("#cfgTeacher").value = cfg.teacher || "";
+  var list = $("#studentList");
+  /* 시험 고르기 칸 : 학생 목록 바로 위 */
+  var holder = document.getElementById("axEvHolder");
+  if(!holder && list && list.parentNode){
+    holder = el("div",{id:"axEvHolder"});
+    list.parentNode.insertBefore(holder, list);
+  }
+  if(holder){ holder.innerHTML = ""; holder.appendChild(axEvBox()); }
+
+  var q = ($("#searchInput").value||"").trim().toLowerCase();
+  list.innerHTML = "";
+  var all = filterStudents(q), cur = axEvCur();
+  var items = all.filter(function(s){ return axEvIn(s, cur); });
+  var others = all.filter(function(s){ return !axEvIn(s, cur); });
+  var searching = !!q;
+  if(searching && !items.length && !others.length){
+    list.appendChild(el("li",{class:"side-empty"},["검색 결과가 없습니다"]));
+    return;
+  }
+  var groups = {};
+  items.forEach(function(s){
+    var g = (s.meta.grade || "").trim() || "학년 미지정";
+    (groups[g] = groups[g] || []).push(s);
+  });
+  var order = ["중1","중2","중3"];
+  var keys = order.slice().concat(Object.keys(groups).filter(function(k){ return order.indexOf(k) === -1; }).sort());
+  keys.forEach(function(g){
+    var rows = groups[g] || [];
+    if(searching && rows.length === 0) return;
+    var open = searching || !isFolderCollapsed(g);
+    list.appendChild(el("li",{
+      class:"folder-row" + (open ? " open" : ""), role:"button", tabindex:"0",
+      "aria-expanded": open ? "true" : "false",
+      title: open ? "클릭하면 학생 목록을 접습니다" : "클릭하면 학생 목록을 펼칩니다",
+      onclick:function(){ toggleFolder(g); renderSidebar(); },
+      onkeydown:function(e){ if(e.key === "Enter" || e.key === " "){ e.preventDefault(); toggleFolder(g); renderSidebar(); } }
+    },[
+      el("span",{class:"folder-caret"},[open ? "▾" : "▸"]),
+      el("span",{class:"folder-icon"},[open ? "📂" : "📁"]),
+      el("span",{class:"folder-name"},[g]),
+      el("span",{class:"folder-count"},[String(rows.length)])
+    ]));
+    if(!open) return;
+    if(rows.length === 0){
+      list.appendChild(el("li",{class:"folder-empty"},["이 시험 리포트가 아직 없습니다"]));
+      return;
+    }
+    rows.forEach(function(s){ list.appendChild(axEvItem(s, false)); });
+  });
+  if(searching){
+    if(others.length){
+      list.appendChild(el("li",{class:"ax-ev-gh"},["다른 시험 리포트"]));
+      others.forEach(function(s){ list.appendChild(axEvItem(s, true)); });
+    }
+  } else if(cur !== AX_EV_ALL){
+    var rest = (state.students || []).filter(function(s){ return !axEvIn(s, cur); }).length;
+    if(rest) list.appendChild(el("li",{class:"ax-ev-past", role:"button", tabindex:"0",
+      onclick:function(e){ e.stopPropagation(); axEvOpen = true; renderSidebar(); try{ document.getElementById("axEvHolder").scrollIntoView({block:"nearest"}); }catch(x){} }},[
+      el("span",{},["📁 다른 시험 리포트 " + rest + "개"]), el("span",{},["보기 ›"])
+    ]));
+  }
+}
+
+/* ---------- 위쪽 바로 바꾸기도 같은 시험 기준 ---------- */
+/* 기준 시험 : 지금 열린 리포트의 시험 (전체 보기일 때는 전체) */
+function axSwExamKey(){
+  if(axEvCur() === AX_EV_ALL) return AX_EV_ALL;
+  var s = activeStudent();
+  return s ? axEvOf(s) : axEvCur();
+}
+function axSwPool(){
+  var k = axSwExamKey();
+  return (state.students || []).filter(function(s){ return axEvIn(s, k); });
+}
+function axSwTeachers(){
+  var cnt = {}, none = 0, pool = axSwPool();
+  pool.forEach(function(s){
+    var t = axSwTeacherOf(s);
+    if(t) cnt[t] = (cnt[t] || 0) + 1; else none++;
+  });
+  var list = Object.keys(cnt).sort(function(a,b){ return cnt[b] - cnt[a] || a.localeCompare(b,"ko"); })
+    .map(function(t){ return {key:t, label:t, n:cnt[t]}; });
+  list.unshift({key:AX_SW_ALL, label:"전체 선생님", n:pool.length});
+  if(none) list.push({key:AX_SW_NONE, label:"담당 미지정", n:none});
+  return list;
+}
+function axSwList(t){
+  t = t || axSwCurTeacher();
+  var list = axSwPool().filter(function(s){
+    if(t === AX_SW_ALL) return true;
+    if(t === AX_SW_NONE) return !axSwTeacherOf(s);
+    return axSwTeacherOf(s) === t;
+  });
+  return list.sort(function(a,b){
+    var d = gradeRank(a.meta.grade) - gradeRank(b.meta.grade); if(d) return d;
+    var ka = axSwKey(a), kb = axSwKey(b);
+    if(ka !== kb){
+      var ya = (a.meta.examYear||"") + (a.meta.examSemester||"") + (a.meta.examKind === "기말" ? "2" : "1");
+      var yb = (b.meta.examYear||"") + (b.meta.examSemester||"") + (b.meta.examKind === "기말" ? "2" : "1");
+      if(ya !== yb) return ya < yb ? 1 : -1;
+      return ka.localeCompare(kb, "ko");
+    }
+    return cmpStudent(a, b);
+  });
 }
 
 /* ============================================================
