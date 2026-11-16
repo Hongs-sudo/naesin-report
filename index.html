@@ -5270,7 +5270,12 @@ var AX_EXAM_DEFAULTS = [
   {year:2026, sem:2, kind:"기말", tag:"중3 10월", groups:[
     {id:"g1", name:"1그룹", note:"중3 전체", weeks:AX_G2_2026_2}]},
   {year:2026, sem:2, kind:"기말", tag:"중1·2 12월", groups:[
-    {id:"g1", name:"1그룹", note:"중1·2 전체", weeks:axBlankWeeks()}]}
+    {id:"g1", name:"1그룹", note:"1차 시작 11/14", schools:"월촌, 염경, 당산, 상암, 양동",
+      weeks:[["2026-11-09","2026-11-15"],["2026-11-16","2026-11-22"],["2026-11-23","2026-11-29"],["2026-11-30","2026-12-06"]]},
+    {id:"g2", name:"2그룹", note:"2차 시작 11/21", schools:"목운, 당산서, 봉영, 염창, 선유, 명덕",
+      weeks:[["2026-11-16","2026-11-22"],["2026-11-23","2026-11-29"],["2026-11-30","2026-12-06"],["2026-12-07","2026-12-13"]]},
+    {id:"g3", name:"3그룹", note:"3차 시작 11/28", schools:"신목, 양정, 영도",
+      weeks:[["2026-11-23","2026-11-29"],["2026-11-30","2026-12-06"],["2026-12-07","2026-12-13"],["2026-12-14","2026-12-20"]]}]}
 ];
 var ax = {mock:null, daily:null, config:null, unsub:[], err:{}};
 var AX_LOCAL_KEY = "wr_autodata_v1";
@@ -5300,7 +5305,27 @@ function axExams(){
 }
 function axExamDef(m){
   var k = axExamKey(m);
-  return axExams().filter(function(e){ return axExamKeyOf(e) === k; })[0] || null;
+  var hit = axExams().filter(function(e){ return axExamKeyOf(e) === k; })[0] || null;
+  if(hit && axExamHasWeeks(hit)) return hit;
+  /* 구분이 비어 있는 리포트 : 같은 연도·학기·중간/기말 중 학년이 맞는 구분을 씁니다 (리포트는 바꾸지 않음) */
+  if(m && !axTag(m)){
+    var gd = String(m.grade || "").replace(/[^1-3]/g, "");
+    var base = (m.examYear || "") + "-" + (m.examSemester || "") + "-" + (m.examKind || "중간");
+    var alt = axExams().filter(function(e){
+      if((e.year + "-" + e.sem + "-" + e.kind) !== base || !e.tag || !axExamHasWeeks(e)) return false;
+      var t = String(e.tag).match(/중\s*([1-3](?:\s*[·,]\s*[1-3])*)/);
+      return !!(gd && t && t[1].indexOf(gd) > -1);
+    });
+    if(alt.length === 1) return alt[0];
+  }
+  return hit;
+}
+function axExamHasWeeks(e){
+  return !!(e && Array.isArray(e.groups) && e.groups.some(function(g){ return axWeeksOk(g.weeks); }));
+}
+/* 그룹의 학교 목록 (쉼표로 적은 것) */
+function axGroupSchools(g){
+  return String((g && g.schools) || "").split(/[,·\/\s]+/).map(function(x){ return cxNormSchool(x); }).filter(Boolean);
 }
 /* 같은 연도·학기·중간/기말의 구분 목록 (선생님이 고를 수 있는 것) */
 function axTagOptions(m){
@@ -5325,6 +5350,11 @@ function axGroupObj(s){
     if(hit) return hit;
     var n = parseInt(g, 10);
     if(n >= 1 && n <= gs.length) return gs[n-1];
+  }
+  var sc = s && s.meta ? cxNormSchool(s.meta.school) : "";
+  if(sc){
+    var bySchool = gs.filter(function(x){ return axGroupSchools(x).indexOf(sc) > -1; })[0];
+    if(bySchool) return bySchool;
   }
   return gs[0];
 }
@@ -5498,6 +5528,7 @@ function axParseScoreGrid(rows, year){
       if(!n || /^#|REF|^[\d.]+$/.test(n) || n.length > 12) continue;
       var sc = b.col.school != null ? axTxt(row[b.col.school]) : "";
       if(/^#/.test(sc) || /^중\s*\d$/.test(sc)) sc = "";
+      if(/중$/.test(n) && axIsNameLike(sc) && !/중$/.test(sc)){ var sw = n; n = sc; sc = sw; }
       var a = b.col.a != null ? axNum(row[b.col.a]) : null;
       var bb = b.col.b != null ? axNum(row[b.col.b]) : null;
       if(a == null && bb == null) continue;
@@ -5544,6 +5575,20 @@ function axMockStat(round, paper, grade){
   });
   if(!v.length) return null;
   return {avg: v.reduce(function(a,b){ return a+b; }, 0) / v.length, count: v.length};
+}
+function axRoundText(r){
+  var m = String(r).match(/^([^\d]+)(\d+)$/);
+  return m ? (m[1] + " (" + m[2] + ")회") : ("(" + r + ")회");
+}
+/* 시트 회차 날짜로 중간/기말 구분 (4·5·9·10월 = 중간, 6·7·11·12월 = 기말) */
+function axScorePrefix(rounds){
+  var st = (rounds || []).map(function(x){ return x.start || ""; }).filter(Boolean).sort()[0] || "";
+  var mo = parseInt(st.slice(5,7), 10);
+  return (mo === 6 || mo === 7 || mo === 11 || mo === 12) ? "기말" : "";
+}
+function axIsPrefixed(r, pre){
+  var m = String(r).match(/^([^\d]*)\d+$/);
+  return (m ? m[1] : "") === pre;
 }
 /* 그 주차에 치른 회차 번호 (학생 그룹 기준) */
 function axRoundOfWeek(s, w){
@@ -6502,7 +6547,7 @@ function mockAvgSummaryBlock(s, week){
   var slots = axMockView(s).filter(function(x){ return x.w === week; });
   slots.forEach(function(x){
     box.appendChild(el("div",{class:"mock-avg-row"},[
-      el("span",{class:"lab"},[x.label + (x.round ? " · 시트 (" + x.round + ")회" : "")]),
+      el("span",{class:"lab"},[x.label + (x.round ? " · 시트 " + axRoundText(x.round) : "")]),
       !x.stat ? el("span",{class:"cnt"},["아직 채점된 점수가 없습니다"])
         : el("span",{},[ el("span",{class:"val"},[Math.round(x.stat.avg*10)/10 + "점"]), el("span",{class:"cnt"},["  · 응시 " + x.stat.count + "명 평균 (" + (ax.mock ? "시트 · 같은 회차·같은 학년" : "같은 시험대비 학생 기준") + ")"]) ])
     ]));
@@ -7625,7 +7670,14 @@ function axOpenScoreUpload(){
           var parsed = null;
           (sh ? [sh] : sheets).some(function(x){ parsed = axParseScoreGrid(x.rows, year); return !!parsed; });
           if(!parsed || !parsed.recs.length) throw new Error("'점수종합' 표(회차 머리글 · 참석일 · 학생명 · 1차 · 2차)를 찾지 못했습니다");
-          await axWriteDoc("mockScores", {source:"upload", fileName:f.name, rounds:parsed.rounds, recs:parsed.recs});
+          var pre = axScorePrefix(parsed.rounds);
+          if(pre){
+            parsed.rounds.forEach(function(x){ x.no = pre + x.no; });
+            parsed.recs.forEach(function(x){ x.r = pre + x.r; });
+          }
+          var keepR = ((ax.mock && ax.mock.rounds) || []).filter(function(x){ return !axIsPrefixed(x.no, pre); });
+          var keepC = ((ax.mock && ax.mock.recs) || []).filter(function(x){ return !axIsPrefixed(x.r, pre); });
+          await axWriteDoc("mockScores", {source:"upload", fileName:f.name, rounds:keepR.concat(parsed.rounds), recs:keepC.concat(parsed.recs)});
           st.style.display = "block"; st.className = "ax-ok";
           st.textContent = "✔ " + parsed.rounds.length + "개 회차 · 점수 " + parsed.recs.length + "건을 반영했습니다";
         }catch(err){ st.style.display = "block"; st.className = "ax-err"; st.textContent = "반영하지 못했습니다 · " + (err && err.message ? err.message : err); }
@@ -7648,6 +7700,8 @@ function axCfgLoad(){
     var m = s.meta; if(!m || !m.examYear || !m.examKind) return;
     var k = axExamKey(m);
     if(have[k]) return;
+    var alt = axExamDef(m);
+    if(alt && have[axExamKeyOf(alt)]) return;
     have[k] = true;
     axCfg.push({year:+m.examYear, sem:+(m.examSemester || 2), kind:m.examKind, tag:axTag(m),
       groups:[{id:"g1", name:"1그룹", note:"", weeks:axBlankWeeks()}]});
@@ -7720,6 +7774,9 @@ function renderAxExamSetup(){
       });
       line.appendChild(el("input",{type:"text", class:"ax-g-memo", value:g.note || "", placeholder:"메모 (예: 중1·2)",
         oninput:function(ev){ g.note = ev.target.value; }}));
+      line.appendChild(el("input",{type:"text", class:"ax-g-memo", value:g.schools || "", placeholder:"학교 (예: 월촌, 염경)",
+        title:"그룹을 고르지 않은 리포트는 이 학교 목록으로 그룹이 정해집니다",
+        oninput:function(ev){ g.schools = ev.target.value; }}));
       line.appendChild(el("span",{class:"ax-g-used"},[gused ? (gused + "명") : ""]));
       line.appendChild(el("button",{class:"ax-ex-del", title:"이 그룹 지우기", onclick:function(){
         var n = axCountByGroup(e, g.id);
