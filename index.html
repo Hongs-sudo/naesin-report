@@ -9779,6 +9779,253 @@ try{ if(/axdebug/.test(location.search)) window.__ax = {ax:ax, state:function(){
            get:function(){ return Promise.resolve({forEach:function(){}}); } }; } }; } }}; }catch(e){}
 
 /* ============================================================
+   v8 · 📅 출석부로 기말 리포트 만들기 (원장 전용)
+   · 데일리 출석 기록(최근 2주 : 지난주 월요일 ~ 오늘)에 있는 학생 중
+     아직 진행 중인 기말 대비 리포트가 없는 학생을 보여 주고, 체크한 학생만 만듭니다
+   · 다른 선생님이 담당하던 학생 · 학교를 모르는 학생은 기본으로 체크하지 않습니다
+   · 기존 리포트는 건드리지 않습니다 (새 리포트만 추가)
+   ------------------------------------------------------------
+   · 기말 리포트 교재 진도율 : 그 학교 중간고사가 끝난 다음 날 이후 데일리 기록만 셉니다
+     (캘린더에 없으면 기말 1주차 4주 전부터) · 중간 리포트 계산은 그대로
+   ============================================================ */
+function axAddDays(iso, n){ var d = cxParse(iso); d.setDate(d.getDate() + n); return cxIso(d); }
+/* 이 리포트가 데일리 진도를 세기 시작하는 날 ("" = 제한 없음) */
+function axDailyFrom(s){
+  if(!s || !s.meta || s.meta.examKind !== "기말") return "";
+  var weeks = axWeeks(s); if(!weeks) return "";
+  var sc = cxNormSchool(s.meta.school), gd = cxGradeNum(s.meta.grade);
+  var key = s.meta.examYear + "-" + s.meta.examSemester + "-중간", end = "";
+  if(sc){
+    Object.keys(cal.items || {}).forEach(function(k){
+      var it = cal.items[k];
+      if(!it || it.type !== "exam" || it.exam !== key || cxNormSchool(it.school) !== sc) return;
+      if(gd && Array.isArray(it.grades) && it.grades.length && it.grades.indexOf(gd) < 0) return;
+      var e = it.end || it.start || "";
+      if(e > end) end = e;
+    });
+  }
+  return end ? axAddDays(end, 1) : axAddDays(weeks[0][0], -28);
+}
+function axBookView(s){
+  var weeks = axWeeks(s), drecs = weeks ? axDailyRecs(s) : null, src = s.src || {};
+  var from = weeks ? axDailyFrom(s) : "";
+  if(drecs && from) drecs = drecs.filter(function(r){ return !r.d || r.d >= from; });
+  return (s.books || []).map(function(row, ri){
+    var code = axRowCode(row), man = (row.pct || []).slice(0,4);
+    while(man.length < 4) man.push(null);
+    var eff = [], tag = [], auto = [], sum = 0;
+    for(var w=1; w<=4; w++){
+      var mv = pctOr(man[w-1]), av = null;
+      if(drecs && drecs.length && code){
+        var inWeek = false, cum = null;
+        drecs.forEach(function(r){
+          if(!axCodeMatch(r.b, code) || r.r == null) return;
+          if(r.d <= weeks[w-1][1]) cum = cum == null ? r.r : Math.max(cum, r.r);
+          if(r.d >= weeks[w-1][0] && r.d <= weeks[w-1][1]) inWeek = true;
+        });
+        if(inWeek && cum != null) av = Math.max(0, Math.round(Math.min(100, cum) - sum));
+      }
+      var v = mv != null ? mv : av, t = "";
+      if(mv != null){
+        if(src["b" + ri + "_" + w] === "excel") t = "excel";
+        else if(av != null && Math.round(av) !== Math.round(mv)) t = "edited";
+      } else if(av != null) t = "daily";
+      eff.push(v); tag.push(t); auto.push(av);
+      if(v != null) sum += v;
+    }
+    return {row:row, idx:ri, code:code, pct:eff, man:man, auto:auto, tag:tag};
+  });
+}
+
+/* ---------- 출석부 → 기말 리포트 ---------- */
+function axRollWindow(){
+  var t = cxToday(), d = cxParse(t), dow = (d.getDay() + 6) % 7;
+  return {from:axAddDays(t, -dow - 7), to:t};
+}
+/* 진행 중인 기말 대비 (학년이 맞고, 주차 날짜가 있고, 아직 4주차가 끝나지 않은 것) */
+function axRollExam(grade){
+  var gd = String(grade || "").replace(/\D/g, ""), today = cxToday(), best = null;
+  axExams().forEach(function(e){
+    if(e.kind !== "기말" || !axExamHasWeeks(e)) return;
+    var t = String(e.tag || "").match(/중\s*([1-3](?:\s*[·,]\s*[1-3])*)/);
+    if(e.tag && !(t && t[1].indexOf(gd) > -1)) return;
+    var last = "";
+    e.groups.forEach(function(g){ if(axWeeksOk(g.weeks) && g.weeks[3][1] > last) last = g.weeks[3][1]; });
+    if(last < today) return;
+    if(!best || (e.year * 10 + e.sem) > (best.year * 10 + best.sem)) best = e;
+  });
+  return best;
+}
+function axRollGroup(e, school){
+  var sc = cxNormSchool(school);
+  var hit = sc ? e.groups.filter(function(g){ return axGroupSchools(g).indexOf(sc) > -1; })[0] : null;
+  return {g: hit || e.groups[0], bySchool: !!hit};
+}
+function axRollInfo(n, g){
+  var nm = axNormName(n), out = {school:"", teacher:""};
+  ((state.settings && state.settings.roster) || []).forEach(function(r){
+    if(axNormName(r.name) !== nm || String(r.grade || "").trim() !== g) return;
+    if(!out.school && r.school) out.school = String(r.school).trim();
+    if(!out.teacher && r.teacher) out.teacher = String(r.teacher).trim();
+  });
+  var last = null;
+  state.students.forEach(function(s){
+    if(axNormName(s.meta.name) !== nm || String(s.meta.grade || "").trim() !== g) return;
+    if(!last || (s.updatedAt || 0) > (last.updatedAt || 0)) last = s;
+  });
+  if(last){
+    if(!out.school && last.meta.school) out.school = String(last.meta.school).trim();
+    if(!out.teacher && last.meta.teacher) out.teacher = String(last.meta.teacher).trim();
+  }
+  if(!out.school){
+    ((ax.mock && ax.mock.recs) || []).forEach(function(r){
+      if(!out.school && axNormName(r.n) === nm && (!r.g || r.g === g) && r.sc) out.school = String(r.sc).trim();
+    });
+  }
+  if(out.school && !/중$|중학교$/.test(out.school)) out.school += "중";
+  return out;
+}
+function axRollList(){
+  var win = axRollWindow(), map = {};
+  var all = ((ax.daily && ax.daily.notes) || []).concat((ax.daily && ax.daily.recs) || []);
+  all.forEach(function(x){
+    if(!x || !x.n || !x.d || x.d < win.from || x.d > win.to) return;
+    var g = String(x.g || "").trim(), k = axNormName(x.n) + "|" + g;
+    var it = map[k] || (map[k] = {n:String(x.n).trim(), g:g, days:{}, abs:{}});
+    it.days[x.d] = true;
+    if(/결석/.test(x.t || "")) it.abs[x.d] = true;
+  });
+  var mine = axDailyTeacherName();
+  return Object.keys(map).map(function(k){
+    var it = map[k], e = axRollExam(it.g);
+    if(!e) return null;
+    var info = axRollInfo(it.n, it.g), grp = axRollGroup(e, info.school);
+    var has = state.students.some(function(s){
+      return axNormName(s.meta.name) === axNormName(it.n) && String(s.meta.grade || "").trim() === it.g
+          && axExamKey(s.meta) === axExamKeyOf(e) ;
+    }) || state.students.some(function(s){
+      return axNormName(s.meta.name) === axNormName(it.n) && String(s.meta.grade || "").trim() === it.g
+          && axExamDef(s.meta) === e;
+    });
+    var other = info.teacher && !/홍재화/.test(info.teacher) && info.teacher !== mine ? info.teacher : "";
+    var days = Object.keys(it.days).sort();
+    return {n:it.n, g:it.g, s:info.school, e:e, grp:grp.g, bySchool:grp.bySchool, has:has, other:other,
+      days:days, abs:Object.keys(it.abs).length, thisWeek:days.some(function(d){ return d >= axAddDays(win.from, 7); }),
+      pick:!has && !other && !!info.school};
+  }).filter(Boolean).sort(function(a,b){
+    return (a.has - b.has) || (gradeRank(a.g) - gradeRank(b.g)) || a.n.localeCompare(b.n, "ko");
+  });
+}
+function axOpenRollcall(){
+  if(!isAdmin()){ toast("원장님만 쓸 수 있습니다"); return; }
+  axOpenPanel("📅 출석부로 기말 리포트 만들기", function(body){
+    var win = axRollWindow();
+    var list = axRollList();
+    body.appendChild(el("div",{class:"hint"},[
+      "데일리 출석 기록(" + cxMd(win.from) + " ~ " + cxMd(win.to) + ")에 있는 학생입니다. 체크한 학생만 진행 중인 기말 대비 리포트를 새로 만들고, 기존 리포트는 바꾸지 않습니다. ",
+      "교재 진행은 데일리 기록, 모의고사는 기말 시트, 코멘트는 데일리 특이사항 초안으로 자동으로 채워집니다."
+    ]));
+    if(!ax.daily){ body.appendChild(el("div",{class:"ax-err"},["데일리 자동 연결 기록이 아직 없습니다. 📘 데일리 올리기로 먼저 올려 주세요."])); return; }
+    if(!list.length){ body.appendChild(el("div",{class:"hint"},["이 기간에 기말 대비 리포트를 만들 학생이 없습니다."])); return; }
+    var t = el("table",{class:"ax-trash"});
+    t.appendChild(el("tr",{},[el("th",{},[""]), el("th",{},["이름"]), el("th",{},["학년"]), el("th",{},["학교"]), el("th",{},["그룹 (1주차)"]), el("th",{},["출석"]), el("th",{},["메모"])]));
+    list.forEach(function(it){
+      var schoolIn = el("input",{type:"text", class:"item-input", value:it.s || "", placeholder:"학교 입력", style:"width:96px",
+        oninput:function(e){
+          it.s = e.target.value.trim();
+          var r = axRollGroup(it.e, it.s); it.grp = r.g; it.bySchool = r.bySchool;
+          grpCell.textContent = axRollGrpText(it);
+        }});
+      var grpCell = el("td",{},[axRollGrpText(it)]);
+      t.appendChild(el("tr",{style: it.has ? "opacity:.5" : null},[
+        el("td",{},[ it.has ? "✓" : el("input",{type:"checkbox", checked:it.pick ? "checked" : null, onchange:function(e){ it.pick = e.target.checked; }}) ]),
+        el("td",{},[it.n]), el("td",{},[it.g]),
+        el("td",{},[ it.has ? (it.s || "") : schoolIn ]),
+        grpCell,
+        el("td",{style:"font-size:11px"},[it.days.map(cxMd).join(", ") + (it.abs ? " (결석 " + it.abs + ")" : "")]),
+        el("td",{class:"l", style:"font-size:11px;color:var(--ink-muted)"},[
+          it.has ? "기말 리포트 있음" :
+          it.other ? ("중간 담당 " + it.other + " · 확인 후 체크") :
+          !it.s ? "학교 정보 없음 · 입력 후 체크" :
+          !it.bySchool ? "학교가 그룹 목록에 없음 · 1그룹으로 만듦" :
+          (it.thisWeek ? "이번 주 출석" : "지난주 출석")])
+      ]));
+    });
+    body.appendChild(t);
+    var msg = el("div");
+    body.appendChild(el("div",{class:"access-actions"},[
+      el("button",{class:"btn", onclick:function(){ closeAxImport(); }},["닫기"]),
+      el("button",{class:"btn btn-primary", onclick:function(){
+        var go = list.filter(function(it){ return it.pick && !it.has; });
+        if(!go.length){ toast("만들 학생을 골라 주세요"); return; }
+        var noSchool = go.filter(function(it){ return !it.s; });
+        if(noSchool.length && !confirm(noSchool.map(function(x){ return x.n; }).join(", ") + " 학생은 학교가 비어 있습니다. 그대로 만들까요?")) return;
+        var made = axCreateFromDaily(go.map(function(it){ return {st:{n:it.n, g:it.g, s:it.s, kind:it.e.kind}, opt:{e:it.e, g:it.grp}}; }));
+        msg.className = "ax-ok";
+        msg.textContent = "✔ " + made.length + "명의 기말 리포트를 만들었습니다 (담당 " + axDailyTeacherName() + ") · 자동으로 저장됩니다";
+        toast(made.length + "명의 기말 리포트를 만들었습니다");
+        axOpenRollcall();
+        $("#axBody").appendChild(msg);
+      }},["체크한 학생 기말 리포트 만들기 (담당 " + axDailyTeacherName() + ")"])
+    ]));
+    body.appendChild(el("div",{class:"hint"},["기본 세팅 : 교재 칸 A·B·C·전체오답 / 주차별 교재 1주 A · 2주 B · 3주 C · 4주 전체오답. 그룹은 학교 이름으로 정해집니다 (⚙ 시험·그룹 설정의 학교 목록). 만든 뒤 학생별로 고칠 수 있습니다."]));
+  });
+}
+function axRollGrpText(it){
+  var w = it.grp && axWeeksOk(it.grp.weeks) ? cxMd(it.grp.weeks[0][0]) + "~" : "날짜 없음";
+  return (it.grp ? (it.grp.name || it.grp.id) : "-") + " · " + w;
+}
+/* 총괄 도구 줄에 [📅 출석부로 기말 리포트] 추가 */
+function axRenderSide(){
+  var box = $("#axSide"); if(!box) return;
+  box.innerHTML = "";
+  if(!isAuthorized() && !isOffline()) return;
+  function t(x){ if(!x || !x.updatedAt) return "연결 전"; var d = new Date(x.updatedAt); return (d.getMonth()+1) + "/" + d.getDate() + " " + axPad(d.getHours()) + ":" + axPad(d.getMinutes()); }
+  var denied = Object.keys(ax.err).length > 0;
+  box.appendChild(el("div",{class:"ax-side-line", title: denied ? "Firestore 규칙에 autodata 읽기 권한이 아직 없습니다" : "구글시트 자동 연결 후 5분마다 갱신됩니다"},[
+    "🔄 자동 반영 · 시트 " + (denied ? "규칙 필요" : t(ax.mock)) + (isAdmin() || ax.daily ? " · 데일리 " + (denied ? "-" : t(ax.daily)) : "")
+  ]));
+  var tools = el("div",{class:"ax-side-tools"});
+  if(isAdmin()){
+    tools.appendChild(el("button",{class:"ax-link", onclick:axOpenScoreUpload},["📊 점수종합 올리기"]));
+    tools.appendChild(el("button",{class:"ax-link", onclick:axOpenDailyUpload},["📘 데일리 올리기"]));
+    tools.appendChild(el("button",{class:"ax-link", onclick:axOpenRollcall},["📅 출석부로 기말 리포트"]));
+    tools.appendChild(el("button",{class:"ax-link", onclick:axOpenExamSetup},["⚙ 시험·그룹 설정"]));
+  }
+  if(isAuthorized()) tools.appendChild(el("button",{class:"ax-link", onclick:axOpenTrash},["🗑 삭제 기록"]));
+  if(isAdmin()){
+    var cands = axConvertCandidates();
+    if(cands.length) tools.appendChild(el("button",{class:"ax-link warn", onclick:axOpenConvert},["🔧 교재 칸 변환 " + cands.length]));
+  }
+  if(tools.childNodes.length) box.appendChild(tools);
+}
+
+/* 새 리포트의 내신교재 칸 : 데일리 교재 이름 (기말이면 '(2기말)' 교재를 우선, 최근에 쓴 교재 우선) */
+function axDailyBookRows(st){
+  var dg = String(st.g).replace(/\D/g, ""), nm = axNormName(st.n), kind = st.kind || "";
+  var used = {}, usedD = {};
+  ((ax.daily && ax.daily.recs) || []).forEach(function(r){
+    if(axNormName(r.n) !== nm || r.g !== st.g || !r.k) return;
+    if(kind && /\((\d)?(중간|기말)\)/.test(r.k) && r.k.indexOf(kind) < 0) return;
+    if(!usedD[r.b] || r.d > usedD[r.b]){ used[r.b] = r.k; usedD[r.b] = r.d; }
+  });
+  var cat = (ax.daily && ax.daily.catalog) || [];
+  function pick(code){
+    if(used[code]) return used[code];
+    var c = cat.filter(function(b){ return axDailyBookCode(b) === code && new RegExp("교재\\s*(\\([^)]*\\))?\\s*" + dg).test(b); });
+    var best = (kind ? c.filter(function(b){ return b.indexOf(kind) > -1; })[0] : null)
+            || c.filter(function(b){ return !/\((\d)?(중간|기말)\)/.test(b); })[0] || c[0];
+    return best || ("내신대비교재 " + dg + code.charAt(0) + (code.length > 1 ? "-" + code.charAt(1) : ""));
+  }
+  var aCode = used.A2 && !used.A1 ? "A2" : "A1";
+  var rows = [aCode, "B", "C"].map(function(code){
+    return {group:code.charAt(0), name:code + " " + pick(code), pct:[null,null,null,null]};
+  });
+  rows.push({group:"오답", name:"전체오답 (A~C 교재)", pct:[null,null,null,null]});
+  return rows;
+}
+
+/* ============================================================
    WIRING
    ============================================================ */
 function bootstrap(){
