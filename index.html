@@ -5622,9 +5622,15 @@ function axSameStudent(s, n, g, sc){
 function axMockSlots(s){
   var out = {};
   if(!ax.mock || !Array.isArray(ax.mock.recs) || !axWeeks(s)) return out;
+  /* 기말부터 : 날짜가 아니라 '어느 회차 표 안에 있는지'로 주차를 정합니다 (늦게·미리 본 점수도 그 회차 주차로) */
+  var rStart = {};
+  (ax.mock.rounds || []).forEach(function(rd){ if(rd && rd.start) rStart[rd.no] = rd.start; });
   ax.mock.recs.forEach(function(r){
     if(!axSameStudent(s, r.n, r.g, r.sc)) return;
-    var w = axWeekOfDate(s, r.d); if(!w) return;
+    var byRound = /^기말\d+$/.test(String(r.r)) && rStart[r.r];
+    var w = byRound ? axWeekOfDate(s, rStart[r.r]) : 0;
+    if(!w) w = axWeekOfDate(s, r.d);   /* 그 회차가 이 학생 주차 밖이면 날짜로 */
+    if(!w) return;
     [[1, r.a], [2, r.b]].forEach(function(p){
       if(p[1] == null) return;
       var k = w + "-" + p[0], prev = out[k];
