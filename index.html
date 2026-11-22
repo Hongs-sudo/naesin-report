@@ -10643,9 +10643,25 @@ function bootstrap(){
   renderAll();
 }
 
+/* [HUB 연동] 주소 끝에 #open=보고서ID 가 붙어 있으면 그 학생의 보고서를 엽니다.
+   주소에 그런 표시가 없으면 아무 일도 하지 않습니다. 학생을 목록에서 누른 것과 같은 동작만 합니다. */
+function hubOpenFromHash(){
+  var m = /^#open=([A-Za-z0-9_-]{1,80})$/.exec(location.hash || "");
+  if(!m) return;
+  var id = m[1], tries = 0;
+  try{ history.replaceState(null, "", location.pathname + location.search); }catch(e){}
+  (function look(){
+    var s = (state.students || []).filter(function(x){ return String(x.id) === id; })[0];
+    if(s){ if(state.activeId !== s.id) openStudent(s); return; }
+    if(++tries < 40) setTimeout(look, 500);   // 저장소에서 목록을 받아오는 동안 최대 20초 기다립니다
+    else toast("HUB에서 고른 학생의 보고서를 이 계정에서 찾지 못했습니다");
+  })();
+}
+window.addEventListener("hashchange", hubOpenFromHash);
+
 /* 페이지가 이미 로드된 뒤에 스크립트가 실행되는 환경에서도 반드시 시작되도록 합니다 */
-if(document.readyState === "loading") document.addEventListener("DOMContentLoaded", bootstrap);
-else bootstrap();
+if(document.readyState === "loading") document.addEventListener("DOMContentLoaded", function(){ bootstrap(); hubOpenFromHash(); });
+else { bootstrap(); hubOpenFromHash(); }
 })();
 </script>
 
