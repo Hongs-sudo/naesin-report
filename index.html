@@ -1187,6 +1187,21 @@
   .ax-sch-st.same{background:#f1f1f1; color:#999;}
   tr.ax-sch-same td{color:var(--ink-faint);}
   .rp-grid-1{display:grid; grid-template-columns:1fr; gap:10px;}
+  /* ===== v13 · 리포트 관리 시험대비 ===== */
+  .ax-mg-ex{display:flex; align-items:center; gap:6px; flex-wrap:wrap; margin:8px 0 12px;}
+  .ax-mg-chip{display:inline-flex; align-items:center; gap:5px; border:1px solid var(--line); border-radius:99px; padding:5px 11px; background:var(--surface);
+    font:inherit; font-size:12px; font-weight:700; color:var(--ink-muted); cursor:pointer;}
+  .ax-mg-chip b{font-weight:800; color:var(--ink-faint);}
+  .ax-mg-chip i{font-style:normal; font-size:10px; color:#fff; background:var(--gold-ink, #7A5C14); border-radius:99px; padding:1px 6px;}
+  .ax-mg-chip.on{background:var(--accent); border-color:var(--accent); color:#fff;} .ax-mg-chip.on b{color:#DEBC62;}
+  .ax-mg-chip.dim{opacity:.55;}
+  tr.ax-mg-eg td{background:#fff; border-bottom:1px solid #E8E0CC;}
+  tr.ax-mg-eg td:first-child{border-left:3px solid #DEBC62;}
+  .ax-mg-eg-cell{cursor:pointer; font-weight:800; font-size:12.5px; color:#7A5C14;}
+  .ax-mg-eg-cell .ct{margin-left:6px; font-size:11px; color:var(--ink-faint); font-weight:700;}
+  .ax-mg-eg-cell .tg{margin-left:6px; font-size:10px; background:var(--accent); color:#DEBC62; border-radius:99px; padding:1px 7px;}
+  tr.ax-mg-eg.old .ax-mg-eg-cell{color:var(--ink-faint);} tr.ax-mg-eg.old td:first-child{border-left-color:#ccc;}
+  tr.ax-mg-ind td:nth-child(2){padding-left:22px;}
 </style>
 <style id="calCss">
   /* =================== 📅 시험 일정 캘린더 =================== */
@@ -11061,6 +11076,202 @@ function axRenderSide(){
     if(cands.length) tools.appendChild(el("button",{class:"ax-link warn", onclick:axOpenConvert},["🔧 교재 칸 변환 " + cands.length]));
   }
   if(tools.childNodes.length) box.appendChild(tools);
+}
+
+/* ============================================================
+   v13 · 리포트 관리 : 시험 대비 고르기 + 선생님 안에서 시험대비별 묶음
+   · 위쪽 [시험 대비] 줄 : 기본 = 지금 진행 중인 시험 · [전체] 를 고르면 묶음 안에서 시험대비별로 나눔
+   · 검색할 때는 모든 시험에서 찾고 시험대비별로 나눠 보여 줍니다
+   ============================================================ */
+var AX_MG_ALL = "__all__";
+var axMgExam = null;            /* 고른 시험 대비 (null = 기본) */
+var axMgOpenEx = {};            /* 전체 보기에서 펼친 시험 묶음 */
+function axMgKey(s){
+  var d = null; try{ d = axExamDef(s.meta); }catch(e){}
+  return d ? axExamKeyOf(d) : axExamKey(s.meta);
+}
+function axMgLabel(key){
+  var d = axExams().filter(function(e){ return axExamKeyOf(e) === key; })[0];
+  var p = key.split("|"), b = p[0].split("-");
+  var base = (b[0] || "?") + " " + (b[1] || "?") + "학기 " + (b[2] || "") ;
+  var tag = d ? (d.tag || "") : (p[1] || "");
+  return base + (tag ? " · " + tag : "");
+}
+function axMgOngoing(key){
+  var d = axExams().filter(function(e){ return axExamKeyOf(e) === key; })[0];
+  if(!d || !Array.isArray(d.groups)) return false;
+  var t = cxToday();
+  return d.groups.some(function(g){ return axWeeksOk(g.weeks) && g.weeks[3][1] >= t; });
+}
+function axMgRank(key){
+  var b = key.split("|")[0].split("-");
+  return (+b[0] || 0) * 10 + (+b[1] || 0) * 2 + (b[2] === "기말" ? 1 : 0);
+}
+function axMgOptions(){
+  var cnt = {};
+  (state.students || []).forEach(function(s){ var k = axMgKey(s); cnt[k] = (cnt[k] || 0) + 1; });
+  return Object.keys(cnt).sort(function(a,b){ return (axMgRank(b) - axMgRank(a)) || a.localeCompare(b, "ko"); })
+    .map(function(k){ return {key:k, n:cnt[k], on:axMgOngoing(k)}; });
+}
+function axMgDefault(opts){
+  var now = ""; try{ now = cxExamOf(cxToday()); }catch(e){}
+  var same = opts.filter(function(o){ return o.key.split("|")[0] === now; });
+  var pick = same.filter(function(o){ return o.on; }).sort(function(a,b){ return b.n - a.n; })[0]
+          || opts.filter(function(o){ return o.on; }).sort(function(a,b){ return b.n - a.n; })[0]
+          || same.sort(function(a,b){ return b.n - a.n; })[0] || opts[0];
+  return pick ? pick.key : AX_MG_ALL;
+}
+function openManage(){
+  axMgExam = null; axMgOpenEx = {};
+  manageChecked = {};
+  manageOpenTeachers = {};
+  $("#manageSearch").value = "";
+  $("#manageVeil").classList.add("open");
+  refreshManage();
+}
+function buildManageTable(){
+  var q = ($("#manageSearch").value||"");
+  var searching = !!q.trim();
+  var opts = axMgOptions();
+  if(axMgExam == null || (axMgExam !== AX_MG_ALL && !opts.some(function(o){ return o.key === axMgExam; }))) axMgExam = axMgDefault(opts);
+  var mode = searching ? AX_MG_ALL : axMgExam;
+  var all = filterStudents(q);
+  var items = mode === AX_MG_ALL ? all : all.filter(function(s){ return axMgKey(s) === mode; });
+  var wrap = el("div",{});
+
+  if(state.students.length === 0){
+    wrap.appendChild(el("div",{class:"manage-empty"},["아직 만들어진 리포트가 없습니다. '+ 새 학생 리포트'로 시작해보세요."]));
+    return wrap;
+  }
+  var head = el("div",{class:"manage-head"},[
+    el("div",{class:"manage-count", style:"margin:0"},[
+      (mode === AX_MG_ALL ? "전체 " + state.students.length + "개" : axMgLabel(mode) + " " + items.length + "개")
+      + (searching ? (" · 검색 결과 " + items.length + "개 (모든 시험에서 찾음)") : "")
+      + " · 묶음 이름을 클릭하면 펼쳐집니다"
+    ]),
+    el("div",{class:"group-pick"},[
+      el("span",{class:"group-pick-label"},["묶어 보기"])
+    ].concat(MANAGE_GROUPS.filter(function(g){ return g.key !== "exam" || mode === AX_MG_ALL; }).map(function(g){
+      return el("button",{class:"pick-btn sm" + (manageGroupBy === g.key ? " on" : ""),
+        onclick:function(){
+          manageGroupBy = g.key;
+          try{ localStorage.setItem(GROUPBY_KEY, g.key); }catch(e){}
+          manageOpenTeachers = {}; refreshManage();
+        }},[g.label]);
+    })))
+  ]);
+  wrap.appendChild(head);
+  /* 시험 대비 고르기 줄 */
+  var exLine = el("div",{class:"ax-mg-ex"},[ el("span",{class:"group-pick-label"},["시험 대비"]) ]);
+  opts.concat([{key:AX_MG_ALL, n:state.students.length}]).forEach(function(o){
+    exLine.appendChild(el("button",{class:"ax-mg-chip" + (mode === o.key ? " on" : "") + (searching ? " dim" : ""), type:"button",
+      title: o.key === AX_MG_ALL ? "모든 시험 리포트를 시험대비별로 나눠서 봅니다" : axMgLabel(o.key),
+      onclick:function(){ axMgExam = o.key; axMgOpenEx = {}; manageOpenTeachers = {}; manageChecked = {}; refreshManage(); }},[
+      o.key === AX_MG_ALL ? "전체" : axMgLabel(o.key),
+      el("b",{},[String(o.n)]),
+      o.on ? el("i",{},["진행 중"]) : null
+    ]));
+  });
+  wrap.appendChild(exLine);
+  if(items.length === 0){
+    wrap.appendChild(el("div",{class:"manage-empty"},[searching ? "검색 결과가 없습니다." : "이 시험대비 리포트가 아직 없습니다."]));
+    return wrap;
+  }
+  var gdef = manageGroupDef();
+  if(mode !== AX_MG_ALL && gdef.key === "exam") gdef = MANAGE_GROUPS[0];
+
+  var table = el("table",{class:"manage-table"});
+  var allChecked = items.every(function(s){ return manageChecked[s.id]; });
+  table.appendChild(el("thead",{},[ el("tr",{},[
+    el("th",{style:"width:34px"},[ el("input",{type:"checkbox", checked: allChecked && items.length>0 ? "checked" : null,
+      onchange:function(e){
+        items.forEach(function(s){ manageChecked[s.id] = e.target.checked; });
+        refreshManage();
+      }}) ]),
+    el("th",{},["학생"]),
+    el("th",{},["시험 대비"]),
+    el("th",{style:"width:70px"},["주차"]),
+    el("th",{style:"width:150px"},["마지막 수정"]),
+    el("th",{style:"width:210px"},[""])
+  ])]));
+  var tbody = el("tbody");
+
+  var byG = {};
+  items.forEach(function(s){ var t = gdef.of(s); (byG[t] = byG[t] || []).push(s); });
+  Object.keys(byG).forEach(function(k){ byG[k].sort(cmpStudent); });
+  var gNames = Object.keys(byG).sort(function(a,b){
+    var au = /미지정$/.test(a), bu = /미지정$/.test(b);
+    if(au !== bu) return au ? 1 : -1;
+    if(gdef.key === "grade") return gradeRank(a) - gradeRank(b);
+    return a.localeCompare(b, "ko");
+  });
+
+  function checkCell(rows, title){
+    var allOn = rows.every(function(s){ return manageChecked[s.id]; });
+    return el("td",{},[ el("input",{type:"checkbox", checked: allOn ? "checked" : null, title:title,
+      onclick:function(e){ e.stopPropagation(); },
+      onchange:function(e){ rows.forEach(function(s){ manageChecked[s.id] = e.target.checked; }); refreshManage(); }}) ]);
+  }
+  function studentRow(s, sub){
+    var grp = ""; try{ grp = axGroupName(s); if((axGroups(s.meta) || []).length < 2) grp = ""; }catch(e){}
+    return el("tr",{class:(s.id===state.activeId ? "is-active" : "") + (sub ? " ax-mg-ind" : "")},[
+      el("td",{},[ el("input",{type:"checkbox", checked: manageChecked[s.id] ? "checked" : null,
+        onchange:function(e){ manageChecked[s.id] = e.target.checked; }}) ]),
+      el("td",{},[
+        el("div",{class:"manage-name"},[s.meta.name || "이름 미입력"]),
+        el("div",{class:"manage-sub"},[[s.meta.school, s.meta.grade].filter(Boolean).join(" · ") || "학교 미입력"])
+      ]),
+      el("td",{},
+        sub ? [ el("div",{class:"manage-sub"},[[grp, gdef.key !== "teacher" && s.meta.teacher ? "담당 " + s.meta.teacher : ""].filter(Boolean).join(" · ")]) ]
+            : [ el("div",{},[s.meta.examName || "시험 대비명 미입력"]),
+                el("div",{class:"manage-sub"},[[axTag(s.meta), grp, gdef.key !== "teacher" && s.meta.teacher ? "담당 " + s.meta.teacher : ""].filter(Boolean).join(" · ")]) ]),
+      el("td",{},[ el("span",{class:"manage-week"},[(s.meta.week||1) + "주차"]) ]),
+      el("td",{class:"manage-sub"},[ new Date(s.updatedAt).toLocaleString("ko-KR") + (s.updatedByName ? (" · " + s.updatedByName) : "") ]),
+      el("td",{},[ el("div",{class:"manage-actions"},[
+        el("button",{class:"mini-btn", onclick:function(){ openStudent(s); }},["✏️ 수정"]),
+        el("button",{class:"mini-btn", onclick:function(){ openPreviewFor(s); }},["📄 발송본"]),
+        canEdit(s) ? el("button",{class:"mini-btn", onclick:function(){ duplicateStudent(s); }},["⎘ 복제"]) : el("span",{},[""]),
+        canDelete(s) ? el("button",{class:"mini-btn danger", onclick:function(){ removeStudent(s); }},["🗑 삭제"]) : el("span",{},[""])
+      ]) ])
+    ]);
+  }
+
+  gNames.forEach(function(gName){
+    var rows = byG[gName];
+    var open = searching || !!manageOpenTeachers[gName];
+    tbody.appendChild(el("tr",{class:"manage-group" + (open ? " is-open" : "")},[
+      checkCell(rows, "이 묶음 리포트 전체 선택"),
+      el("td",{colspan:"5", class:"manage-group-cell",
+        title: open ? "클릭하면 접힙니다" : "클릭하면 담당 학생이 보입니다",
+        onclick:function(){ manageOpenTeachers[gName] = !manageOpenTeachers[gName]; refreshManage(); }},[
+        el("span",{class:"manage-group-caret"},[open ? "▾" : "▸"]),
+        el("span",{class:"manage-group-name"},[ ({teacher:"👤 ", grade:"🎓 ", school:"🏫 ", exam:"📝 "}[gdef.key] || "") + gName ]),
+        el("span",{class:"manage-group-count"},[rows.length + "개"])
+      ])
+    ]));
+    if(!open) return;
+    if(mode !== AX_MG_ALL || gdef.key === "exam"){ rows.forEach(function(s){ tbody.appendChild(studentRow(s, false)); }); return; }
+    /* 전체 보기 : 묶음 안에서 시험대비별로 */
+    var byEx = {};
+    rows.forEach(function(s){ var k = axMgKey(s); (byEx[k] = byEx[k] || []).push(s); });
+    Object.keys(byEx).sort(function(a,b){ return (axMgRank(b) - axMgRank(a)) || a.localeCompare(b, "ko"); }).forEach(function(k){
+      var er = byEx[k], ongo = axMgOngoing(k), id = gName + "|" + k;
+      var eOpen = searching || (axMgOpenEx[id] != null ? axMgOpenEx[id] : ongo);
+      tbody.appendChild(el("tr",{class:"ax-mg-eg" + (ongo ? "" : " old") + (eOpen ? " is-open" : "")},[
+        checkCell(er, "이 시험대비 학생만 선택"),
+        el("td",{colspan:"5", class:"ax-mg-eg-cell", onclick:function(){ axMgOpenEx[id] = !eOpen; refreshManage(); }},[
+          el("span",{class:"manage-group-caret"},[eOpen ? "▾" : "▸"]),
+          "📝 " + axMgLabel(k),
+          el("span",{class:"ct"},[er.length + "명"]),
+          ongo ? el("span",{class:"tg"},["진행 중"]) : null
+        ])
+      ]));
+      if(eOpen) er.forEach(function(s){ tbody.appendChild(studentRow(s, true)); });
+    });
+  });
+  table.appendChild(tbody);
+  wrap.appendChild(el("div",{class:"table-wrap"},[table]));
+  return wrap;
 }
 
 /* ============================================================
